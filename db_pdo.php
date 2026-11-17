@@ -1,9 +1,8 @@
 <?php
 /**
- * Camada PDO Relacional (MySQL / MariaDB Hostinger e PostgreSQL opcional).
- * Funciona de forma híbrida: se o banco SQL não estiver configurado em
- * data/db_config.json, retorna null e o sistema continua operando em JSON
- * automaticamente sem quebrar a vitrine ou o painel.
+ * Camada PDO — PostgreSQL/MySQL (Railway é a referência em produção).
+ * Com DATABASE_URL ativa, o SQL é a única fonte de verdade; JSON em data/ só
+ * para desenvolvimento local sem banco.
  */
 
 function pz_db_config_path()
@@ -129,7 +128,7 @@ function pz_db_ler_config()
     $padrao = [
         'enabled' => false,
         'env_managed' => false,
-        'driver' => 'mysql', // mysql (Railway / Hostinger MariaDB/MySQL) | pgsql (PostgreSQL)
+        'driver' => 'pgsql',
         'host' => 'localhost',
         'port' => '3306',
         'database' => '',
@@ -545,6 +544,98 @@ function pz_db_media_save($tenant, $mediaName, $mimeType, $rawBytes)
     }
     $stmt = $pdo->prepare($sql);
     return $stmt->execute([$tenant, $mediaName, $mimeType, $b64, $agora]);
+}
+
+/** Retorna true quando há conexão SQL ativa (produção Railway). */
+function pz_db_sql_modo_ativo()
+{
+    return pz_pdo() instanceof PDO;
+}
+
+function pz_runtime_railway()
+{
+    foreach (['RAILWAY_ENVIRONMENT', 'RAILWAY_PROJECT_ID', 'RAILWAY_SERVICE_ID'] as $k) {
+        if (pz_db_env_val($k) !== '') {
+            return true;
+        }
+    }
+    return false;
+}
+
+/** Em Railway o disco é efêmero: com SQL ativo, não espelhar JSON em data/. */
+function pz_db_should_mirror_json_files()
+{
+    if (pz_db_env_val('ACHEIAKI_SQL_MIRROR_JSON') === '1') {
+        return true;
+    }
+    if (pz_db_env_val('ACHEIAKI_SQL_MIRROR_JSON') === '0') {
+        return false;
+    }
+    return !pz_runtime_railway();
+}
+
+function pz_media_parse_ref($ref, $tenantPadrao = 'default')
+{
+    $ref = trim((string) $ref);
+    if ($ref === '') {
+        return null;
+    }
+    if (preg_match('#media\.php\?t=([a-zA-Z0-9_-]+)&f=([a-zA-Z0-9._-]+)#i', $ref, $m)) {
+        return ['tenant' => $m[1], 'file' => $m[2]];
+    }
+    if (preg_match('#/assets/lojas/([a-zA-Z0-9_-]+)/([a-zA-Z0-9._-]+)#i', $ref, $m)) {
+        return ['tenant' => $m[1], 'file' => $m[2]];
+    }
+    if (preg_match('#^assets/lojas/([a-zA-Z0-9_-]+)/([a-zA-Z0-9._-]+)#i', $ref, $m)) {
+        return ['tenant' => $m[1], 'file' => $m[2]];
+    }
+    return null;
+}
+
+function pz_media_nome_de_ref($ref, $tenantPadrao = 'default')
+{
+    $p = pz_media_parse_ref($ref, $tenantPadrao);
+    return $p ? (string) $p['file'] : null;
+}
+
+function pz_media_delete_disk($tenant, $mediaName)
+{
+    $tenant = preg_replace('/[^a-z0-9_-]/i', '', (string) $tenant) ?: 'default';
+    $mediaName = basename((string) $mediaName);
+    if ($mediaName === '' || strpos($mediaName, 'prod_') !== 0) {
+        return false;
+    }
+    $path = __DIR__ . '/assets/lojas/' . $tenant . '/' . $mediaName;
+    return is_file($path) ? @unlink($path) : false;
+}
+
+function pz_db_media_delete($tenant, $mediaName)
+{
+    $pdo = pz_pdo();
+    if (!$pdo) {
+        return null;
+    }
+    $tenant = preg_replace('/[^a-z0-9_-]/i', '', (string) $tenant) ?: 'default';
+    $mediaName = basename((string) $mediaName);
+    if ($mediaName === '' || !preg_match('/^prod_[a-zA-Z0-9._-]+\.(jpg|jpeg|png|webp|gif)$/i', $mediaName)) {
+        return false;
+    }
+    try {
+        $stmt = $pdo->prepare('DELETE FROM pz_media_store WHERE tenant_slug = ? AND media_name = ?');
+        return $stmt->execute([$tenant, $mediaName]);
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+function pz_db_media_delete_ref($ref, $tenantPadrao = 'default')
+{
+    $p = pz_media_parse_ref($ref, $tenantPadrao);
+    if (!$p || strpos((string) $p['file'], 'prod_') !== 0) {
+        return false;
+    }
+    pz_media_delete_disk($p['tenant'], $p['file']);
+    return pz_db_media_delete($p['tenant'], $p['file']);
 }
 
 function pz_db_media_read($tenant, $mediaName)

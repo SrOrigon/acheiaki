@@ -620,7 +620,7 @@ async function iniciarAdmin() {
     }
 
     // --- GLOBAL SCOPE FUNCTIONS ---
-    async function enviarFotoServidor(dataUrl) {
+    async function enviarFotoServidor(dataUrl, imagemAnterior) {
         const saveUrl = (typeof TENANT !== 'undefined' && TENANT.apiUrl)
             ? TENANT.apiUrl('upload_produto_imagem.php')
             : 'upload_produto_imagem.php';
@@ -630,7 +630,8 @@ async function iniciarAdmin() {
             body: JSON.stringify({
                 auth: { user: credenciaisAtuais.user, pass: credenciaisAtuais.pass },
                 tenant: tenantAtual,
-                imagem: dataUrl
+                imagem: dataUrl,
+                imagem_anterior: imagemAnterior || ''
             })
         });
         const result = await res.json().catch(() => ({}));
@@ -655,7 +656,7 @@ async function iniciarAdmin() {
             img.onload = async function () {
                 const canvas = document.createElement('canvas');
                 const ctx2 = canvas.getContext('2d');
-                const MAX_WIDTH = 800;
+                const MAX_WIDTH = 720;
                 let width = img.width;
                 let height = img.height;
                 if (width > MAX_WIDTH) {
@@ -665,15 +666,10 @@ async function iniciarAdmin() {
                 canvas.width = width;
                 canvas.height = height;
                 ctx2.drawImage(img, 0, 0, width, height);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                const imagemAnterior = (dadosLocais[cat][index] && dadosLocais[cat][index].imagem) || '';
                 try {
-                    let urlFinal = dataUrl;
-                    try {
-                        urlFinal = await enviarFotoServidor(dataUrl);
-                    } catch (upErr) {
-                        console.warn('Upload servidor falhou, usando imagem embutida', upErr);
-                        showToast('Foto enviada no modo alternativo. Toque em Salvar no topo.', 'warning');
-                    }
+                    const urlFinal = await enviarFotoServidor(dataUrl, imagemAnterior);
                     dadosLocais[cat][index].imagem = urlFinal;
                     salvarAlteracoesNoNavegador();
                     gravarEstadoAdminUi();
@@ -746,7 +742,7 @@ async function iniciarAdmin() {
             dadosLocais[cat].splice(index, 1);
             salvarAlteracoesNoNavegador();
             renderizarEditor();
-            showToast('Item removido com sucesso!', 'success');
+            showToast('Item removido. Toque em Salvar para liberar a foto antiga no servidor.', 'success');
         }
     };
 
@@ -814,7 +810,10 @@ async function iniciarAdmin() {
                 return;
             }
             if (payloadStr.indexOf('data:image') !== -1) {
-                showToast('Há foto ainda em modo alternativo. Prefira “Enviar foto”; você pode salvar assim mesmo se precisar.', 'warning');
+                showToast('Há foto que não foi para o servidor. Use "Enviar foto" em cada prato antes de Salvar.', 'error');
+                btnGerarArquivo.disabled = false;
+                btnGerarArquivo.innerHTML = '<i class="fa-solid fa-save"></i> Salvar';
+                return;
             }
 
             const payload = {

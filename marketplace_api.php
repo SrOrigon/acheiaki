@@ -6,6 +6,7 @@
  * - Recebe avaliações pós-pedido para alimentar a disputa territorial
  */
 require_once __DIR__ . '/tenant_init.php';
+require_once __DIR__ . '/saas_lib.php';
 require_once __DIR__ . '/territorio_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -26,6 +27,12 @@ if (!is_array($body)) {
 }
 
 $acao = (string) ($_GET['action'] ?? $body['action'] ?? 'listar_lojas');
+
+if (!pedidozap_limite_requisicao('marketplace_' . $acao, 120, 60)) {
+    http_response_code(429);
+    echo json_encode(['success' => false, 'message' => 'Muitas consultas. Aguarde um momento.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 if ($acao === 'listar_lojas') {
     $cidadeFiltro = pz_territorio_norm($_GET['cidade'] ?? $body['cidade'] ?? '');

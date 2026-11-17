@@ -1019,6 +1019,36 @@ function pedidozap_validar_token($user, $token)
     return hash_equals(pedidozap_digital_credencial('lojista'), (string) ($payload['d'] ?? '')) ? 'lojista' : false;
 }
 
+/**
+ * Limite genérico por IP + escopo (protege APIs públicas contra abuso).
+ * Retorna false quando o limite foi atingido.
+ */
+function pedidozap_limite_requisicao($escopo, $maximo = 80, $janela = 60, $registrar = true)
+{
+    $escopo = preg_replace('/[^a-z0-9._-]/i', '_', (string) $escopo);
+    if ($escopo === '') {
+        $escopo = 'api';
+    }
+    $dir = __DIR__ . '/data/ratelimit';
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'desconhecido';
+    $tenant = class_exists('Database') ? Database::getTenant() : 'default';
+    $path = $dir . '/' . sha1($ip . '|' . $escopo . '|' . $tenant) . '.json';
+    $agora = time();
+
+    $data = is_file($path) ? json_decode(file_get_contents($path) ?: '', true) : null;
+    if (!is_array($data) || ($data['inicio'] ?? 0) < $agora - $janela) {
+        $data = ['inicio' => $agora, 'hits' => 0];
+    }
+    if ($registrar) {
+        $data['hits']++;
+        file_put_contents($path, json_encode($data), LOCK_EX);
+    }
+    return (int) ($data['hits'] ?? 0) <= (int) $maximo;
+}
+
 function pedidozap_limite_login($registrarFalha = false, $limpar = false)
 {
     $dir = __DIR__ . '/data/ratelimit';

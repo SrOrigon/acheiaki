@@ -56,13 +56,16 @@ function pedidozap_integracoes_publicas()
     $cfg = pedidozap_integracoes_config();
     $temChaveGoogle = trim((string) ($cfg['google_maps_api_key'] ?? '')) !== '';
     $temChaveIa = trim((string) ($cfg['ia_api_key'] ?? '')) !== '';
+    $providerIa = $cfg['ia_provider'] ?? 'local';
+    $geminiAtivo = $providerIa === 'gemini' && $temChaveIa;
     return [
         'google_maps_configurado' => $temChaveGoogle,
         'google_maps_habilitado' => $temChaveGoogle && (!empty($cfg['google_maps_habilitado']) || $temChaveGoogle),
         'google_oauth_client_id' => trim((string) ($cfg['google_oauth_client_id'] ?? '')),
         'cnpj_habilitado' => !empty($cfg['cnpj_habilitado']),
-        'ia_provider' => $cfg['ia_provider'] ?? 'local',
+        'ia_provider' => $providerIa,
         'ia_api_configurado' => $temChaveIa,
+        'gemini_configurado' => $geminiAtivo,
     ];
 }
 

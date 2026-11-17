@@ -46,19 +46,18 @@ if ($bytes === false || strlen($bytes) < 32) {
     exit;
 }
 
-if (strlen($bytes) > 6 * 1024 * 1024) {
+if (strlen($bytes) > 4 * 1024 * 1024) {
     http_response_code(413);
-    echo json_encode(['success' => false, 'message' => 'Imagem muito grande. Tente uma foto menor.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'message' => 'Imagem muito grande. Use uma foto menor (máx. 4 MB).'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// Compacta e redimensiona via GD antes de gravar no PostgreSQL (economiza disco e rede)
 if ($ext !== 'gif' && function_exists('imagecreatefromstring') && function_exists('imagesx')) {
     $img = @imagecreatefromstring($bytes);
     if ($img !== false) {
         $w = imagesx($img);
         $h = imagesy($img);
-        $maxDim = 960;
+        $maxDim = 720;
         $alvo = $img;
         if ($w > $maxDim || $h > $maxDim) {
             $escala = min($maxDim / $w, $maxDim / $h);
@@ -79,10 +78,10 @@ if ($ext !== 'gif' && function_exists('imagecreatefromstring') && function_exist
         if (function_exists('imagewebp')) {
             imagealphablending($alvo, true);
             imagesavealpha($alvo, true);
-            $okComp = @imagewebp($alvo, null, 80);
+            $okComp = @imagewebp($alvo, null, 78);
             $novoExt = 'webp';
         } elseif (function_exists('imagejpeg')) {
-            $okComp = @imagejpeg($alvo, null, 82);
+            $okComp = @imagejpeg($alvo, null, 80);
             $novoExt = 'jpg';
         }
         $compBytes = ob_get_clean();
@@ -95,31 +94,55 @@ if ($ext !== 'gif' && function_exists('imagecreatefromstring') && function_exist
 }
 
 $tenant = preg_replace('/[^a-z0-9_-]/i', '', (string) Database::getTenant()) ?: 'default';
-$dir = __DIR__ . '/assets/lojas/' . $tenant;
-if (!is_dir($dir)) {
-    @mkdir($dir, 0755, true);
+$imagemAnterior = trim((string) ($data['imagem_anterior'] ?? ''));
+
+$reusarNome = null;
+if ($imagemAnterior !== '' && function_exists('pz_media_nome_de_ref')) {
+    $cand = pz_media_nome_de_ref($imagemAnterior, $tenant);
+    if ($cand !== null && strpos($cand, 'prod_') === 0) {
+        $extAntigo = strtolower(pathinfo($cand, PATHINFO_EXTENSION));
+        if ($extAntigo === 'jpeg') {
+            $extAntigo = 'jpg';
+        }
+        if ($ext === $extAntigo) {
+            $reusarNome = $cand;
+        } elseif (function_exists('pz_db_media_delete_ref')) {
+            pz_db_media_delete_ref($imagemAnterior, $tenant);
+        }
+    } elseif (function_exists('pz_db_media_delete_ref')) {
+        pz_db_media_delete_ref($imagemAnterior, $tenant);
+    }
 }
 
-$nome = 'prod_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-$caminho = $dir . '/' . $nome;
+$nome = $reusarNome ?: ('prod_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext);
 
-$salvouDisco = @file_put_contents($caminho, $bytes) !== false;
 $mimeMap = ['jpg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'gif' => 'image/gif'];
 $mime = $mimeMap[$ext] ?? 'image/jpeg';
 $salvouSql = function_exists('pz_db_media_save') ? pz_db_media_save($tenant, $nome, $mime, $bytes) : null;
 
-if (!$salvouDisco && !$salvouSql) {
+$salvouDisco = false;
+$espelharDisco = !(function_exists('pz_runtime_railway') && pz_runtime_railway()) || $salvouSql !== true;
+if ($espelharDisco) {
+    $dir = __DIR__ . '/assets/lojas/' . $tenant;
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
+    $caminho = $dir . '/' . $nome;
+    $salvouDisco = @file_put_contents($caminho, $bytes) !== false;
+}
+
+if ($salvouSql !== true && !$salvouDisco) {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Falha ao gravar a imagem no servidor.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// Quando SQL está ativo (ex.: Railway), serve via media.php com fallback garantido pós-redeploy
 $path = ($salvouSql === true)
     ? ('media.php?t=' . rawurlencode($tenant) . '&f=' . rawurlencode($nome))
     : ('assets/lojas/' . $tenant . '/' . $nome);
+
 echo json_encode([
     'success' => true,
     'url' => $path,
-    'message' => 'Imagem salva.',
+    'message' => 'Foto do produto atualizada (uma foto por item).',
 ], JSON_UNESCAPED_UNICODE);

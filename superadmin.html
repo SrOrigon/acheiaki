@@ -125,7 +125,7 @@
         </section>
         <section class="card">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-                <h2 style="margin:0;">Banco de Dados Relacional (Railway MySQL / PostgreSQL)</h2>
+                <h2 style="margin:0;">Banco oficial — PostgreSQL no Railway</h2>
                 <a href="marketplace.html" target="_blank" class="btn" style="text-decoration:none;background:#071c34;border:1px solid #00d4ff;">Abrir Marketplace AcheIAki</a>
             </div>
             <p style="font-size:0.92rem;color:#4b5563;">No <strong>Railway</strong>, ao adicionar um banco MySQL ou PostgreSQL ao projeto, o sistema detecta automaticamente as variáveis <code>MYSQL_URL</code> / <code>DATABASE_URL</code> sem precisar digitar senha aqui. Você também pode configurar manualmente abaixo.</p>
@@ -133,8 +133,8 @@
                 <div>
                     <label for="db-driver">Banco</label>
                     <select id="db-driver">
-                        <option value="mysql">MySQL / MariaDB (Hostinger)</option>
-                        <option value="pgsql">PostgreSQL (VPS / EduHub)</option>
+                        <option value="pgsql">PostgreSQL (recomendado — produção)</option>
+                        <option value="mysql">MySQL / MariaDB (legado)</option>
                     </select>
                 </div>
                 <div><label for="db-host">Host</label><input id="db-host" value="localhost"></div>
@@ -145,7 +145,7 @@
             </div>
             <label style="display:flex;align-items:center;gap:8px;margin-top:10px;">
                 <input id="db-enabled" type="checkbox" style="width:auto;">
-                <span>Ativar Banco SQL (desmarcado = mantém armazenamento JSON local)</span>
+                <span>Ativar Banco SQL (em produção Railway use PostgreSQL + DATABASE_URL; JSON em data/ é só para testes locais)</span>
             </label>
             <p id="db-status" style="font-size:0.9rem;color:#374151;"></p>
             <div class="acoes">

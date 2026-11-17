@@ -21,7 +21,7 @@
             if (pathMatch && pathMatch[1]) return sanitizeTenantSlug(pathMatch[1]);
 
             const host = (global.location.hostname || '').toLowerCase();
-            const plataforma = host.endsWith('.hostingersite.com') || host.endsWith('.hostinger.com');
+            const plataforma = host.endsWith('.up.railway.app') || host.endsWith('.railway.app');
             if (plataforma) {
                 const falso = sanitizeTenantSlug(host.split('.')[0]);
                 const guardado = global.sessionStorage.getItem('pedidozap_tenant_slug');
@@ -32,7 +32,7 @@
         }
 
         const hostAtual = (global.location.hostname || '').toLowerCase();
-        const naPlataforma = hostAtual.endsWith('.hostingersite.com') || hostAtual.endsWith('.hostinger.com');
+        const naPlataforma = hostAtual.endsWith('.up.railway.app') || hostAtual.endsWith('.railway.app');
         if (naPlataforma) return 'default';
 
         const stored = global.sessionStorage.getItem('pedidozap_tenant_slug');

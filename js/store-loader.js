@@ -204,7 +204,7 @@
         }
 
         const hostLoja = (global.location.hostname || '').toLowerCase();
-        const hospedagemTemporaria = hostLoja.endsWith('.hostingersite.com') || hostLoja.endsWith('.hostinger.com');
+        const hospedagemTemporaria = hostLoja.endsWith('.up.railway.app') || hostLoja.endsWith('.railway.app');
         if (data.tenant && slug !== 'default' && data.tenant !== slug && !(hospedagemTemporaria && data.tenant === 'default')) {
             throw new Error('Resposta da API não corresponde ao estabelecimento solicitado.');
         }

@@ -5,7 +5,7 @@
     var scripts = ['js/ajuda-loja.js', 'js/preloaders.js', 'js/script.js', 'js/vitrine-agente.js'];
     var opts = { fallbackStatic: true, showLoading: true };
     var host = (location.hostname || '').toLowerCase();
-    if (host.endsWith('.hostingersite.com') || host.endsWith('.hostinger.com') || host.endsWith('.up.railway.app') || host.endsWith('.railway.app')) {
+    if (host.endsWith('.up.railway.app') || host.endsWith('.railway.app')) {
         opts.fallbackStatic = false;
     }
 

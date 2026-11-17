@@ -2,10 +2,9 @@
  * Service Worker leve AcheIAki (PWA)
  * Estratégia Network-First para páginas/APIs (dados sempre frescos) e Cache-First para ícones/fontes estáticas.
  */
-const CACHE_NAME = 'acheiaki-app-v1';
+const CACHE_NAME = 'acheiaki-app-v2';
 const STATIC_ASSETS = [
-  'assets/images/acheiaki-icon.jpg',
-  'assets/images/acheiaki-logo.jpg',
+  'assets/images/placeholder-logo.svg',
   'css/acheiaki-design.css?v=1'
 ];
 

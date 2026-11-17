@@ -15,6 +15,12 @@
       "sizes": "512x512",
       "type": "image/jpeg",
       "purpose": "any maskable"
+    },
+    {
+      "src": "assets/images/placeholder-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }

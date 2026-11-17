@@ -58,7 +58,10 @@ try {
     if (!empty($data['reset'])) {
         $reset = (string) $data['reset'];
         if ($reset === 'cardapio' || $reset === 'tudo') {
-            Database::write('cardapio.json', Database::emptyCardapioStructure());
+            $cardapioAntigoReset = Database::readStrict('cardapio.json');
+            $vazio = Database::emptyCardapioStructure();
+            pedidozap_sincronizar_midias_cardapio($tenant, is_array($cardapioAntigoReset) ? $cardapioAntigoReset : [], $vazio);
+            Database::write('cardapio.json', $vazio);
         }
         if ($reset === 'pedidos' || $reset === 'tudo') {
             Database::write('pedidos.json', []);
@@ -80,7 +83,9 @@ try {
         if (isset($data['config']) && is_array($data['config'])) {
             $configNorm = pedidozap_normalizar_config($data['config'], $tenant);
         }
+        $cardapioAntigo = Database::readStrict('cardapio.json');
         $cardapio = pedidozap_limpar_cardapio_para_salvar($data['cardapio'], $configNorm);
+        pedidozap_sincronizar_midias_cardapio($tenant, is_array($cardapioAntigo) ? $cardapioAntigo : [], $cardapio);
         if (!Database::write('cardapio.json', $cardapio)) {
             $success = false;
             $messages[] = 'Erro ao salvar cardapio.json do estabelecimento.';
@@ -91,6 +96,7 @@ try {
         $config = pedidozap_normalizar_config($data['config'], $tenant);
         $config['VERSION'] = $version;
         pedidozap_tentar_geocode_loja($config);
+        $config = pedidozap_config_para_sql($config);
 
         if (!Database::write('config.json', $config)) {
             $success = false;
@@ -98,7 +104,11 @@ try {
         }
     }
 
-    if ($tenant === 'default' && empty($data['reset'])) {
+    $gerarJsLegado = $tenant === 'default' && empty($data['reset'])
+        && !(function_exists('pz_db_sql_modo_ativo') && pz_db_sql_modo_ativo())
+        && !(function_exists('pz_runtime_railway') && pz_runtime_railway());
+
+    if ($gerarJsLegado) {
         if (isset($data['cardapio'])) {
             $cardapioSalvo = Database::readStrict('cardapio.json');
             $cardapioContent = "window.CARDAPIO_DADOS = " . json_encode($cardapioSalvo, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . ";";

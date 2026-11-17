@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AcheIAki — Produção no Railway</title>
+    <link rel="stylesheet" href="css/acheiaki-design.css">
+    <style>
+        body { max-width: 720px; margin: 0 auto; padding: 24px 20px 48px; font-family: system-ui, sans-serif; line-height: 1.55; color: #0f172a; background: #f7f6f2; }
+        h1 { font-size: 1.5rem; margin-bottom: 8px; }
+        .aviso { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 14px 16px; margin: 16px 0 24px; font-size: 0.95rem; }
+        .passo { background: #fff; border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+        .passo h2 { font-size: 1.05rem; margin: 0 0 8px; display: flex; align-items: center; gap: 10px; }
+        .passo input[type="checkbox"] { width: 20px; height: 20px; accent-color: #f97136; }
+        .passo p { margin: 8px 0; color: #475569; font-size: 0.92rem; }
+        .passo ul { margin: 8px 0; padding-left: 1.2rem; color: #475569; font-size: 0.9rem; }
+        .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+        a.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 0.9rem; }
+        a.btn-prim { background: #f97136; color: #fff; }
+        a.btn-sec { background: #e2e8f0; color: #0f172a; }
+        #url-site { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; margin-top: 8px; font-size: 1rem; box-sizing: border-box; }
+        #progresso { font-weight: 800; margin-top: 20px; color: #166534; }
+        code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.88rem; }
+    </style>
+</head>
+<body>
+    <h1>Produção — Railway + PostgreSQL</h1>
+    <p>Fluxo oficial: <strong>Railway</strong> + Dockerfile + <strong>PostgreSQL</strong> (5 GB no volume). Dados das lojas só no banco.</p>
+
+    <div class="aviso">
+        Cole a URL pública do serviço Railway (ex.: <code>https://acheiaki-production.up.railway.app</code>). Domínio customizado pode vir depois em <strong>Settings → Networking → Custom Domain</strong>.
+    </div>
+
+    <label for="url-site"><strong>URL Railway do AcheIAki</strong></label>
+    <input type="url" id="url-site" value="https://acheiaki-production.up.railway.app" placeholder="https://seu-projeto.up.railway.app" autocomplete="url">
+
+    <p id="progresso">Marcados: 0 / 6</p>
+
+    <div class="passo">
+        <h2><input type="checkbox" id="c1"> 1. Railway — serviço + banco + variáveis</h2>
+        <ul>
+            <li>Projeto com deploy via Dockerfile (health: <code>/health.php</code>).</li>
+            <li>Serviço <strong>PostgreSQL</strong> ligado (Railway injeta <code>DATABASE_URL</code>).</li>
+            <li>Em Variables do serviço: <code>ACHEIAKI_MASTER_USER</code>, <code>ACHEIAKI_MASTER_PASS</code>, <code>ACHEIAKI_APP_SECRET</code> (32+ caracteres).</li>
+            <li>Opcional: <code>ACHEIAKI_MP_ACCESS_TOKEN</code>, <code>ACHEIAKI_GOOGLE_MAPS_KEY</code>, <code>ACHEIAKI_IA_API_KEY</code>.</li>
+        </ul>
+        <div class="btns">
+            <a class="btn btn-prim" href="https://railway.app/dashboard" target="_blank" rel="noopener">Abrir Railway Dashboard</a>
+            <a class="btn btn-sec" href="https://docs.railway.com/guides/mysql" target="_blank" rel="noopener">Doc MySQL Railway</a>
+        </div>
+    </div>
+
+    <div class="passo">
+        <h2><input type="checkbox" id="c2"> 2. Testar deploy</h2>
+        <p><code>ready_for_traffic: true</code> é o ideal. Avisos de SQL ou ícone podem ser resolvidos depois.</p>
+        <div class="btns">
+            <a class="btn btn-prim" id="lnk-health" href="#" target="_blank" rel="noopener">health.php</a>
+            <a class="btn btn-sec" id="lnk-marketplace" href="#" target="_blank" rel="noopener">Marketplace</a>
+        </div>
+    </div>
+
+    <div class="passo">
+        <h2><input type="checkbox" id="c3"> 3. SuperAdmin</h2>
+        <p>Troque senha master, confira banco conectado, domínio futuro, integrações.</p>
+        <div class="btns">
+            <a class="btn btn-prim" id="lnk-superadmin" href="#" target="_blank" rel="noopener">superadmin.html</a>
+        </div>
+    </div>
+
+    <div class="passo">
+        <h2><input type="checkbox" id="c4"> 4. Mercado Pago (mensalidade)</h2>
+        <p>Webhook: <code id="webhook-url">(preencha a URL acima)</code></p>
+        <div class="btns">
+            <a class="btn btn-prim" href="https://www.mercadopago.com.br/developers/panel/app" target="_blank" rel="noopener">Painel MP Dev</a>
+        </div>
+    </div>
+
+    <div class="passo">
+        <h2><input type="checkbox" id="c5"> 5. Google Maps (opcional)</h2>
+        <div class="btns">
+            <a class="btn btn-prim" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Credenciais Google</a>
+        </div>
+    </div>
+
+    <div class="passo">
+        <h2><input type="checkbox" id="c6"> 6. Loja piloto + pedido teste</h2>
+        <div class="btns">
+            <a class="btn btn-prim" id="lnk-cadastro" href="#" target="_blank" rel="noopener">cadastro.html</a>
+            <a class="btn btn-sec" id="lnk-admin" href="#" target="_blank" rel="noopener">admin.html</a>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const urlInput = document.getElementById('url-site');
+            const stored = localStorage.getItem('aki_url_producao');
+            if (stored) urlInput.value = stored;
+
+            function base() {
+                let u = (urlInput.value || '').trim().replace(/\/+$/, '');
+                if (!u) return '';
+                if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+                return u;
+            }
+
+            function atualizarLinks() {
+                const b = base();
+                localStorage.setItem('aki_url_producao', urlInput.value.trim());
+                const map = {
+                    'lnk-health': '/health.php',
+                    'lnk-marketplace': '/marketplace.html',
+                    'lnk-superadmin': '/superadmin.html',
+                    'lnk-cadastro': '/cadastro.html',
+                    'lnk-admin': '/admin.html'
+                };
+                Object.keys(map).forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (el) el.href = b ? b + map[id] : '#';
+                });
+                const wh = document.getElementById('webhook-url');
+                if (wh) wh.textContent = b ? b + '/mp_webhook.php' : '(preencha a URL acima)';
+            }
+
+            function atualizarProgresso() {
+                let n = 0;
+                for (let i = 1; i <= 6; i++) {
+                    if (document.getElementById('c' + i).checked) n++;
+                }
+                document.getElementById('progresso').textContent = 'Marcados: ' + n + ' / 6';
+            }
+
+            urlInput.addEventListener('input', atualizarLinks);
+            for (let i = 1; i <= 6; i++) {
+                const cb = document.getElementById('c' + i);
+                cb.addEventListener('change', function () {
+                    localStorage.setItem('aki_passo_' + i, this.checked ? '1' : '');
+                    atualizarProgresso();
+                });
+                if (localStorage.getItem('aki_passo_' + i) === '1') cb.checked = true;
+            }
+            atualizarLinks();
+            atualizarProgresso();
+        })();
+    </script>
+</body>
+</html>

@@ -74,7 +74,7 @@
     <main>
         <div class="aki-top-brand">
             <a href="marketplace.html" class="aki-top-brand-left">
-                <img src="assets/images/acheiaki-icon.jpg" alt="AcheIAki">
+                <img src="assets/images/acheiaki-icon.jpg" alt="AcheIAki" onerror="this.onerror=null;this.src='assets/images/placeholder-logo.svg'">
                 <div>
                     <div class="aki-top-word">Ache<span class="aki-ia">IA</span>ki</div>
                     <div class="aki-top-sub">Área da Empresa (CNPJ)</div>
@@ -145,6 +145,17 @@
                         <p>Cada cliente da sua cidade que entra no marketplace recebe recomendações inteligentes por preço, tempo de entrega e avaliações reais perto dele — sem leilão nem taxa.</p>
                     </div>
                 </div>
+            </div>
+
+            <div class="aki-engines-card" style="margin-top:0;">
+                <h2>Por que a loja fica com mais margem que em app de marketplace</h2>
+                <ul style="margin:10px 0 0;padding-left:1.15rem;color:#374151;font-size:0.92rem;">
+                    <li><strong>0% de comissão por pedido</strong> — o cliente pede no seu link; o dinheiro não passa por taxa de marketplace.</li>
+                    <li><strong>Cardápio + cozinha + motoboy + caixa</strong> no mesmo painel, sem outro sistema.</li>
+                    <li><strong>Uma foto por prato</strong>, painel em português simples e tutorial no primeiro acesso.</li>
+                    <li>Aparece no marketplace da região para quem busca perto — sem leilão de anúncio.</li>
+                </ul>
+                <p style="margin:10px 0 0;font-size:0.84rem;color:#6b7280;">O AcheIAki não substitui a frota de um app nacional. Ele é melhor onde o dono quer <strong>ficar com a margem</strong> e atender com a própria equipe.</p>
             </div>
 
             <div class="aki-garantia-box">
@@ -311,12 +322,21 @@
             <button type="submit" style="width:100%;min-height:54px;font-size:1.06rem;background:#e85d04;">Concluir cadastro e criar loja <i class="fa-solid fa-arrow-right"></i></button>
         </form>
         <section id="pronto" class="pronto" hidden>
-            <h2>Sua loja está pronta</h2>
+            <h2>Loja criada. Faça estes 4 passos hoje</h2>
             <p id="texto-pronto"></p>
-            <p><a id="link-cardapio" class="btn" href="#">Abrir meu cardápio</a></p>
-            <p><a id="link-tutorial" class="btn" href="#" style="background:#0d9488;margin-top:10px;">Ver tutorial de primeiros passos</a></p>
-            <p><a id="link-painel" class="link" href="#">Entrar no painel para cadastrar produtos e preços</a></p>
-            <p><a class="link" href="marketplace.html">Ver sua loja no Marketplace AcheIAki</a></p>
+            <ol style="margin:12px 0 18px;padding-left:1.2rem;color:#1f2937;line-height:1.55;">
+                <li><strong>Entrar no painel</strong> e salvar WhatsApp, horário e taxa de entrega.</li>
+                <li><strong>Cadastrar pelo menos 8 pratos</strong> — cada um com preço e <em>uma</em> foto.</li>
+                <li><strong>Fazer um pedido teste</strong> no cardápio e concluir no botão laranja “Ver pedidos”.</li>
+                <li><strong>Enviar o link da loja</strong> no WhatsApp da casa e na bio do Instagram.</li>
+            </ol>
+            <p style="display:flex;flex-wrap:wrap;gap:10px;">
+                <a id="link-painel" class="btn" href="#" style="margin-top:0;background:#e85d04;">Abrir o painel agora</a>
+                <a id="link-cardapio" class="btn" href="#" style="margin-top:0;background:#0b192c;">Ver meu cardápio</a>
+            </p>
+            <p><button type="button" id="btn-copiar-link-loja" class="btn" style="margin-top:8px;background:#0d9488;">Copiar link da loja</button></p>
+            <p><a id="link-tutorial" class="link" href="#">Ver tutorial de primeiros passos</a></p>
+            <p><a class="link" href="marketplace.html">Voltar ao marketplace</a></p>
         </section>
     </main>
     <script>
@@ -620,9 +640,20 @@
                 const pronto = document.getElementById('pronto');
                 pronto.hidden = false;
                 const quando = data.vencimento ? data.vencimento.split('-').reverse().join('/') : '';
-                document.getElementById('texto-pronto').textContent = 'Teste grátis até ' + quando + '. Guarde o usuário ' + data.login + '. A senha é a que você acabou de escolher.';
-                document.getElementById('link-cardapio').href = data.url_cardapio;
-                document.getElementById('link-painel').href = data.url_painel;
+                document.getElementById('texto-pronto').textContent = (quando ? ('Teste grátis até ' + quando + '. ') : '') + 'Usuário: ' + (data.login || '') + '. A senha é a que você acabou de criar — anote agora.';
+                document.getElementById('link-cardapio').href = data.url_cardapio || '#';
+                document.getElementById('link-painel').href = data.url_painel || '#';
+                const btnCopiar = document.getElementById('btn-copiar-link-loja');
+                if (btnCopiar && data.url_cardapio) {
+                    btnCopiar.onclick = function () {
+                        const abs = new URL(data.url_cardapio, window.location.href).href;
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(abs).then(function () {
+                                btnCopiar.textContent = 'Link copiado';
+                            });
+                        }
+                    };
+                }
                 if (data.url_tutorial) {
                     document.getElementById('link-tutorial').href = data.url_tutorial;
                 } else if (data.url_painel) {

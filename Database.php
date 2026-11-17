@@ -1,8 +1,7 @@
 <?php
 /**
  * Multi-tenant Database Handler — PedidoZap / Food Gestão
- * Opera nativamente em JSON atômico (LOCK_EX) e escala automaticamente para
- * MySQL/MariaDB (Hostinger) ou PostgreSQL via PDO quando habilitado em db_config.json.
+ * Produção: PostgreSQL (Railway) via PDO. JSON em data/ apenas para dev local sem SQL.
  */
 require_once __DIR__ . '/db_pdo.php';
 
@@ -63,9 +62,16 @@ class Database
         if (is_array($sqlRes)) {
             return $sqlRes;
         }
+        if (function_exists('pz_db_sql_modo_ativo') && pz_db_sql_modo_ativo()) {
+            return [];
+        }
 
+        return self::readFromDisk($filename);
+    }
+
+    private static function readFromDisk($filename)
+    {
         $path = self::resolvePath($filename);
-
         if (!file_exists($path)) {
             return [];
         }
@@ -92,14 +98,15 @@ class Database
     {
         $sqlOk = pz_db_kv_write(self::$tenant, $filename, $data);
         if ($sqlOk !== null) {
-            // Espelha em disco quando gravável para manter compatibilidade com assets legados
-            $path = self::resolvePath($filename);
-            $dir = dirname($path);
-            if (!is_dir($dir)) {
-                @mkdir($dir, 0755, true);
+            if (function_exists('pz_db_should_mirror_json_files') && pz_db_should_mirror_json_files()) {
+                $path = self::resolvePath($filename);
+                $dir = dirname($path);
+                if (!is_dir($dir)) {
+                    @mkdir($dir, 0755, true);
+                }
+                $json = json_encode($data, JSON_UNESCAPED_UNICODE);
+                @file_put_contents($path, $json, LOCK_EX);
             }
-            $json = json_encode($data, JSON_UNESCAPED_UNICODE);
-            @file_put_contents($path, $json, LOCK_EX);
             return (bool) $sqlOk;
         }
 
@@ -334,30 +341,27 @@ class Database
         if (is_array($sqlRes)) {
             return $sqlRes;
         }
-
-        $path = self::resolvePath($filename);
-        if (!file_exists($path)) {
+        if (function_exists('pz_db_sql_modo_ativo') && pz_db_sql_modo_ativo()) {
             return [];
         }
 
-        $fp = fopen($path, 'r');
-        if (!$fp) {
-            return [];
-        }
-
-        flock($fp, LOCK_SH);
-        $size = filesize($path);
-        $content = ($size !== false && $size > 0) ? fread($fp, $size) : '';
-        flock($fp, LOCK_UN);
-        fclose($fp);
-
-        $decoded = json_decode($content, true);
-        return is_array($decoded) ? $decoded : [];
+        return self::readFromDisk($filename);
     }
 
     public static function tenantDataExists($slug = null)
     {
         $slug = self::sanitizeTenant($slug ?? self::$tenant);
+        if (function_exists('pz_db_sql_modo_ativo') && pz_db_sql_modo_ativo()) {
+            $cfg = pz_db_kv_read($slug, 'config.json');
+            $menu = pz_db_kv_read($slug, 'cardapio.json');
+            if (is_array($cfg) && $cfg !== []) {
+                return true;
+            }
+            if (is_array($menu) && $menu !== []) {
+                return true;
+            }
+            return false;
+        }
         if (is_array(pz_db_kv_read($slug, 'config.json')) || is_array(pz_db_kv_read($slug, 'cardapio.json'))) {
             return true;
         }

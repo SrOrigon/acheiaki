@@ -94,6 +94,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (!pedidozap_limite_requisicao('save_order', 30, 60)) {
+    http_response_code(429);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Muitos pedidos em sequência. Aguarde um minuto e tente novamente.',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 $bruto = file_get_contents('php://input');
 if (strlen((string) $bruto) > 200000) {
     http_response_code(413);

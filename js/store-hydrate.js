@@ -362,7 +362,7 @@
             return;
         }
         const host = (global.location.hostname || '').toLowerCase();
-        const ehDemo = host.endsWith('.hostingersite.com') || host.endsWith('.hostinger.com');
+        const ehDemo = host.endsWith('.up.railway.app') || host.endsWith('.railway.app');
         if (!ehDemo) return;
         if (document.getElementById('pz-banner-demo')) return;
         const el = document.createElement('div');

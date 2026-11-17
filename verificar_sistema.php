@@ -3,6 +3,7 @@
  * Diagnóstico rápido (CLI ou navegador master). Não exponha em produção pública sem proteção.
  */
 require_once __DIR__ . '/Database.php';
+require_once __DIR__ . '/saas_lib.php';
 require_once __DIR__ . '/integracoes_lib.php';
 require_once __DIR__ . '/perfil_qualificado_lib.php';
 
@@ -23,6 +24,16 @@ $dataDir = __DIR__ . '/data';
 $checks['data_gravavel'] = ['ok' => is_dir($dataDir) && is_writable($dataDir)];
 
 $checks['integracoes'] = pedidozap_integracoes_publicas();
+$checks['master_config'] = ['ok' => pedidozap_ler_master() !== null, 'nota' => 'Defina ACHEIAKI_MASTER_* no .env ou master_auth.json'];
+$checks['app_secret'] = ['ok' => strlen(pedidozap_app_secret()) >= 32];
+$checks['brand_icon'] = [
+    'ok' => is_file(__DIR__ . '/assets/images/acheiaki-icon.jpg')
+        || is_file(__DIR__ . '/assets/images/acheiaki-icon.png'),
+    'nota' => 'Inclua assets/images/acheiaki-icon.jpg para PWA e redes sociais',
+];
+$checks['gd'] = ['ok' => extension_loaded('gd'), 'nota' => 'Recomendado para redimensionar fotos de produtos'];
+$checks['curl'] = ['ok' => function_exists('curl_init')];
+$checks['mbstring'] = ['ok' => extension_loaded('mbstring')];
 $checks['cnpj_validador'] = ['ok' => pedidozap_validar_cnpj('00000000000191')];
 
 $cnpjTeste = pedidozap_consultar_cnpj('00000000000191');

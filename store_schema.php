@@ -579,7 +579,78 @@ function pedidozap_limpar_cardapio_para_salvar(array $cardapio, array $config)
             $filtrado[$chave] = $lista;
         }
     }
+    foreach ($filtrado as $cat => &$lista) {
+        if (!is_array($lista)) {
+            continue;
+        }
+        foreach ($lista as $i => &$item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $img = trim((string) ($item['imagem'] ?? ''));
+            if ($img === '' || stripos($img, 'data:image') === 0) {
+                $item['imagem'] = 'assets/images/placeholder-logo.svg';
+            } elseif (strlen($img) > 500) {
+                $item['imagem'] = mb_substr($img, 0, 500);
+            }
+            unset($item['imagens'], $item['galeria'], $item['fotos']);
+        }
+        unset($item);
+    }
+    unset($lista);
     return $filtrado;
+}
+
+/** Tutorial e textos de ajuda vêm do PHP (store_schema); não duplicar no SQL. */
+function pedidozap_config_para_sql(array $config)
+{
+    $c = $config;
+    unset($c['TUTORIAL'], $c['AJUDA']);
+    return $c;
+}
+
+function pedidozap_cardapio_refs_imagem_produto(array $cardapio)
+{
+    $nomes = [];
+    foreach ($cardapio as $lista) {
+        if (!is_array($lista)) {
+            continue;
+        }
+        foreach ($lista as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $img = trim((string) ($item['imagem'] ?? ''));
+            if ($img === '' || stripos($img, 'data:image') === 0) {
+                continue;
+            }
+            if (!function_exists('pz_media_nome_de_ref')) {
+                continue;
+            }
+            $nome = pz_media_nome_de_ref($img);
+            if ($nome !== null && strpos($nome, 'prod_') === 0) {
+                $nomes[$nome] = true;
+            }
+        }
+    }
+    return $nomes;
+}
+
+/** Remove fotos de produto que saíram do cardápio (uma foto por item). */
+function pedidozap_sincronizar_midias_cardapio($tenant, array $cardapioAntigo, array $cardapioNovo)
+{
+    if (!function_exists('pz_db_media_delete') || !function_exists('pz_media_delete_disk')) {
+        return;
+    }
+    $tenant = preg_replace('/[^a-z0-9_-]/i', '', (string) $tenant) ?: 'default';
+    $antes = pedidozap_cardapio_refs_imagem_produto(is_array($cardapioAntigo) ? $cardapioAntigo : []);
+    $depois = pedidozap_cardapio_refs_imagem_produto(is_array($cardapioNovo) ? $cardapioNovo : []);
+    foreach ($antes as $nome => $_) {
+        if (!isset($depois[$nome])) {
+            pz_db_media_delete($tenant, $nome);
+            pz_media_delete_disk($tenant, $nome);
+        }
+    }
 }
 
 function pedidozap_nullable_float($value)

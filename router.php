@@ -16,7 +16,7 @@ header('Permissions-Policy: geolocation=(self), microphone=(self)');
 $bloqueados = [
     '#^/data(/|$)#i',
     '#^/\.#',
-    '#^/(router\.php|auth_config\.php|Dockerfile|Procfile|nixpacks\.toml|composer\.(json|lock))$#i',
+    '#^/(router\.php|auth_config\.php|verificar_sistema\.php|go_live_smoke\.php|Dockerfile|Procfile|nixpacks\.toml|composer\.(json|lock))$#i',
     '#\.(md|log|sql|bak|env)$#i',
 ];
 foreach ($bloqueados as $re) {

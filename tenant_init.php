@@ -24,9 +24,7 @@ function pedidozap_bootstrap_tenant(?array $jsonBody = null): void
 function pedidozap_host_de_plataforma($host)
 {
     $host = strtolower((string) $host);
-    return substr($host, -strlen('.hostingersite.com')) === '.hostingersite.com'
-        || substr($host, -strlen('.hostinger.com')) === '.hostinger.com'
-        || substr($host, -strlen('.up.railway.app')) === '.up.railway.app'
+    return substr($host, -strlen('.up.railway.app')) === '.up.railway.app'
         || substr($host, -strlen('.railway.app')) === '.railway.app';
 }
 

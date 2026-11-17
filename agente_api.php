@@ -128,6 +128,14 @@ $tomAgente = trim((string) ($agenteCfg['tom'] ?? 'profissional'));
 // MODO A — ATENDENTE VIRTUAL PÚBLICO NA VITRINE (index.html)
 // =====================================================================
 if ($action === 'vitrine_responder') {
+    if (!pedidozap_limite_requisicao('agente_vitrine', 40, 60)) {
+        http_response_code(429);
+        echo json_encode([
+            'success' => false,
+            'resposta' => 'Muitas perguntas em pouco tempo. Aguarde um instante e tente de novo.',
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     if (isset($agenteCfg['vitrine_ativo']) && !$agenteCfg['vitrine_ativo']) {
         echo json_encode([
             'success' => false,
