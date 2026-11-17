@@ -176,5 +176,59 @@ if ($acao === 'migrar_sql') {
     exit;
 }
 
+if ($acao === 'uso_banco') {
+    // Relatório leve (somente master) do que ocupa espaço no banco: prova que lá só há dados de clientes/lojas.
+    try {
+        $pdo = pz_pdo(true);
+        if (!$pdo) {
+            throw new RuntimeException('Banco SQL não está ativo (modo JSON local).');
+        }
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $tabelas = [];
+        $totalDados = 0;
+        $rotulos = [
+            'pz_compradores' => 'Contas de clientes (compradores)',
+            'pz_pedidos_mkt' => 'Pedidos do marketplace',
+            'pz_avaliacoes' => 'Avaliações',
+            'pz_kv_store' => 'Dados das lojas (cardápio, config, pedidos, clientes)',
+            'pz_media_store' => 'Fotos de produtos (compactadas)',
+            'pz_tenants_index' => 'Índice de lojas por região',
+        ];
+        foreach ($rotulos as $tab => $rotulo) {
+            $bytes = 0;
+            $linhas = 0;
+            try {
+                $linhas = (int) $pdo->query("SELECT COUNT(*) FROM {$tab}")->fetchColumn();
+                if ($driver === 'pgsql') {
+                    $bytes = (int) $pdo->query("SELECT pg_total_relation_size('{$tab}')")->fetchColumn();
+                } else {
+                    $st = $pdo->prepare('SELECT COALESCE(data_length + index_length, 0) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?');
+                    $st->execute([$tab]);
+                    $bytes = (int) $st->fetchColumn();
+                }
+            } catch (Throwable $e) {
+                // tabela ainda não criada
+            }
+            $totalDados += $bytes;
+            $tabelas[] = ['tabela' => $tab, 'rotulo' => $rotulo, 'linhas' => $linhas, 'bytes' => $bytes];
+        }
+        $bancoTotal = $totalDados;
+        if ($driver === 'pgsql') {
+            $bancoTotal = (int) $pdo->query('SELECT pg_database_size(current_database())')->fetchColumn();
+        }
+        echo json_encode([
+            'success' => true,
+            'driver' => $driver,
+            'bytes_dados_sistema' => $totalDados,
+            'bytes_banco_total' => $bancoTotal,
+            'tabelas' => $tabelas,
+        ], JSON_UNESCAPED_UNICODE);
+    } catch (Throwable $e) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    }
+    exit;
+}
+
 http_response_code(400);
 echo json_encode(['success' => false, 'message' => 'Ação desconhecida.'], JSON_UNESCAPED_UNICODE);

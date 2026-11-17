@@ -319,5 +319,37 @@
         });
     }
 
+    function formatarBytes(b) {
+        const n = Number(b) || 0;
+        if (n < 1024) return n + ' B';
+        if (n < 1024 * 1024) return (n / 1024).toFixed(1).replace('.', ',') + ' KB';
+        return (n / (1024 * 1024)).toFixed(2).replace('.', ',') + ' MB';
+    }
+
+    function carregarUsoBanco() {
+        const resumo = document.getElementById('uso-banco-resumo');
+        const corpo = document.getElementById('uso-banco-tabela');
+        if (!resumo || !corpo) return;
+        resumo.textContent = 'Carregando...';
+        api({ acao: 'uso_banco' }).then((data) => {
+            if (!data.success) {
+                resumo.textContent = data.message || 'Não foi possível ler o uso do banco.';
+                corpo.innerHTML = '';
+                return;
+            }
+            const sistema = Number(data.bytes_banco_total || 0) - Number(data.bytes_dados_sistema || 0);
+            resumo.innerHTML = 'Dados de clientes e lojas: <strong>' + formatarBytes(data.bytes_dados_sistema)
+                + '</strong> · Arquivos internos do próprio PostgreSQL (catálogo/WAL): <strong>' + formatarBytes(Math.max(0, sistema)) + '</strong>';
+            corpo.innerHTML = (data.tabelas || []).map((t) => '<tr><td>' + escapar(t.rotulo) + '</td><td>'
+                + Number(t.linhas || 0).toLocaleString('pt-BR') + '</td><td>' + formatarBytes(t.bytes) + '</td></tr>').join('');
+        }).catch(() => {
+            resumo.textContent = 'Sem conexão com o servidor.';
+        });
+    }
+
+    const btnUsoBanco = document.getElementById('btn-uso-banco');
+    if (btnUsoBanco) btnUsoBanco.addEventListener('click', carregarUsoBanco);
+
     carregar();
+    carregarUsoBanco();
 })();

@@ -153,6 +153,20 @@
                 <button id="btn-db-migrar" class="sec" type="button">Migrar JSONs atuais para o SQL</button>
             </div>
         </section>
+        <section class="card" id="card-uso-banco">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <h2 style="margin:0;">O que está guardado no banco (economia)</h2>
+                <button id="btn-uso-banco" class="sec" type="button">Atualizar</button>
+            </div>
+            <p style="font-size:0.9rem;color:#4b5563;margin:8px 0 12px;">O código do sistema fica no GitHub e na imagem do servidor — <strong>nunca no banco</strong>. O banco guarda apenas dados de clientes, lojas, pedidos e fotos compactadas.</p>
+            <div id="uso-banco-resumo" style="font-size:0.92rem;color:#14171f;margin-bottom:10px;">Carregando...</div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead><tr><th>O que é</th><th>Registros</th><th>Tamanho</th></tr></thead>
+                    <tbody id="uso-banco-tabela"></tbody>
+                </table>
+            </div>
+        </section>
         <section class="card">
             <label for="filtro-status">Filtrar</label>
             <select id="filtro-status">

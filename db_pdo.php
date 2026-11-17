@@ -243,8 +243,15 @@ function pz_pdo($throwOnError = false)
         $GLOBALS['__pz_pdo_cache'] = $pdo;
         if (!$schemaOk) {
             $schemaOk = true;
-            pz_db_executar_schema($pdo, $driver);
-            pz_db_auto_seed_se_vazio($pdo);
+            // O servidor PHP cria um processo por requisição: sem este marcador, o schema
+            // (6 CREATE TABLE + 2 ALTER + COUNT) rodaria em TODA requisição, gastando CPU e banco.
+            $marcador = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR
+                . 'aki_schema_v2_' . md5($driver . '|' . $host . '|' . $db) . '.ok';
+            if (!is_file($marcador)) {
+                pz_db_executar_schema($pdo, $driver);
+                pz_db_auto_seed_se_vazio($pdo);
+                @file_put_contents($marcador, date('c'));
+            }
         }
         return $pdo;
     } catch (Throwable $e) {
@@ -357,9 +364,10 @@ function pz_db_executar_schema(PDO $pdo, $driver = 'mysql')
     }
 
     // Migração incremental segura caso pz_compradores já exista sem cpf/perfil_completo
+    $ifNotExists = $isPg ? 'IF NOT EXISTS ' : '';
     $alterCols = [
-        "ALTER TABLE pz_compradores ADD COLUMN cpf VARCHAR(20) DEFAULT ''",
-        "ALTER TABLE pz_compradores ADD COLUMN perfil_completo " . ($isPg ? 'SMALLINT' : 'TINYINT') . " DEFAULT 1",
+        "ALTER TABLE pz_compradores ADD COLUMN {$ifNotExists}cpf VARCHAR(20) DEFAULT ''",
+        "ALTER TABLE pz_compradores ADD COLUMN {$ifNotExists}perfil_completo " . ($isPg ? 'SMALLINT' : 'TINYINT') . " DEFAULT 1",
     ];
     foreach ($alterCols as $altSql) {
         try {
