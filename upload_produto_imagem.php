@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/tenant_init.php';
 require_once __DIR__ . '/auth_lib.php';
+require_once __DIR__ . '/saas_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
 

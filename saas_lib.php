@@ -1076,6 +1076,11 @@ function pedidozap_limite_login($registrarFalha = false, $limpar = false)
     return $data['falhas'] < $maximo;
 }
 
+function pedidozap_listar_lojas()
+{
+    return pedidozap_resumo_lojas();
+}
+
 function pedidozap_resumo_lojas()
 {
     $registro = pedidozap_ler_registro();
