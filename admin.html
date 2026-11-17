@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b192c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Painel Administrativo</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/jpeg" href="assets/images/acheiaki-icon.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
+    <link rel="stylesheet" href="css/styles.css?v=20">
+    <link rel="stylesheet" href="css/admin-simples.css?v=2">
+    <link rel="stylesheet" href="css/ajuda-visivel.css?v=2">
+    <link rel="stylesheet" href="css/assistente-ia.css?v=2">
+    <link rel="stylesheet" href="css/gestao-food.css?v=2">
+    <link rel="stylesheet" href="css/perfil-qualificado.css?v=2">
+    <style>
+        body {
+            background-color: var(--aki-canvas, #f7f6f2);
+            color: var(--aki-ink, #14171f);
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .admin-container {
+            max-width: 1080px;
+            margin: 28px auto 64px;
+            padding: 0 20px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(247, 246, 242, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 14px 0;
+            border-bottom: 1px solid var(--aki-line, rgba(20, 23, 31, 0.09));
+        }
+
+        .admin-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--aki-line, rgba(20, 23, 31, 0.09));
+            box-shadow: var(--aki-shadow-sm, 0 1px 2px rgba(20,23,31,.04), 0 6px 16px -6px rgba(20,23,31,.07));
+            margin-bottom: 20px;
+        }
+
+        .form-group-admin {
+            margin-bottom: 15px;
+        }
+
+        .form-group-admin label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.94rem;
+            color: var(--aki-ink, #14171f);
+        }
+
+        .form-group-admin input,
+        .form-group-admin textarea,
+        .form-group-admin select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid rgba(20, 23, 31, 0.16);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            min-height: 48px;
+            background: #fff;
+        }
+        .form-group-admin input:focus,
+        .form-group-admin textarea:focus,
+        .form-group-admin select:focus {
+            outline: none;
+            border-color: #0284c7;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.14);
+        }
+
+        .aki-admin-bento {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 12px;
+        }
+        .aki-bento-btn {
+            background: #ffffff;
+            border: 1px solid var(--aki-line, rgba(20, 23, 31, 0.09));
+            border-radius: 14px;
+            padding: 16px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            min-height: 72px;
+            color: var(--aki-ink, #14171f);
+            font-family: inherit;
+            box-shadow: 0 1px 2px rgba(20, 23, 31, 0.04);
+        }
+        .aki-bento-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(20, 23, 31, 0.22);
+            box-shadow: 0 10px 22px -10px rgba(20, 23, 31, 0.14);
+        }
+        .aki-bento-ico {
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
+            display: grid;
+            place-items: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .aki-bento-btn strong { display: block; font-size: 0.98rem; font-weight: 700; line-height: 1.25; }
+        .aki-bento-btn small { display: block; font-size: 0.82rem; color: var(--aki-muted, #6b7280); margin-top: 2px; }
+
+        .item-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-row:last-child {
+            border-bottom: none;
+        }
+
+        .item-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: #eee;
+            border: 2px solid #e5e7eb;
+        }
+        .produto-foto-col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 140px;
+            flex-shrink: 0;
+        }
+        .btn-foto-produto {
+            width: 100%;
+            min-height: 52px;
+            font-size: 1rem;
+            font-weight: 800;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #0284c7;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-foto-produto:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+        #secao-pratos-precos {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 4px solid #f97316;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-mini {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        /* Otimização Mobile Admin */
+        @media (max-width: 768px) {
+            .admin-container { padding: 10px; margin-top: 10px; }
+            .admin-header { flex-direction: column; gap: 15px; text-align: center; }
+            .admin-header div { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+            .item-row { flex-direction: column; align-items: flex-start; position: relative; }
+            .item-img { width: 100%; height: 150px; }
+            .item-actions { width: 100%; justify-content: flex-end; margin-top: 10px; }
+            .btn-save-file { width: 100%; justify-content: center; padding: 12px; }
+        }
+
+        .btn-edit {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+
+        .btn-delete {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-save-file {
+            background: #10b981;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-save-file:hover {
+            background: #059669;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #f97136;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        pre {
+            background: #1e293b;
+            color: #a5b4fc;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.85em;
+        }
+
+        .admin-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 16px; }
+        .admin-tabs button { border: 1px solid rgba(20, 23, 31, 0.12); background: #fff; border-radius: 10px; padding: 11px 15px; cursor: pointer; font-weight: 600; font-size: 0.94rem; min-height: 46px; color: #374151; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+        .admin-tabs button:hover { background: #f7f6f2; color: #14171f; }
+        .admin-tabs button.ativo { background: #0b192c; color: #fff; border-color: #0b192c; font-weight: 700; box-shadow: 0 4px 12px rgba(11, 25, 44, 0.16); }
+        .admin-guia { background: #fffbeb; border: 2px solid #f59e0b; }
+        .admin-guia ol { margin: 8px 0 0; padding-left: 22px; font-size: 1.05rem; }
+        .admin-guia li { margin-bottom: 8px; }
+        .grade-admin { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 12px; }
+        .admin-tabs button { flex: 1 1 140px; }
+        #container-dias-fechado label { min-height: 48px; padding: 10px 14px !important; font-size: 1rem; }
+        /* Tablet (641px–1024px) */
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .admin-container { padding: 0 18px; }
+            .aki-admin-bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .admin-tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 4px;
+            }
+            .admin-tabs::-webkit-scrollbar { display: none; }
+            .admin-tabs button { flex: 0 0 auto; white-space: nowrap; }
+        }
+
+        /* Mobile App Shell (<= 640px) */
+        @media (max-width: 640px) {
+            .admin-container {
+                padding: 0 12px calc(32px + env(safe-area-inset-bottom));
+                margin-top: 0;
+            }
+            .admin-card { padding: 16px 14px; border-radius: 14px; margin-bottom: 14px; }
+            .admin-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                padding: 10px 0;
+                margin-bottom: 14px;
+            }
+            .admin-header h1 { font-size: 1.24rem; margin: 0; }
+            #admin-subtitulo-principal { display: none; }
+            .admin-header>div:last-child {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr auto;
+                gap: 8px;
+            }
+            .aki-admin-bento {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+            }
+            .aki-bento-btn {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 12px;
+                gap: 8px;
+                min-height: 92px;
+            }
+            .aki-bento-ico { width: 34px; height: 34px; font-size: 0.95rem; }
+            .aki-bento-btn strong { font-size: 0.88rem; }
+            .aki-bento-btn small { font-size: 0.74rem; }
+            .admin-tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                scroll-snap-type: x proximity;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding: 2px 0 6px;
+                gap: 6px;
+            }
+            .admin-tabs::-webkit-scrollbar { display: none; }
+            .admin-tabs button {
+                flex: 0 0 auto;
+                white-space: nowrap;
+                scroll-snap-align: start;
+                padding: 9px 13px;
+                min-height: 42px;
+                font-size: 0.88rem;
+            }
+
+            .item-row {
+                flex-wrap: wrap;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .produto-foto-col {
+                width: 84px;
+            }
+            .item-img {
+                width: 84px;
+                height: 84px;
+            }
+            .item-actions {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 6px;
+            }
+            .btn-save-file {
+                width: 100%;
+                justify-content: center;
+                min-height: 48px !important;
+                font-size: 0.95rem !important;
+            }
+        }
+    </style>
+</head>
+
+<body data-pagina="admin" data-modo-admin="facil">
+    <div class="admin-container">
+        <div class="admin-header">
+            <div>
+                <h1 id="admin-titulo-principal">Painel da sua loja</h1>
+                <p id="admin-subtitulo-principal">Toque na parte que quer mudar. Quando terminar, toque no botão verde Salvar lá em cima.</p>
+                <span id="fg-sessao-badge" class="fg-pill info" hidden style="margin-top:6px;"></span>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-gerar-arquivo" class="btn-save-file" style="font-size:1.1rem; min-height:56px;" title="Grava tudo que você mudou"><i class="fa-solid fa-save"></i> Salvar</button>
+                <button id="btn-logout" class="btn-save-file" style="background-color: #ef4444;" title="Sair do painel"><i
+                        class="fa-solid fa-right-from-bracket"></i> Sair</button>
+            </div>
+        </div>
+
+        <div class="admin-modo-bar" id="barra-modo-admin">
+            <label>
+                <input type="checkbox" id="chk-modo-completo">
+                Mostrar ferramentas avançadas (Estoque, Caixa/DRE, Equipe, Território)
+            </label>
+            <span class="dica-modo" id="dica-modo-admin">Modo fácil ativo: apenas o essencial grande na sua tela.</span>
+        </div>
+
+        <div class="admin-card" style="padding:20px 22px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+                <h2 style="margin:0;font-size:1.18rem;color:var(--aki-ink);">Acesso rápido</h2>
+                <span style="font-size:0.88rem;color:var(--aki-muted);">Atalhos para as tarefas diárias da loja</span>
+            </div>
+            <div class="aki-admin-bento">
+                <button type="button" onclick="document.getElementById('link-kanban').click()" class="aki-bento-btn">
+                    <span class="aki-bento-ico" style="background:#fff7ed;color:#c2410c;"><i class="fa-solid fa-inbox"></i></span>
+                    <span><strong>Pedidos recebidos</strong><small>Aceitar e acompanhar entrega</small></span>
+                </button>
+                <button type="button" onclick="var t=document.querySelector('#admin-tabs [data-tab=cardapio]');if(t){t.click();t.scrollIntoView({behavior:'smooth'});}" class="aki-bento-btn">
+                    <span class="aki-bento-ico" style="background:#eff6ff;color:#0284c7;"><i class="fa-solid fa-utensils"></i></span>
+                    <span><strong>Cardápio e preços</strong><small>Adicionar, editar ou pausar itens</small></span>
+                </button>
+                <button type="button" onclick="var t=document.querySelector('#admin-tabs [data-tab=contato]');if(t){t.click();t.scrollIntoView({behavior:'smooth'});}" class="aki-bento-btn">
+                    <span class="aki-bento-ico" style="background:#ecfdf5;color:#15803d;"><i class="fa-solid fa-location-dot"></i></span>
+                    <span><strong>WhatsApp e endereço</strong><small>Contato, horário e região</small></span>
+                </button>
+                <button type="button" onclick="document.getElementById('link-ver-site').click()" class="aki-bento-btn">
+                    <span class="aki-bento-ico" style="background:#f1efe9;color:#0b192c;"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
+                    <span><strong>Ver loja online</strong><small>Abrir vitrine como o cliente vê</small></span>
+                </button>
+            </div>
+        </div>
+
+        <div class="admin-card" id="card-divulgar-loja" style="background:#ffffff;border:1px solid rgba(11,25,44,0.12);border-left:5px solid #0284c7;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+                <div>
+                    <span style="display:inline-block;background:#e0f2fe;color:#0369a1;font-size:0.75rem;font-weight:700;padding:3px 9px;border-radius:999px;margin-bottom:6px;">KIT DIA 1 • TAXA ZERO</span>
+                    <h3 style="margin:0;color:#0b192c;font-size:1.15rem;"><i class="fa-solid fa-bullhorn" style="color:#0284c7;"></i> Conquistar e Converter Clientes Hoje</h3>
+                    <p style="margin:4px 0 0;color:#475569;font-size:0.92rem;">Puxe quem já compra de você (WhatsApp, balcão, sacola de entrega e Google Maps) para pedir direto sem pagar comissão:</p>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
+                <input type="text" id="aki-div-url" readonly style="flex:1;min-width:220px;font-weight:600;color:#0b192c;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;" value="Carregando link da loja...">
+                <button type="button" id="aki-div-btn-copiar" class="btn-save-file" style="width:auto;background:#0b192c;min-height:46px;"><i class="fa-regular fa-copy"></i> Copiar Link</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:10px;margin-top:10px;">
+                <button type="button" id="aki-div-btn-zap" class="btn-save-file" style="background:#15803d;justify-content:center;min-height:48px;"><i class="fa-brands fa-whatsapp"></i> Enviar no Status / Zap</button>
+                <button type="button" id="aki-div-btn-panfleto" class="btn-save-file" style="background:#0284c7;justify-content:center;min-height:48px;"><i class="fa-solid fa-print"></i> Panfleto Sacola / Balcão</button>
+                <button type="button" id="aki-div-btn-bio" class="btn-save-file" style="background:#334155;justify-content:center;min-height:48px;"><i class="fa-solid fa-map-pin"></i> Texto Bio / Google Maps</button>
+                <button type="button" id="aki-div-btn-cupom" class="btn-save-file" style="background:#b45309;justify-content:center;min-height:48px;"><i class="fa-solid fa-ticket"></i> Criar Cupom DIRETO10</button>
+            </div>
+            <p id="aki-div-feedback" hidden style="margin:10px 0 0;padding:8px 12px;border-radius:8px;background:#ecfdf5;color:#065f46;font-size:0.88rem;font-weight:600;"></p>
+        </div>
+
+        <div class="admin-card admin-card-assistente-home" id="card-assistente-resumo" data-painel-avancado="1">
+            <h3 style="margin-top:0;color:#0f766e;"><i class="fa-solid fa-robot"></i> Copiloto Food Gestão IA (Prioritário e Integrado)</h3>
+            <p style="margin:0 0 12px;color:#334155;">Nosso <strong>Agente IA</strong> agora opera diretamente sobre suas vendas reais, estoque/CMV, fichas técnicas, caixa, contas e pedidos — 100% local ou híbrido via SuperAdmin. Use a central abaixo em <strong>Visão Geral &amp; IA</strong> ou o botão <strong>Agente IA</strong> no canto da tela.</p>
+            <p style="margin:0;font-size:0.95rem;color:#64748b;">Quem precisa de ajustes finos de textos ou comanda personalizada: marque <strong>ferramentas avançadas</strong> acima (ou diga “painel completo” à assistente).</p>
+        </div>
+
+        <div class="regras-faceis" id="card-regras-faceis">
+            <h3><i class="fa-solid fa-hand-pointer"></i> Três coisas para não errar</h3>
+            <ul>
+                <li id="sim-regra-1">Sempre toque no botão verde <strong>Salvar</strong> no alto depois de mudar algo.</li>
+                <li id="sim-regra-2">Em dúvida? Use os 4 botões coloridos acima ou toque em <strong>Agente IA</strong>.</li>
+                <li id="sim-regra-3">Pedidos do cliente ficam no botão laranja <strong>Ver Pedidos</strong>.</li>
+            </ul>
+        </div>
+
+        <div class="admin-card" data-painel-avancado="1" style="display: flex; gap: 15px; flex-wrap: wrap; background: #fff7ed; border: 1px solid #fdba74;">
+            <div style="flex: 1; min-width: 200px;">
+                <h4 style="margin: 0 0 10px 0; color: #c2410c;"><i class="fa-solid fa-clipboard-list"></i> Pedidos</h4>
+                <p style="font-size: 1rem; color: #9a3412; margin-bottom: 15px;">Veja quem pediu e avance cada pedido com um toque.</p>
+                <a id="link-kanban" href="painel.html" class="btn-save-file" style="background-color: #f59e0b; justify-content: center; min-height:56px; font-size:1.1rem;">Ver pedidos</a>
+                <a id="link-cozinha" href="cozinha.html" target="_blank" class="btn-save-file" style="background-color: #b45309; justify-content: center; min-height:56px; font-size:1rem; margin-top:8px;">Tela da cozinha (após copiar o link no painel)</a>
+                <a id="link-atendimento" href="atendimento.html" class="btn-save-file" style="background-color: #0d9488; justify-content: center; min-height:56px; font-size:1rem; margin-top:8px;">Pedido manual (balcão)</a>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <h4 style="margin: 0 0 10px 0; color: #4338ca;"><i class="fa-solid fa-motorcycle"></i> Entregador</h4>
+                <p style="font-size: 1rem; color: #3730a3; margin-bottom: 15px;">Abra no celular de quem faz a entrega.</p>
+                <a id="link-motoboy" href="motoboy.html" class="btn-save-file" style="background-color: #6366f1; justify-content: center; min-height:56px; font-size:1.05rem;">Tela do entregador</a>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <h4 style="margin: 0 0 10px 0; color: #374151;"><i class="fa-solid fa-globe"></i> Como o cliente vê</h4>
+                <p style="font-size: 1rem; color: #4b5563; margin-bottom: 15px;">Abra o cardápio da sua loja ou o Marketplace da cidade.</p>
+                <a id="link-ver-site" href="index.html" target="_blank" class="btn-save-file" style="background-color: #4b5563; justify-content: center; min-height:52px; font-size:1.05rem;">Ver minha loja</a>
+                <a href="marketplace.html" target="_blank" class="btn-save-file" style="background-color: #071c34; border: 1px solid #00d4ff; justify-content: center; min-height:52px; font-size:1rem; margin-top:8px;"><i class="fa-solid fa-magnifying-glass-chart"></i> Abrir AcheIAki Marketplace</a>
+            </div>
+        </div>
+
+        <div class="admin-card admin-guia" id="card-guia-inicio" data-painel-avancado="1" style="border-left: 5px solid #0d9488; background: #f0fdfa;">
+            <h3 style="margin-top:0;" id="guia-titulo"><i class="fa-solid fa-route"></i> Primeiros passos</h3>
+            <p id="guia-subtitulo" style="color:#115e59;margin-top:0;"></p>
+            <p id="guia-progresso" style="font-weight:700;color:#0f766e;"></p>
+            <p style="margin:12px 0 0;">
+                <a id="link-tutorial-interativo" href="tutorial.html" class="btn-save-file" style="background:#0d9488;width:auto;min-height:52px;">Abrir tutorial passo a passo</a>
+            </p>
+            <ol id="guia-lista-resumo" style="margin-top:16px;line-height:1.6;"></ol>
+        </div>
+
+        <p class="dica-abas" id="admin-dica-abas">Escolha o que quer mexer abaixo (tudo simples e direto):</p>
+
+        <div class="admin-card" id="fg-vendedor-loc-alerta" hidden style="border:2px solid #dc2626;background:#fef2f2;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+                <div style="flex:1;min-width:240px;">
+                    <h3 style="margin:0 0 6px;color:#991b1b;"><i class="fa-solid fa-location-crosshairs"></i> Ativação Obrigatória: Localização da Empresa</h3>
+                    <p style="margin:0;color:#7f1d1d;font-size:0.95rem;">Para aparecer no Marketplace e receber entregas do algoritmo regional, toda empresa precisa estar com a localização GPS e cidade/bairro ativos.</p>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button type="button" id="fg-btn-ativar-gps-loja" class="btn-save-file" style="width:auto;background:#dc2626;min-height:48px;"><i class="fa-solid fa-location-dot"></i> Ativar localização GPS agora</button>
+                    <button type="button" id="fg-btn-ir-territorio" class="btn-save-file" style="width:auto;background:#1e293b;min-height:48px;">Configurar endereço</button>
+                </div>
+            </div>
+        </div>
+
+        <nav class="admin-tabs" id="admin-tabs" aria-label="Áreas do painel">
+            <button type="button" data-tab="visao-geral" class="ativo"><i class="fa-solid fa-chart-pie"></i> Resumo de hoje</button>
+            <button type="button" data-tab="cardapio"><i class="fa-solid fa-utensils"></i> Pratos e preços</button>
+            <button type="button" data-tab="identidade"><i class="fa-solid fa-store"></i> Nome e foto</button>
+            <button type="button" data-tab="contato"><i class="fa-solid fa-location-dot"></i> WhatsApp e endereço</button>
+            <button type="button" data-tab="frete"><i class="fa-solid fa-motorcycle"></i> Entrega e taxa</button>
+            <button type="button" data-tab="pagamentos"><i class="fa-regular fa-credit-card"></i> Pagamentos</button>
+            <button type="button" data-tab="conta"><i class="fa-regular fa-calendar-check"></i> Mensalidade</button>
+            <button type="button" data-tab="seguranca"><i class="fa-solid fa-key"></i> Senha e IA</button>
+            <button type="button" data-tab="territorio" data-modo="avancado">Território &amp; Melhorias</button>
+            <button type="button" data-tab="estoque" data-modo="avancado">Estoque &amp; CMV</button>
+            <button type="button" data-tab="financeiro" data-modo="avancado">Caixa &amp; DRE</button>
+            <button type="button" data-tab="clientes" data-modo="avancado">Clientes &amp; Cupons</button>
+            <button type="button" data-tab="entregadores" data-modo="avancado">Entregadores</button>
+            <button type="button" data-tab="equipe" data-modo="avancado">Equipe &amp; Backup</button>
+            <button type="button" data-tab="tutorial" data-modo="avancado">1. Comece aqui</button>
+            <button type="button" data-tab="relatorios" data-modo="avancado">O que vendeu</button>
+            <button type="button" data-tab="comandas" data-modo="avancado">Cozinha / comanda</button>
+            <button type="button" data-tab="atendimento" data-modo="avancado">Pedido no balcão</button>
+            <button type="button" data-tab="textos" data-modo="avancado">Textos do site</button>
+            <button type="button" data-tab="segmento" data-modo="avancado">Categorias</button>
+        </nav>
+
+        <div class="admin-card" data-painel="visao-geral">
+            <div id="fg-visao-geral-root">Carregando Copiloto Food Gestão IA...</div>
+        </div>
+
+        <div class="admin-card" data-painel="territorio" hidden>
+            <h3><i class="fa-solid fa-trophy"></i> Disputa de Território &amp; Melhoria Contínua dos Produtos</h3>
+            <p class="dica-secao">Compare sua loja com a média anônima da sua região, suba no ranking do Marketplace e veja exatamente o que melhorar nos seus pratos para vender mais — sem nenhum custo extra.</p>
+            <div id="fg-territorio-root">Carregando inteligência territorial...</div>
+        </div>
+
+        <div class="admin-card" data-painel="estoque" hidden>
+            <h3><i class="fa-solid fa-boxes-stacked"></i> Estoque, Fornecedores &amp; Ficha Técnica (CMV)</h3>
+            <div id="fg-estoque-root">Carregando estoque...</div>
+        </div>
+
+        <div class="admin-card" data-painel="financeiro" hidden>
+            <h3><i class="fa-solid fa-cash-register"></i> Caixa do Dia, Contas &amp; DRE Gerencial</h3>
+            <div id="fg-financeiro-root">Carregando financeiro...</div>
+        </div>
+
+        <div class="admin-card" data-painel="clientes" hidden>
+            <h3><i class="fa-solid fa-users"></i> Clientes, Fidelidade, Cupons &amp; Recuperação</h3>
+            <div id="fg-clientes-root">Carregando clientes e cupons...</div>
+        </div>
+
+        <div class="admin-card" data-painel="entregadores" hidden>
+            <h3><i class="fa-solid fa-motorcycle"></i> Gestão de Entregadores</h3>
+            <div id="fg-entregadores-root">Carregando entregadores...</div>
+        </div>
+
+        <div class="admin-card" data-painel="equipe" hidden>
+            <h3><i class="fa-solid fa-shield-halved"></i> Equipe (RBAC), Auditoria, Backup &amp; Checklist</h3>
+            <div id="fg-equipe-root">Carregando equipe e homologação...</div>
+        </div>
+
+        <div class="admin-card" data-painel="tutorial" hidden>
+            <p class="dica-secao" data-ajuda-aba="tutorial"></p>
+            <h3><i class="fa-solid fa-graduation-cap"></i> Tutorial para novos assinantes</h3>
+            <p style="font-size:1rem;color:#4b5563;">Personalize o guia de boas-vindas. Os passos aparecem no painel e na página interativa — nada fica fixo no código.</p>
+            <label style="display:block;margin-bottom:12px;"><input type="checkbox" id="chk-tutorial-ativo" checked> Mostrar guia no painel</label>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-tut-titulo">Título do guia</label><input type="text" id="input-tut-titulo"></div>
+                <div class="form-group-admin"><label for="input-tut-sub">Subtítulo</label><input type="text" id="input-tut-sub"></div>
+                <div class="form-group-admin"><label for="input-tut-btn-abrir">Botão “abrir tutorial”</label><input type="text" id="input-tut-btn-abrir"></div>
+                <div class="form-group-admin"><label for="input-tut-btn-ir">Botão “ir fazer agora”</label><input type="text" id="input-tut-btn-ir"></div>
+                <div class="form-group-admin"><label for="input-tut-btn-marca">Botão “marcar como feito”</label><input type="text" id="input-tut-btn-marca"></div>
+                <div class="form-group-admin"><label for="input-tut-btn-desmarca">Botão “desmarcar”</label><input type="text" id="input-tut-btn-desmarca"></div>
+                <div class="form-group-admin"><label for="input-tut-progresso">Texto do progresso (ex.: concluídos)</label><input type="text" id="input-tut-progresso"></div>
+                <div class="form-group-admin"><label for="input-tut-video-rotulo">Rótulo do vídeo</label><input type="text" id="input-tut-video-rotulo"></div>
+                <div class="form-group-admin"><label for="input-tut-video">Link do vídeo (YouTube, opcional)</label><input type="url" id="input-tut-video" placeholder="https://"></div>
+            </div>
+            <div class="form-group-admin">
+                <label for="input-tut-intro">Texto de introdução</label>
+                <textarea id="input-tut-intro" rows="3"></textarea>
+            </div>
+            <h4 style="margin-top:20px;">Passos do tutorial</h4>
+            <p style="font-size:0.95rem;color:#6b7280;">“Aba do painel” abre a seção certa. “Link” é para páginas como painel ou cardápio (deixe a aba em branco se usar link).</p>
+            <div id="lista-passos-tutorial"></div>
+            <button type="button" id="btn-add-passo-tutorial" class="btn-save-file" style="width:auto;background:#0d9488;margin-top:8px;">Adicionar passo</button>
+            <a id="link-preview-tutorial" href="tutorial.html" target="_blank" class="btn-save-file" style="width:auto;background:#374151;margin-top:12px;display:inline-flex;">Pré-visualizar tutorial</a>
+            <hr style="margin:28px 0;border:none;border-top:1px solid #e5e7eb;">
+            <h4>Boas-vindas no primeiro acesso</h4>
+            <label style="display:block;margin-bottom:12px;"><input type="checkbox" id="chk-primeiro-acesso" checked> Mostrar janela de boas-vindas na primeira vez</label>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-pa-titulo">Título da janela</label><input type="text" id="input-pa-titulo"></div>
+                <div class="form-group-admin"><label for="input-pa-btn-tut">Botão principal</label><input type="text" id="input-pa-btn-tut"></div>
+                <div class="form-group-admin"><label for="input-pa-btn-depois">Botão “agora não”</label><input type="text" id="input-pa-btn-depois"></div>
+            </div>
+            <div class="form-group-admin">
+                <label for="input-pa-texto">Texto da janela</label>
+                <textarea id="input-pa-texto" rows="3"></textarea>
+            </div>
+            <h4 style="margin-top:24px;">Linguagem fácil (painel inteiro)</h4>
+            <p style="font-size:0.95rem;color:#6b7280;">Tudo que o lojista lê no admin, no login e na tela de pedidos pode ser editado aqui.</p>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-sim-titulo">Título do painel</label><input type="text" id="input-sim-titulo"></div>
+                <div class="form-group-admin"><label for="input-sim-sub">Texto abaixo do título</label><input type="text" id="input-sim-sub"></div>
+                <div class="form-group-admin"><label for="input-sim-abas">Dica acima das abas</label><input type="text" id="input-sim-abas"></div>
+                <div class="form-group-admin"><label for="input-sim-regra1">Regra 1</label><input type="text" id="input-sim-regra1"></div>
+                <div class="form-group-admin"><label for="input-sim-regra2">Regra 2</label><input type="text" id="input-sim-regra2"></div>
+                <div class="form-group-admin"><label for="input-sim-regra3">Regra 3</label><input type="text" id="input-sim-regra3"></div>
+                <div class="form-group-admin"><label for="input-sim-lem-titulo">Título do lembrete verde (rodapé)</label><input type="text" id="input-sim-lem-titulo"></div>
+                <div class="form-group-admin"><label for="input-sim-lem-texto">Texto do lembrete verde</label><input type="text" id="input-sim-lem-texto"></div>
+                <div class="form-group-admin"><label for="input-sim-login-titulo">Título do login</label><input type="text" id="input-sim-login-titulo"></div>
+                <div class="form-group-admin"><label for="input-sim-login-btn">Botão do login</label><input type="text" id="input-sim-login-btn"></div>
+            </div>
+            <div class="form-group-admin"><label for="input-sim-login-dica">Texto de ajuda no login</label><textarea id="input-sim-login-dica" rows="2"></textarea></div>
+            <div class="form-group-admin"><label for="input-sim-painel">Introdução na tela de pedidos (texto amarelo no topo)</label><textarea id="input-sim-painel" rows="3"></textarea></div>
+            <h4 style="margin-top:28px;">Explicação de cada botão na tela de pedidos</h4>
+            <p style="font-size:0.95rem;color:#6b7280;">Cada linha = um botão grande que o lojista vê ao lado da explicação.</p>
+            <div id="lista-ajuda-painel-ferramentas"></div>
+            <h4 style="margin-top:20px;">Explicação de cada coluna de pedidos</h4>
+            <div id="lista-ajuda-painel-colunas"></div>
+            <h4 style="margin-top:20px;">Cozinha — botões do topo</h4>
+            <div id="lista-ajuda-cozinha-ferramentas"></div>
+            <div class="form-group-admin"><label for="input-ajuda-cozinha-fichas-tit">Cozinha — título “botões em cada pedido”</label><input type="text" id="input-ajuda-cozinha-fichas-tit"></div>
+            <h4 style="margin-top:16px;">Cozinha — botões Reimprimir e Pronto</h4>
+            <div id="lista-ajuda-cozinha-fichas"></div>
+            <h4 style="margin-top:24px;">Cardápio do cliente (como pedir)</h4>
+            <label style="display:block;margin-bottom:12px;"><input type="checkbox" id="chk-ajuda-cardapio-ativo" checked> Mostrar faixa “Como pedir” no site</label>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-ajuda-card-titulo">Título</label><input type="text" id="input-ajuda-card-titulo"></div>
+                <div class="form-group-admin"><label for="input-ajuda-card-carrinho">Texto da barra do carrinho</label><input type="text" id="input-ajuda-card-carrinho"></div>
+                <div class="form-group-admin"><label for="input-ajuda-card-modal-car">Texto dentro do carrinho</label><input type="text" id="input-ajuda-card-modal-car"></div>
+                <div class="form-group-admin"><label for="input-ajuda-card-modal-end">Texto no endereço</label><input type="text" id="input-ajuda-card-modal-end"></div>
+                <div class="form-group-admin"><label for="input-ajuda-card-frete">Texto sobre taxa de entrega</label><input type="text" id="input-ajuda-card-frete"></div>
+                <div class="form-group-admin"><label for="input-ajuda-card-final">Texto na confirmação final</label><input type="text" id="input-ajuda-card-final"></div>
+            </div>
+            <div class="form-group-admin"><label for="input-ajuda-card-intro">Introdução</label><textarea id="input-ajuda-card-intro" rows="2"></textarea></div>
+            <h4 style="margin-top:12px;">Passos “Como pedir” (4 blocos)</h4>
+            <div id="lista-ajuda-cardapio-passos"></div>
+            <h4 style="margin-top:20px;">Outras telas</h4>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-ajuda-cozinha-intro">Cozinha — texto de introdução</label><input type="text" id="input-ajuda-cozinha-intro"></div>
+                <div class="form-group-admin"><label for="input-ajuda-entregador-intro">Entregador — introdução</label><input type="text" id="input-ajuda-entregador-intro"></div>
+                <div class="form-group-admin"><label for="input-ajuda-atendimento-extra">Atendimento — faixa laranja extra</label><input type="text" id="input-ajuda-atendimento-extra"></div>
+            </div>
+        </div>
+
+        <div class="admin-card" data-painel="identidade" hidden style="border-left: 5px solid #6366f1;">
+            <div id="pz-perfil-admin" class="pz-perfil" style="margin-bottom:20px;"></div>
+            <h3><i class="fa-solid fa-store"></i> Nome e cores da loja</h3>
+            <p class="dica-secao" data-ajuda-aba="identidade"></p>
+            <p style="font-size: 1rem; color: #4b5563; margin-top: 0;">
+                Sua loja agora: <strong id="tenant-badge">default</strong> — só mude o código abaixo se o suporte pedir.
+            </p>
+            <div class="form-group-admin" style="margin-top:8px;">
+                <label for="input-tenant-slug">Código interno da loja (pode deixar como está)</label>
+                <input type="text" id="input-tenant-slug" readonly placeholder="default">
+            </div>
+            <div class="form-group-admin">
+                <label for="input-nome-loja">Nome que o cliente vê</label>
+                <input type="text" id="input-nome-loja" placeholder="Ex: Pensão da Maria">
+            </div>
+            <div class="grade-admin">
+                <div class="form-group-admin">
+                    <label for="input-cnpj">CNPJ da empresa (obrigatório para o Marketplace)</label>
+                    <input type="text" id="input-cnpj" placeholder="00.000.000/0001-00" maxlength="18">
+                </div>
+                <div class="form-group-admin">
+                    <label for="input-razao-social">Razão Social (opcional)</label>
+                    <input type="text" id="input-razao-social" placeholder="Razão Social conforme CNPJ">
+                </div>
+            </div>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-slogan">Frase curta da loja</label><input type="text" id="input-slogan"></div>
+                <div class="form-group-admin"><label for="input-seo">Uma frase sobre a loja</label><input type="text" id="input-seo"></div>
+                <div class="form-group-admin"><label for="input-keywords">Palavras de busca (opcional)</label><input type="text" id="input-keywords"></div>
+                <div class="form-group-admin"><label for="input-cor-primaria">Cor primária</label><input type="color" id="input-cor-primaria" value="#f97136"></div>
+                <div class="form-group-admin"><label for="input-cor-secundaria">Cor secundária</label><input type="color" id="input-cor-secundaria" value="#1f2937"></div>
+                <div class="form-group-admin"><label for="input-cor-fundo">Cor de fundo</label><input type="color" id="input-cor-fundo" value="#f9fafb"></div>
+            </div>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-logo">Foto da logo (envie do celular ou do computador)</label><input type="text" id="input-logo" placeholder="ou cole o link da imagem"><input type="file" id="file-logo" accept="image/*"></div>
+                <div class="form-group-admin"><label for="input-favicon">Ícone pequeno da aba (opcional)</label><input type="text" id="input-favicon"><input type="file" id="file-favicon" accept="image/*"></div>
+                <div class="form-group-admin"><label for="input-hero">Imagem de capa</label><input type="text" id="input-hero"><input type="file" id="file-hero" accept="image/*"></div>
+            </div>
+        </div>
+
+        <div class="admin-card" data-painel="textos" hidden>
+            <h3><i class="fa-solid fa-align-left"></i> Textos da página</h3>
+            <p class="dica-secao" data-ajuda-aba="textos"></p>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-hero-titulo">Título do banner</label><input type="text" id="input-hero-titulo"></div>
+                <div class="form-group-admin"><label for="input-hero-sub">Subtítulo do banner</label><input type="text" id="input-hero-sub"></div>
+                <div class="form-group-admin"><label for="input-sec-ofertas">Título das ofertas</label><input type="text" id="input-sec-ofertas"></div>
+                <div class="form-group-admin"><label for="input-sec-destaques">Título dos destaques</label><input type="text" id="input-sec-destaques"></div>
+                <div class="form-group-admin"><label for="input-sec-cardapio">Título do cardápio</label><input type="text" id="input-sec-cardapio"></div>
+                <div class="form-group-admin"><label for="input-sec-avaliacoes">Título das avaliações</label><input type="text" id="input-sec-avaliacoes"></div>
+            </div>
+            <h4>Banner do WhatsApp</h4>
+            <label><input type="checkbox" id="chk-banner-wpp"> Ativar banner</label>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-banner-titulo">Título</label><input type="text" id="input-banner-titulo"></div>
+                <div class="form-group-admin"><label for="input-banner-botao">Texto do botão</label><input type="text" id="input-banner-botao"></div>
+            </div>
+            <div class="form-group-admin"><label for="input-banner-msg">Mensagem padrão</label><textarea id="input-banner-msg" rows="2"></textarea></div>
+            <h4>Sugestão no carrinho</h4>
+            <label><input type="checkbox" id="chk-upsell"> Oferecer um item extra</label>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-upsell-produto">ID do produto</label><input type="text" id="input-upsell-produto" placeholder="id do item no cardápio"></div>
+                <div class="form-group-admin"><label for="input-upsell-titulo">Frase</label><input type="text" id="input-upsell-titulo"></div>
+                <div class="form-group-admin"><label for="input-upsell-sub">Complemento</label><input type="text" id="input-upsell-sub"></div>
+                <div class="form-group-admin"><label for="input-upsell-img">Imagem (URL)</label><input type="text" id="input-upsell-img"></div>
+            </div>
+            <h4>Avaliações</h4>
+            <div id="lista-avaliacoes-admin"></div>
+            <button type="button" id="btn-add-avaliacao" class="btn-mini btn-edit">+ Depoimento</button>
+            <div id="editor-categorias" style="margin-top:18px;"></div>
+        </div>
+
+        <div class="admin-card" data-painel="contato" hidden>
+            <h3><i class="fa-solid fa-sliders"></i> WhatsApp e tempo de espera</h3>
+            <p class="dica-secao" data-ajuda-aba="contato"></p>
+
+            <div class="form-group-admin" style="margin-top: 15px;">
+                <label for="input-whatsapp">Número do WhatsApp (com DDD, apenas números):</label>
+                <input type="text" id="input-whatsapp" placeholder="Ex: 5521969271316">
+            </div>
+
+            <div style="display: flex; gap: 20px; align-items: center; margin-top: 20px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="chk-alta-demanda">
+                        <span class="slider"></span>
+                    </label>
+                    <span><strong>Modo Alta Demanda</strong></span>
+                </div>
+
+                <div class="form-group-admin" style="margin-bottom: 0;">
+                    <label for="input-tempo-espera">Tempo Estimado:</label>
+                    <input type="text" id="input-tempo-espera" style="width: 150px;" placeholder="Ex: 40-50 min">
+                </div>
+            </div>
+
+            <!-- Horários de Funcionamento -->
+            <div style="margin-top: 25px; padding: 18px; background: #fffcfb; border-radius: 12px; border: 1px solid #fed7aa;">
+                <h4 style="margin: 0 0 15px 0; color: #c2410c;"><i class="fa-solid fa-clock"></i> Horário da loja</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div class="form-group-admin" style="margin-bottom:0;">
+                        <label for="input-horario-semana-inicio">Seg a Qui - Abertura:</label>
+                        <input type="time" id="input-horario-semana-inicio">
+                    </div>
+                    <div class="form-group-admin" style="margin-bottom:0;">
+                        <label for="input-horario-semana-fim">Seg a Qui - Fechamento:</label>
+                        <input type="time" id="input-horario-semana-fim">
+                    </div>
+                    <div class="form-group-admin" style="margin-bottom:0;">
+                        <label for="input-horario-fds-inicio">Sex, Sáb e Dom - Abertura:</label>
+                        <input type="time" id="input-horario-fds-inicio">
+                    </div>
+                    <div class="form-group-admin" style="margin-bottom:0;">
+                        <label for="input-horario-fds-fim">Sex, Sáb e Dom - Fechamento:</label>
+                        <input type="time" id="input-horario-fds-fim">
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px;">
+                <label style="display: block; margin-bottom: 10px; font-weight: 500; color: #666;">Dias em que a Loja está FECHADA:</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px;" id="container-dias-fechado">
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; background: #f3f4f6; padding: 5px 10px; border-radius: 6px;">
+                        <input type="checkbox" value="0" class="chk-dia-fechado"> Domingo
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; background: #f3f4f6; padding: 5px 10px; border-radius: 6px;">
+                        <input type="checkbox" value="1" class="chk-dia-fechado"> Segunda
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; background: #f3f4f6; padding: 5px 10px; border-radius: 6px;">
+                        <input type="checkbox" value="2" class="chk-dia-fechado"> Terça
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; background: #f3f4f6; padding: 5px 10px; border-radius: 6px;">
+                        <input type="checkbox" value="3" class="chk-dia-fechado"> Quarta
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; background: #f3f4f6; padding: 5px 10px; border-radius: 6px;">
+                        <input type="checkbox" value="4" class="chk-dia-fechado"> Quinta
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; background: #f3f4f6; padding: 5px 10px; border-radius: 6px;">
+                        <input type="checkbox" value="5" class="chk-dia-fechado"> Sexta
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; background: #f3f4f6; padding: 5px 10px; border-radius: 6px;">
+                        <input type="checkbox" value="6" class="chk-dia-fechado"> Sábado
+                    </label>
+                </div>
+            </div>
+            <h4 style="margin-top:22px;">Endereço da loja</h4>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-end-rua">Rua</label><input type="text" id="input-end-rua"></div>
+                <div class="form-group-admin"><label for="input-end-numero">Número</label><input type="text" id="input-end-numero"></div>
+                <div class="form-group-admin"><label for="input-end-bairro">Bairro</label><input type="text" id="input-end-bairro"></div>
+                <div class="form-group-admin"><label for="input-end-cidade">Cidade</label><input type="text" id="input-end-cidade"></div>
+                <div class="form-group-admin"><label for="input-end-estado">Estado</label><input type="text" id="input-end-estado"></div>
+                <div class="form-group-admin"><label for="input-end-cep">CEP</label><input type="text" id="input-end-cep"></div>
+                <div class="form-group-admin"><label for="input-end-lat">Latitude</label><input type="text" id="input-end-lat" placeholder="-22.9"></div>
+                <div class="form-group-admin"><label for="input-end-lng">Longitude</label><input type="text" id="input-end-lng" placeholder="-43.1"></div>
+            </div>
+            <p style="font-size:0.85em;color:#6b7280;">Se latitude e longitude ficarem vazias, o servidor tenta localizar o endereço ao salvar.</p>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-instagram">Instagram (URL)</label><input type="url" id="input-instagram"></div>
+                <div class="form-group-admin"><label for="input-facebook">Facebook (URL)</label><input type="url" id="input-facebook"></div>
+            </div>
+            <h4 style="margin-top:22px;">Textos do rodapé</h4>
+            <p style="font-size:1rem;color:#4b5563;">O que aparece embaixo do cardápio: nome, endereço, horário e os botões de WhatsApp, Instagram e Facebook.</p>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-rodape-horario">Título do horário</label><input type="text" id="input-rodape-horario" placeholder="Horário"></div>
+                <div class="form-group-admin"><label for="input-rodape-contato">Título do contato</label><input type="text" id="input-rodape-contato" placeholder="Fale com a gente"></div>
+            </div>
+            <div class="form-group-admin"><label for="input-rodape-frase">Frase embaixo do nome</label><input type="text" id="input-rodape-frase" placeholder="Ex.: Comida caseira desde 1998"></div>
+            <div class="form-group-admin"><label for="input-horario-texto">Horário escrito do seu jeito</label><input type="text" id="input-horario-texto" placeholder="Deixe vazio para montar pelos horários acima"></div>
+            <div class="form-group-admin"><label for="input-horario-folga">Aviso de dia fechado</label><input type="text" id="input-horario-folga" placeholder="Ex.: Fechado na segunda"></div>
+        </div>
+
+        <div class="admin-card" data-painel="frete" hidden>
+            <h3><i class="fa-solid fa-truck"></i> Quanto cobrar a entrega</h3>
+            <p class="dica-secao" data-ajuda-aba="frete"></p>
+            <p style="font-size:1rem;color:#4b5563;">Se não cobra entrega, escolha “Não cobro entrega”. Se cobra um valor só, escolha “Cobro um valor só”.</p>
+            <div class="form-group-admin">
+                <label for="input-frete-modo">Como cobrar a entrega</label>
+                <select id="input-frete-modo">
+                    <option value="gratis">Não cobro entrega</option>
+                    <option value="fixo">Cobro um valor só</option>
+                    <option value="distancia">Cobro por quilômetro</option>
+                    <option value="peso">Por peso ou quantidade</option>
+                    <option value="bairro">Por bairro</option>
+                </select>
+            </div>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-taxa-fixa">Taxa fixa (R$)</label><input type="number" step="0.01" id="input-taxa-fixa"></div>
+                <div class="form-group-admin"><label for="input-frete-unidade">Unidade da distância</label>
+                    <select id="input-frete-unidade"><option value="km">Quilômetro</option><option value="m">Metro</option></select>
+                </div>
+                <div class="form-group-admin"><label for="input-taxa-base">Taxa base (R$)</label><input type="number" step="0.01" id="input-taxa-base"></div>
+                <div class="form-group-admin"><label for="input-valor-unidade">Valor por km/metro (R$)</label><input type="number" step="0.01" id="input-valor-unidade"></div>
+                <div class="form-group-admin"><label for="input-raio-max">Raio máximo (km)</label><input type="number" step="0.1" id="input-raio-max"></div>
+                <div class="form-group-admin"><label for="input-pedido-minimo">Pedido mínimo (R$)</label><input type="number" step="0.01" id="input-pedido-minimo"></div>
+                <div class="form-group-admin"><label for="input-frete-gratis">Frete grátis acima de (R$)</label><input type="number" step="0.01" id="input-frete-gratis"></div>
+                <div class="form-group-admin"><label for="input-peso-unidade">Unidade do peso</label>
+                    <select id="input-peso-unidade"><option value="kg">Quilograma</option><option value="g">Grama</option><option value="un">Quantidade de itens</option></select>
+                </div>
+                <div class="form-group-admin"><label for="input-peso-base">Taxa base do peso (R$)</label><input type="number" step="0.01" id="input-peso-base"></div>
+                <div class="form-group-admin"><label for="input-peso-valor">Valor por unidade de peso (R$)</label><input type="number" step="0.01" id="input-peso-valor"></div>
+            </div>
+            <label><input type="checkbox" id="chk-usar-faixas"> Usar faixas de km em vez do valor por unidade</label>
+            <div class="form-group-admin"><label for="input-faixas">Faixas (uma por linha: até_km|valor)</label><textarea id="input-faixas" rows="4" placeholder="3|5.00&#10;6|8.00"></textarea></div>
+            <div class="form-group-admin"><label for="input-bairros">Bairros (uma por linha: nome|valor)</label><textarea id="input-bairros" rows="4" placeholder="Centro|5.00"></textarea></div>
+        </div>
+
+        <div class="admin-card" data-painel="pagamentos" hidden>
+            <h3><i class="fa-solid fa-wallet"></i> Como o cliente paga</h3>
+            <p class="dica-secao" data-ajuda-aba="pagamentos"></p>
+            <label><input type="checkbox" id="chk-pay-pix" checked> PIX</label>
+            <label><input type="checkbox" id="chk-pay-debito" checked> Débito</label>
+            <label><input type="checkbox" id="chk-pay-credito" checked> Crédito</label>
+            <label><input type="checkbox" id="chk-pay-dinheiro" checked> Dinheiro</label>
+            <div class="form-group-admin"><label for="input-chave-pix">Chave PIX (opcional)</label><input type="text" id="input-chave-pix"></div>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-agenda-ini">Agendamento a partir de</label><input type="time" id="input-agenda-ini"></div>
+                <div class="form-group-admin"><label for="input-agenda-fim">Agendamento até</label><input type="time" id="input-agenda-fim"></div>
+            </div>
+            <div class="form-group-admin"><label for="input-agenda-texto">Texto da regra de agendamento</label><input type="text" id="input-agenda-texto"></div>
+            <div class="form-group-admin"><label for="input-aviso-obs">Aviso do campo de observações</label><textarea id="input-aviso-obs" rows="2"></textarea></div>
+        </div>
+
+        <div class="admin-card" data-painel="frete" hidden>
+            <h3><i class="fa-solid fa-motorcycle"></i> Como a loja entrega</h3>
+            <div class="form-group-admin">
+                <label for="input-logistica">Quem leva o pedido</label>
+                <select id="input-logistica">
+                    <option value="propria">Eu entrego</option>
+                    <option value="retirada">O cliente só busca na loja</option>
+                    <option value="mista">Entrego e também deixo buscar</option>
+                </select>
+            </div>
+            <label><input type="checkbox" id="chk-aceita-retirada" checked> O cliente pode buscar na loja</label>
+            <label style="display:block;margin-top:8px;"><input type="checkbox" id="chk-despacho-manual"> Quero copiar o endereço do pedido e colar o link de acompanhamento</label>
+            <p style="font-size:1rem;color:#374151;">Isso aparece na tela de pedidos: um botão para copiar o endereço e um campo para colar o link que o cliente acompanha.</p>
+        </div>
+
+        <div class="admin-card" data-painel="cardapio" hidden>
+            <h3><i class="fa-solid fa-icons"></i> Categorias da vitrine</h3>
+            <p class="dica-secao" style="background:#fff7ed;border-color:#fdba74;color:#9a3412;">Aqui você só muda o <strong>nome das categorias</strong> (Promoções, Burgers…). Para <strong>foto e preço de cada prato</strong>, role até a caixa laranja <strong>“Pratos e preços”</strong> logo abaixo.</p>
+            <p style="font-size:1rem;color:#4b5563;">Categoria sem prato some do site.</p>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-nova-cat-slug">Identificador</label><input id="input-nova-cat-slug" placeholder="marmitas"></div>
+                <div class="form-group-admin"><label for="input-nova-cat-nome">Nome</label><input id="input-nova-cat-nome" placeholder="Marmitas"></div>
+            </div>
+            <button type="button" id="btn-nova-categoria" class="btn-save-file" style="width:auto;">Adicionar categoria</button>
+            <div id="lista-categorias-admin" style="margin-top:12px;"></div>
+        </div>
+
+        <div class="admin-card" data-painel="cardapio" hidden id="secao-pratos-precos">
+            <h3><i class="fa-solid fa-burger"></i> Pratos e preços</h3>
+            <p class="dica-secao" style="background:#ecfdf5;border-color:#6ee7b7;color:#065f46;">Em cada prato: toque no botão azul <strong>Enviar foto</strong> (celular ou computador). Ou cole o link da imagem no campo abaixo do botão.</p>
+            <p class="dica-secao" data-ajuda-aba="cardapio"></p>
+            <div id="lista-editor">
+                <!-- Items injected via JS -->
+            </div>
+        </div>
+
+        <div class="admin-card" data-painel="segmento" hidden>
+            <h3><i class="fa-solid fa-shapes"></i> Que tipo de comida você vende</h3>
+            <p class="dica-secao" data-ajuda-aba="segmento"></p>
+            <p style="font-size:1rem;color:#4b5563;">Escolha o tipo e toque no botão. Isso sugere os nomes das categorias. Os pratos que você já cadastrou continuam.</p>
+            <div class="form-group-admin">
+                <label for="input-nicho">Segmento</label>
+                <select id="input-nicho">
+                    <option value="lanchonete">Lanchonete</option>
+                    <option value="pensao">Pensão / comida caseira</option>
+                    <option value="marmitaria">Marmitaria</option>
+                    <option value="pizzaria">Pizzaria</option>
+                    <option value="acai">Açaí</option>
+                    <option value="confeitaria">Doceria / confeitaria</option>
+                </select>
+            </div>
+            <button type="button" id="btn-aplicar-nicho" class="btn-save-file" style="width:auto; min-height:52px;">Usar as sugestões</button>
+        </div>
+
+        <div class="admin-card" data-painel="relatorios" hidden>
+            <h3><i class="fa-solid fa-chart-column"></i> <span id="rel-titulo">Relatório mensal</span></h3>
+            <p class="dica-secao" data-ajuda-aba="relatorios"></p>
+            <p id="rel-subtitulo" style="font-size:1rem;color:#4b5563;"></p>
+            <div class="grade-admin" style="align-items:end;">
+                <div class="form-group-admin" style="margin-bottom:0;">
+                    <label for="input-relatorio-mes">Mês</label>
+                    <input type="month" id="input-relatorio-mes">
+                </div>
+                <button type="button" id="btn-carregar-relatorio" class="btn-save-file" style="width:auto;min-height:52px;">Atualizar relatório</button>
+            </div>
+            <div id="rel-resumo" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:16px 0;"></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+                <div>
+                    <h4 id="rel-rotulo-mais">Mais vendidos</h4>
+                    <div id="rel-mais" class="rel-lista"></div>
+                </div>
+                <div>
+                    <h4 id="rel-rotulo-menos">Menos vendidos</h4>
+                    <div id="rel-menos" class="rel-lista"></div>
+                </div>
+            </div>
+            <h4 id="rel-rotulo-tabela" style="margin-top:20px;">Itens do mês</h4>
+            <div style="overflow-x:auto;">
+                <table id="rel-tabela" style="width:100%;border-collapse:collapse;font-size:0.95rem;">
+                    <thead><tr>
+                        <th id="rel-col-item" style="text-align:left;padding:8px;border-bottom:2px solid #e5e7eb;">Item</th>
+                        <th id="rel-col-qtd" style="text-align:right;padding:8px;border-bottom:2px solid #e5e7eb;">Qtd</th>
+                        <th id="rel-col-valor" style="text-align:right;padding:8px;border-bottom:2px solid #e5e7eb;">R$</th>
+                    </tr></thead>
+                    <tbody id="rel-corpo"></tbody>
+                </table>
+            </div>
+            <p id="rel-vazio" style="display:none;color:#6b7280;"></p>
+            <hr style="margin:24px 0;border:none;border-top:1px solid #e5e7eb;">
+            <h4>Textos do relatório (editáveis)</h4>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-rel-titulo">Título</label><input type="text" id="input-rel-titulo"></div>
+                <div class="form-group-admin"><label for="input-rel-sub">Subtítulo</label><input type="text" id="input-rel-sub"></div>
+                <div class="form-group-admin"><label for="input-rel-mais">Rótulo “mais vendidos”</label><input type="text" id="input-rel-mais"></div>
+                <div class="form-group-admin"><label for="input-rel-menos">Rótulo “menos vendidos”</label><input type="text" id="input-rel-menos"></div>
+                <div class="form-group-admin"><label for="input-rel-tabela">Título da tabela</label><input type="text" id="input-rel-tabela"></div>
+                <div class="form-group-admin"><label for="input-rel-vazio">Quando não houver pedidos</label><input type="text" id="input-rel-vazio"></div>
+            </div>
+        </div>
+
+        <div class="admin-card" data-painel="comandas" hidden>
+            <h3><i class="fa-solid fa-receipt"></i> Impressão e tela da cozinha</h3>
+            <p class="dica-secao" data-ajuda-aba="comandas"></p>
+            <p style="font-size:1rem;color:#4b5563;">Textos das comandas térmica (80&nbsp;mm) e botões da cozinha. Nada aqui é fixo no código — tudo vem desta configuração.</p>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-cmd-via">Título via cozinha</label><input type="text" id="input-cmd-via"></div>
+                <div class="form-group-admin"><label for="input-cmd-balcao">Selo pedido balcão</label><input type="text" id="input-cmd-balcao"></div>
+                <div class="form-group-admin"><label for="input-cmd-rodape-cozinha">Rodapé comanda cozinha</label><input type="text" id="input-cmd-rodape-cozinha"></div>
+                <div class="form-group-admin"><label for="input-cmd-rodape-completa">Rodapé comanda completa</label><input type="text" id="input-cmd-rodape-completa"></div>
+                <div class="form-group-admin"><label for="input-cmd-instrucao">Instrução na tela da cozinha</label><input type="text" id="input-cmd-instrucao"></div>
+                <div class="form-group-admin"><label for="input-cmd-btn-pronto">Botão “pronto” na cozinha</label><input type="text" id="input-cmd-btn-pronto"></div>
+                <div class="form-group-admin"><label for="input-cmd-btn-reimp">Botão reimprimir</label><input type="text" id="input-cmd-btn-reimp"></div>
+                <div class="form-group-admin"><label for="input-cmd-painel-on">Texto botão painel (impressão ligada)</label><input type="text" id="input-cmd-painel-on"></div>
+                <div class="form-group-admin"><label for="input-cmd-painel-off">Texto botão painel (impressão na cozinha)</label><input type="text" id="input-cmd-painel-off"></div>
+            </div>
+            <label style="display:block;margin:8px 0;"><input type="checkbox" id="chk-cmd-tel-cozinha"> Mostrar telefone na comanda da cozinha</label>
+            <label style="display:block;margin:8px 0;"><input type="checkbox" id="chk-cmd-pag-cozinha"> Mostrar pagamento na comanda da cozinha</label>
+            <label style="display:block;margin:8px 0;"><input type="checkbox" id="chk-cmd-painel-auto"> Painel imprime ao mandar pra cozinha (padrão ligado)</label>
+        </div>
+
+        <div class="admin-card" data-painel="atendimento" hidden>
+            <h3><i class="fa-solid fa-headset"></i> Pedido manual (atendente)</h3>
+            <p class="dica-secao" data-ajuda-aba="atendimento"></p>
+            <p style="font-size:1rem;color:#4b5563;">O balconista informa nome e telefone e monta o pedido no mesmo cardápio. Tudo que aparece para o cliente pode ser editado abaixo.</p>
+            <label style="display:block;margin-bottom:12px;"><input type="checkbox" id="chk-atendimento-ativo" checked> Ativar pedido manual</label>
+            <a id="link-abrir-atendimento" href="atendimento.html" target="_blank" class="btn-save-file" style="width:auto;margin-bottom:16px;">Abrir tela do atendente</a>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-atd-titulo">Título da página</label><input type="text" id="input-atd-titulo"></div>
+                <div class="form-group-admin"><label for="input-atd-instrucao">Instrução inicial</label><input type="text" id="input-atd-instrucao"></div>
+                <div class="form-group-admin"><label for="input-atd-nome">Rótulo do nome</label><input type="text" id="input-atd-nome"></div>
+                <div class="form-group-admin"><label for="input-atd-tel">Rótulo do telefone</label><input type="text" id="input-atd-tel"></div>
+                <div class="form-group-admin"><label for="input-atd-btn">Botão para abrir cardápio</label><input type="text" id="input-atd-btn"></div>
+                <div class="form-group-admin"><label for="input-atd-banner">Faixa no topo do cardápio</label><input type="text" id="input-atd-banner"></div>
+                <div class="form-group-admin"><label for="input-atd-sucesso">Mensagem após registrar</label><input type="text" id="input-atd-sucesso"></div>
+                <div class="form-group-admin"><label for="input-atd-entrega">Texto do tipo de entrega</label><input type="text" id="input-atd-entrega"></div>
+                <div class="form-group-admin"><label for="input-atd-badge">Etiqueta no painel de pedidos</label><input type="text" id="input-atd-badge"></div>
+                <div class="form-group-admin"><label for="input-atd-voltar">Link voltar ao painel</label><input type="text" id="input-atd-voltar"></div>
+                <div class="form-group-admin"><label for="input-atd-novo">Link novo pedido</label><input type="text" id="input-atd-novo"></div>
+                <div class="form-group-admin"><label for="input-atd-btn-registrar">Botão final (sem WhatsApp)</label><input type="text" id="input-atd-btn-registrar"></div>
+                <div class="form-group-admin"><label for="input-atd-btn-zap">Botão final (com WhatsApp)</label><input type="text" id="input-atd-btn-zap"></div>
+            </div>
+            <div class="form-group-admin">
+                <label for="input-atd-modo">Modo padrão ao abrir o cardápio</label>
+                <select id="input-atd-modo">
+                    <option value="retirada">Cliente busca / balcão</option>
+                    <option value="entrega">Entrega com endereço</option>
+                </select>
+            </div>
+            <label><input type="checkbox" id="chk-atd-whatsapp"> Também abrir WhatsApp ao registrar (opcional)</label>
+        </div>
+
+        <div class="admin-card" data-painel="conta" hidden>
+            <h3><i class="fa-solid fa-file-invoice"></i> Sua mensalidade</h3>
+            <p class="dica-secao" data-ajuda-aba="conta"></p>
+        <p id="conta-resumo" style="font-size:1em;">Consultando plano...</p>
+        <div id="conta-pagamento" style="display:none;margin:12px 0;">
+            <p id="conta-valor" style="font-size:1.05em;font-weight:700;margin-bottom:8px;"></p>
+            <label for="conta-email" style="display:block;margin-bottom:4px;">E-mail para a cobrança</label>
+            <input id="conta-email" type="email" placeholder="seuemail@exemplo.com" style="width:100%;max-width:360px;padding:10px;border-radius:8px;border:1px solid #d1d5db;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                <button type="button" id="btn-assinar" class="btn-save-file" style="width:auto;">Assinar com Mercado Pago</button>
+                <button type="button" id="btn-sincronizar-assinatura" class="btn-save-file" style="width:auto;background:#374151;">Já paguei, atualizar</button>
+            </div>
+            <p style="font-size:0.85em;margin-top:8px;opacity:0.8;">Cobrança mensal automática no cartão. A loja é liberada sozinha assim que o pagamento é aprovado.</p>
+        </div>
+        <a id="conta-suporte" class="btn-save-file" style="width:auto;display:none;" target="_blank" rel="noopener">Suporte técnico</a>
+            <p id="link-painel-master" style="margin-top:12px;display:none;"><a href="superadmin.html">Voltar ao painel master</a></p>
+        </div>
+
+        <div class="admin-card" data-painel="seguranca" hidden>
+            <h3><i class="fa-solid fa-lock"></i> Senha de entrada &amp; Preferências do Agente IA</h3>
+            <p class="dica-secao" data-ajuda-aba="seguranca"></p>
+            <p style="font-size:1rem;color:#4b5563;">Para trocar as credenciais do proprietário, informe o novo usuário ou senha e toque em Salvar. Deixe a senha em branco para manter a atual.</p>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-admin-user">Novo usuário</label><input type="text" id="input-admin-user" autocomplete="username"></div>
+                <div class="form-group-admin"><label for="input-admin-pass">Nova senha</label><input type="password" id="input-admin-pass" autocomplete="new-password" placeholder="Em branco mantém a atual"></div>
+            </div>
+            <hr style="margin:20px 0;border:none;border-top:1px solid #e5e7eb;">
+            <h4 style="margin-top:0;"><i class="fa-solid fa-robot"></i> Comportamento do Agente IA da Loja</h4>
+            <div class="grade-admin">
+                <div class="form-group-admin"><label for="input-agente-nome">Nome do Agente IA</label><input type="text" id="input-agente-nome" placeholder="Copiloto Food IA"></div>
+                <div class="form-group-admin"><label for="input-agente-margem">Alertar margem abaixo de (%)</label><input type="number" step="1" id="input-agente-margem" value="25"></div>
+            </div>
+            <label style="display:block;margin-bottom:14px;"><input type="checkbox" id="chk-agente-vitrine" checked> Ativar Atendente Virtual IA no cardápio público (index.html)</label>
+
+            <hr style="margin:22px 0;border:none;border-top:1px solid #e5e7eb;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px;">
+                <h4 style="margin:0;"><i class="fa-solid fa-key"></i> IA Pessoal do Cliente (Chave + URL + Voz + Prompts)</h4>
+                <span id="fg-ia-pessoal-status" class="fg-badge" style="background:#f3f4f6;color:#374151;">Desativada (sem chave cadastrada)</span>
+            </div>
+            <p class="dica-secao" style="margin-bottom:12px;">
+                Opcional: quando você cadastrar sua própria <strong>Chave API</strong> e <strong>URL de acesso</strong>, o sistema libera sua IA pessoal com reconhecimento de voz para gerenciar a empresa e movimentar o painel com base nas suas instruções. Se não cadastrar nenhuma chave, o sistema opera apenas no modo local sem IA externa nem comandos de voz.
+            </p>
+            <div class="grade-admin">
+                <div class="form-group-admin">
+                    <label for="fg-ia-provedor">Formato da API</label>
+                    <select id="fg-ia-provedor">
+                        <option value="auto">Detectar automaticamente pela URL</option>
+                        <option value="openai">OpenAI / Compatível (OpenRouter, Groq, DeepSeek, etc.)</option>
+                        <option value="gemini">Google Gemini (generateContent)</option>
+                    </select>
+                </div>
+                <div class="form-group-admin">
+                    <label for="fg-ia-modelo">Modelo (opcional)</label>
+                    <input type="text" id="fg-ia-modelo" placeholder="Ex.: gpt-4o-mini ou gemini-2.5-flash">
+                </div>
+                <div class="form-group-admin" style="grid-column:1 / -1;">
+                    <label for="fg-ia-url">URL de acesso da IA (Endpoint)</label>
+                    <input type="url" id="fg-ia-url" placeholder="https://api.openai.com/v1/chat/completions">
+                </div>
+                <div class="form-group-admin" style="grid-column:1 / -1;">
+                    <label for="fg-ia-key">Chave API (API Key pessoal do cliente)</label>
+                    <input type="password" id="fg-ia-key" autocomplete="new-password" placeholder="Cole sua chave API (fica salva só no servidor da sua loja)">
+                </div>
+                <div class="form-group-admin" style="grid-column:1 / -1;">
+                    <label for="fg-ia-prompt">Prompts e Inteligência do Negócio (regras para a IA operar sua empresa)</label>
+                    <textarea id="fg-ia-prompt" rows="4" placeholder="Ex.: Seja direta como gerente financeira. Sempre confirme gastos acima de R$ 200, priorize itens com margem acima de 35% e ajude a organizar a cozinha e os pedidos..."></textarea>
+                </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin:8px 0 14px;">
+                <label style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="fg-ia-voz" checked>
+                    <span>Ativar leitura por voz (microfone reconhece o que é dito e movimenta o sistema)</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="fg-ia-falar">
+                    <span>Ler em voz alta a resposta da IA após comandos de voz</span>
+                </label>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                <button type="button" id="fg-ia-salvar" class="btn-save-file" style="width:auto;min-height:48px;background:#0f766e;"><i class="fa-solid fa-floppy-disk"></i> Salvar IA Pessoal</button>
+                <button type="button" id="fg-ia-testar" class="btn-save-file" style="width:auto;min-height:48px;background:#2563eb;"><i class="fa-solid fa-plug-circle-check"></i> Testar conexão</button>
+                <button type="button" id="fg-ia-limpar" class="btn-save-file" style="width:auto;min-height:48px;background:#6b7280;" hidden><i class="fa-solid fa-trash"></i> Remover chave e desativar</button>
+            </div>
+            <p id="fg-ia-feedback" class="fg-feedback" hidden style="margin-top:10px;"></p>
+
+            <hr style="margin:22px 0;border:none;border-top:1px solid #e5e7eb;">
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;">
+                <button type="button" id="btn-reset-cardapio" class="btn-save-file" style="background:#b45309; width:auto; min-height:52px;">Apagar todos os pratos</button>
+                <button type="button" id="btn-reset-pedidos" class="btn-save-file" style="background:#b45309; width:auto; min-height:52px;">Apagar pedidos antigos</button>
+                <button type="button" id="btn-reset-config" class="btn-save-file" style="background:#b91c1c; width:auto; min-height:52px;">Voltar a loja ao começo</button>
+            </div>
+        </div>
+
+        <div class="admin-card" style="border-left: 5px solid #10b981; background: #f0fdf4;">
+            <h3 style="color: #166534;" id="sim-lem-titulo-dom"><i class="fa-solid fa-cloud-check"></i> Não esqueça de Salvar</h3>
+            <p style="line-height: 1.6; color: #166534; font-weight: 500; font-size: 1.05rem;" id="sim-lem-texto-dom">O cliente só vê as mudanças depois que você tocar em Salvar no topo.</p>
+        </div>
+    </div>
+
+    <div id="modal-boas-vindas" class="modal-boas-vindas" hidden role="dialog" aria-modal="true" aria-labelledby="modal-bv-titulo">
+        <div class="caixa">
+            <h2 id="modal-bv-titulo">Bem-vindo!</h2>
+            <p id="modal-bv-texto"></p>
+            <div class="acoes">
+                <a id="modal-bv-btn-tutorial" href="tutorial.html" class="btn-save-file" style="background:#0d9488;">Sim, me mostre o passo a passo</a>
+                <button type="button" id="modal-bv-btn-depois" class="btn-save-file" style="background:#6b7280;">Agora não, quero explorar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const v = Date.now();
+            document.write('<script src="js/tenant.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/modo-apresentacao.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/celulas-sync.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/store-loader.js?v=' + v + '"><\/script>');
+        })();
+    </script>
+    <script>
+        PedidoZapStore.bootstrap(['js/admin.js', 'js/divulgar-loja.js', 'js/assistente-ia.js', 'js/gestao-admin.js', 'js/perfil-qualificado.js'], { fallbackStatic: true, showLoading: true, allowEmptyTenant: true });
+    </script>
+</body>
+
+</html>

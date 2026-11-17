@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcheIAki — Painel Master</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/jpeg" href="assets/images/acheiaki-icon.jpg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
+    <style>
+        body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #f7f6f2; color: #14171f; font-size: 15px; }
+        header { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 14px 24px; background: #0b192c; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .aki-head-brand { display: flex; align-items: center; gap: 12px; }
+        .aki-head-brand img { width: 38px; height: 38px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); object-fit: cover; }
+        main { padding: 24px 20px 56px; max-width: 1120px; margin: 0 auto; }
+        .card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 18px; box-shadow: 0 1px 2px rgba(20,23,31,.04), 0 6px 16px -6px rgba(20,23,31,.06); border: 1px solid rgba(20,23,31,.09); }
+        label { display: block; font-size: .82rem; font-weight: 600; color: #4b5563; margin-bottom: 4px; }
+        input, select { width: 100%; padding: 9px 11px; border: 1px solid rgba(20,23,31,.16); border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+        button, .btn { border: 0; border-radius: 9px; padding: 9px 14px; cursor: pointer; background: #0284c7; color: #fff; font-weight: 600; }
+        button.sec { background: #0b192c; }
+        button.perigo { background: #b91c1c; }
+        table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+        th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid rgba(20,23,31,.08); vertical-align: top; }
+        tbody tr:hover { background: #faf9f6; }
+        .acoes { display: flex; flex-wrap: wrap; gap: 6px; }
+        .pill { border-radius: 999px; padding: 2px 9px; font-size: .75rem; font-weight: 600; background: #dcfce7; color: #166534; }
+        .pill.bloqueado { background: #fee2e2; color: #991b1b; }
+        .pill.pendente, .pill.teste { background: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="aki-head-brand">
+            <img src="assets/images/acheiaki-icon.jpg" alt="AcheIAki">
+            <div>
+                <strong style="font-size:1.15rem;">Ache<span style="color:#00d4ff;">IA</span>ki <span style="opacity:.8;font-weight:500;">— Painel Master</span></strong>
+                <div style="opacity:.8;font-size:.82rem;">O Marketplace Inteligente da sua Região • Lojas, planos e suporte</div>
+            </div>
+        </div>
+        <button id="btn-sair" class="sec" type="button">Sair</button>
+    </header>
+    <main>
+        <section class="card">
+            <h2>Nova loja</h2>
+            <div class="grade">
+                <div><label for="novo-nome">Nome fantasia</label><input id="novo-nome"></div>
+                <div><label for="novo-razao">Razão social</label><input id="novo-razao"></div>
+                <div><label for="novo-slug">Identificador da URL</label><input id="novo-slug" placeholder="pensao-da-maria"></div>
+                <div><label for="novo-nicho">Segmento</label><select id="novo-nicho"></select></div>
+                <div><label for="novo-login">Usuário do lojista</label><input id="novo-login" value="admin"></div>
+                <div><label for="novo-senha">Senha inicial</label><input id="novo-senha" type="password"></div>
+                <div><label for="novo-plano">Plano</label>
+                    <select id="novo-plano">
+                        <option value="essencial">Essencial</option>
+                        <option value="profissional">Profissional</option>
+                        <option value="avancado">Avançado (IA &amp; Gestão Completa)</option>
+                        <option value="basico">Básico (legado)</option>
+                        <option value="pro">Pro (legado)</option>
+                        <option value="completo">Completo (legado)</option>
+                    </select>
+                </div>
+                <div><label for="novo-vencimento">Vencimento</label><input id="novo-vencimento" type="date"></div>
+            </div>
+            <p><button id="btn-criar" type="button">Criar loja</button></p>
+        </section>
+        <section class="card">
+            <h2>Acesso master</h2>
+            <div class="grade">
+                <div><label for="master-user">Novo usuário</label><input id="master-user"></div>
+                <div><label for="master-senha">Nova senha</label><input id="master-senha" type="password"></div>
+            </div>
+            <p><button id="btn-master" class="sec" type="button">Atualizar acesso master</button></p>
+        </section>
+        <section class="card">
+            <h2>Atendimento, LGPD &amp; Identidade</h2>
+            <div class="grade">
+                <div><label for="saas-nome">Nome da plataforma</label><input id="saas-nome"></div>
+                <div><label for="saas-zap">WhatsApp de suporte</label><input id="saas-zap" placeholder="5511999999999"></div>
+                <div><label for="saas-dominio">Seu domínio (para endereço tipo loja.seudominio.com)</label><input id="saas-dominio" placeholder="acheiaki.com.br"></div>
+                <div><label for="saas-gsc-token">Google Search Console (código meta tag)</label><input id="saas-gsc-token" placeholder="Cole o código content=... ou a tag inteira"></div>
+                <div><label for="saas-dpo-email">E-mail LGPD / Encarregado (DPO)</label><input id="saas-dpo-email" type="email" placeholder="privacidade@acheiaki.com.br"></div>
+                <div><label for="saas-cnpj">CNPJ da plataforma (opcional)</label><input id="saas-cnpj" placeholder="00.000.000/0001-00"></div>
+            </div>
+            <div style="margin-top:14px;padding:12px 14px;border-radius:12px;background:#f8fafc;border:1px solid rgba(11,25,44,.1);font-size:0.86rem;color:#334155;">
+                <strong>Google Search Console &amp; Indexação Automática:</strong>
+                <div style="margin-top:4px;line-height:1.55;">
+                    • Sitemap dinâmico (inclui marketplace + todas as lojas ativas): <code id="aki-seo-sitemap-url">/sitemap.xml</code><br>
+                    • Robots dinâmico: <code id="aki-seo-robots-url">/robots.txt</code><br>
+                    • Passo a passo: aponte seu domínio da EduHub no Railway (CNAME/DNS) → cole o código do Search Console no campo acima e salve → envie <code>sitemap.xml</code> no Google Search Console.
+                </div>
+            </div>
+            <h2 style="margin-top:18px;">Cobrança automática (Mercado Pago)</h2>
+            <div class="grade">
+                <div><label for="saas-mensalidade">Valor da mensalidade (R$)</label><input id="saas-mensalidade" inputmode="decimal" placeholder="49,90"></div>
+                <div><label for="saas-mp-token">Access Token de produção do Mercado Pago</label><input id="saas-mp-token" type="password" autocomplete="off" placeholder="APP_USR-..."></div>
+            </div>
+            <p id="saas-mp-status" style="font-size:0.95em;"></p>
+            <p style="font-size:0.9em;">URL de notificações (cole em Mercado Pago &gt; Suas integrações &gt; Webhooks, eventos <strong>Planos e assinaturas</strong>):<br><code id="saas-webhook"></code></p>
+            <p><button id="btn-saas" type="button">Salvar atendimento e cobrança</button></p>
+        </section>
+        <section class="card">
+            <h2>Integrações (CNPJ, Google Maps e Motor do Agente IA)</h2>
+            <p style="font-size:0.92rem;color:#4b5563;">As chaves ficam protegidas apenas no servidor. O Agente IA funciona 100% local por padrão; informe a chave Gemini apenas se quiser modo híbrido.</p>
+            <div class="grade">
+                <div>
+                    <label for="int-ia-provider">Motor do Agente IA</label>
+                    <select id="int-ia-provider">
+                        <option value="local">100% Local (Sem custo de API)</option>
+                        <option value="gemini">Híbrido (Local + Google Gemini)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="int-ia-key">Chave API Gemini (opcional)</label>
+                    <input id="int-ia-key" type="password" autocomplete="off" placeholder="AIza... (opcional)">
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label for="int-google-key">Chave Google Maps (Places)</label>
+                    <input id="int-google-key" type="password" autocomplete="off" placeholder="AIza...">
+                </div>
+            </div>
+            <p id="int-status" style="font-size:0.9rem;color:#374151;"></p>
+            <p><button id="btn-integracoes" class="sec" type="button">Salvar integrações</button></p>
+        </section>
+        <section class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <h2 style="margin:0;">Banco de Dados Relacional (Railway MySQL / PostgreSQL)</h2>
+                <a href="marketplace.html" target="_blank" class="btn" style="text-decoration:none;background:#071c34;border:1px solid #00d4ff;">Abrir Marketplace AcheIAki</a>
+            </div>
+            <p style="font-size:0.92rem;color:#4b5563;">No <strong>Railway</strong>, ao adicionar um banco MySQL ou PostgreSQL ao projeto, o sistema detecta automaticamente as variáveis <code>MYSQL_URL</code> / <code>DATABASE_URL</code> sem precisar digitar senha aqui. Você também pode configurar manualmente abaixo.</p>
+            <div class="grade">
+                <div>
+                    <label for="db-driver">Banco</label>
+                    <select id="db-driver">
+                        <option value="mysql">MySQL / MariaDB (Hostinger)</option>
+                        <option value="pgsql">PostgreSQL (VPS / EduHub)</option>
+                    </select>
+                </div>
+                <div><label for="db-host">Host</label><input id="db-host" value="localhost"></div>
+                <div><label for="db-port">Porta</label><input id="db-port" value="3306"></div>
+                <div><label for="db-name">Nome do Banco</label><input id="db-name" placeholder="u123456_food"></div>
+                <div><label for="db-user">Usuário</label><input id="db-user" placeholder="u123456_admin"></div>
+                <div><label for="db-pass">Senha</label><input id="db-pass" type="password" autocomplete="new-password" placeholder="Senha do banco"></div>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+                <input id="db-enabled" type="checkbox" style="width:auto;">
+                <span>Ativar Banco SQL (desmarcado = mantém armazenamento JSON local)</span>
+            </label>
+            <p id="db-status" style="font-size:0.9rem;color:#374151;"></p>
+            <div class="acoes">
+                <button id="btn-db-salvar" type="button">Salvar e Testar Banco</button>
+                <button id="btn-db-migrar" class="sec" type="button">Migrar JSONs atuais para o SQL</button>
+            </div>
+        </section>
+        <section class="card">
+            <label for="filtro-status">Filtrar</label>
+            <select id="filtro-status">
+                <option value="">Todas</option>
+                <option value="ativo">Ativas</option>
+                <option value="pendente">Pendentes</option>
+                <option value="bloqueado">Bloqueadas</option>
+                <option value="teste">Em teste</option>
+            </select>
+            <div style="overflow-x:auto;margin-top:12px;">
+                <table>
+                    <thead><tr><th>Loja</th><th>Plano</th><th>Status</th><th>Ações</th></tr></thead>
+                    <tbody id="tabela-lojas"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <script src="js/superadmin.js"></script>
+</body>
+</html>

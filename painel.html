@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b192c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Painel de Pedidos</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/ajuda-visivel.css?v=1">
+    <link rel="stylesheet" href="css/assistente-ia.css?v=1">
+    <link rel="stylesheet" href="css/gestao-food.css?v=1">
+    <link rel="icon" type="image/jpeg" href="assets/images/acheiaki-icon.jpg">
+    <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
+    <style>
+        * { box-sizing: border-box; }
+        html, body { max-width: 100%; overflow-x: hidden; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: #f7f6f2; margin: 0; padding: 20px; color: #14171f; font-size: 16px; line-height: 1.5; }
+        .header div button, .header div a { font-size: 0.96rem !important; min-height: 48px !important; }
+        .header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .header h1 { font-size: 1.45rem; overflow-wrap: anywhere; }
+        .header > div { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        h1 { margin: 0; color: #14171f; }
+        .board { 
+            display: flex; 
+            gap: 16px; 
+            overflow-x: auto; 
+            padding-bottom: 20px; 
+            height: calc(100vh - 100px); 
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        .column { 
+            background: #ece9e0; 
+            border-radius: 14px; 
+            width: 340px; 
+            flex-shrink: 0; 
+            display: flex; 
+            flex-direction: column; 
+            scroll-snap-align: center;
+            border: 1px solid rgba(20, 23, 31, 0.08);
+        }
+
+        /* App Mobile & Tablet: Abas de status para evitar rolagem gigante */
+        .aki-kanban-tabs {
+            display: none;
+            gap: 6px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding: 6px;
+            margin: 0 0 14px;
+            background: #ece9e0;
+            border-radius: 14px;
+            position: sticky;
+            top: 8px;
+            z-index: 40;
+        }
+        .aki-kanban-tabs::-webkit-scrollbar { display: none; }
+        .aki-kanban-tabs button {
+            flex: 0 0 auto;
+            border: none;
+            background: transparent;
+            color: #4b5563;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 9px 13px;
+            border-radius: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .aki-kanban-tabs button.ativo {
+            background: #fff;
+            color: #14171f;
+            font-weight: 700;
+            box-shadow: 0 1px 3px rgba(20, 23, 31, 0.1);
+        }
+        .aki-kt-count {
+            background: #e85d04;
+            color: #fff;
+            font-size: 0.74rem;
+            padding: 1px 6px;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+
+        /* Otimização Mobile & Tablet */
+        @media (max-width: 960px) {
+            body { padding: 14px 14px calc(24px + env(safe-area-inset-bottom)); height: auto; overflow: auto; }
+            .header { flex-direction: column; align-items: stretch; }
+            .header h1 { font-size: 1.25rem; }
+            .header > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+            .header div button, .header div a { width: 100%; justify-content: center; margin: 0; padding: 10px !important; }
+            #last-update { grid-column: span 2; text-align: center; margin: 0; }
+            .aki-kanban-tabs { display: flex; }
+            .board { flex-direction: column; height: auto; overflow: visible; gap: 14px; }
+            .column { width: 100%; display: none; }
+            .column.aki-col-ativa { display: flex; }
+            .column-content { min-height: 260px; }
+        }
+
+        .card-footer div a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        .card-footer div a:active { transform: scale(0.95); }
+
+        .column-header { padding: 15px; font-weight: bold; border-bottom: 2px solid #d1d5db; display: flex; justify-content: space-between; align-items: center; }
+        .column-content { padding: 10px; flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 200px; }
+        
+        /* Cores das colunas */
+        #col-novo .column-header { border-top: 4px solid #3b82f6; }
+        #col-preparo .column-header { border-top: 4px solid #f59e0b; }
+        #col-em-rota .column-header { border-top: 4px solid #8b5cf6; }
+        #col-concluido .column-header { border-top: 4px solid #10b981; }
+        #col-arquivado .column-header { border-top: 4px solid #dc2626; }
+
+        .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: grab; position: relative; border: 1px solid #e5e7eb; transition: transform 0.2s, box-shadow 0.2s; }
+        .card:active { cursor: grabbing; }
+        .card.dragging { 
+            opacity: 0.9; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: scale(1.02) rotate(2deg);
+            background: #fff;
+            border-color: #f97136;
+        }
+        .card-header { display: flex; justify-content: space-between; font-size: 0.85em; color: #9ca3af; margin-bottom: 8px; font-weight: 500; }
+        .card-title { font-weight: 700; font-size: 1.15em; margin-bottom: 8px; color: #111827; }
+        .card-items { font-size: 0.9em; margin-bottom: 12px; color: #4b5563; line-height: 1.5; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f3f4f6; padding-top: 12px; margin-top: 5px; }
+        .btn-wpp { background: #25D366; color: white; text-decoration: none; min-height: 52px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1rem; font-weight: 700; padding: 12px 14px; }
+        .btn-wpp:hover { transform: scale(1.1); }
+        
+        /* Column counts badge */
+        .count { background: #9ca3af; color: white; padding: 2px 8px; border-radius: 20px; font-size: 0.75em; }
+        
+        /* Custom Scrollbar for columns */
+        .column-content::-webkit-scrollbar { width: 6px; }
+        .column-content::-webkit-scrollbar-track { background: transparent; }
+        .column-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .column-content::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .column-content.drop-target { outline: 2px dashed #f97136; background: rgba(249, 113, 54, 0.08); border-radius: 8px; }
+        .card-quick-actions { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .btn-status { border: none; border-radius: 10px; padding: 12px 15px; font-size: 0.96rem; cursor: pointer; font-weight: 700; min-height: 46px; }
+        .aviso-painel { background: #fff; border: 1px solid rgba(20, 23, 31, 0.1); border-left: 3px solid #d97706; border-radius: 12px; padding: 12px 16px; margin: 0 0 16px; font-size: 0.98rem; line-height: 1.5; }
+        .btn-status-back { background: #f1efe9; color: #374151; }
+        .btn-status-fwd { background: #e85d04; color: #fff; flex: 1; }
+        .btn-status:active { transform: translateY(1px); }
+        .resumo-dia { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .resumo-dia div { background: #fff; border: 1px solid rgba(20, 23, 31, 0.08); border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(20, 23, 31, 0.04); }
+        .resumo-dia span { display: block; font-size: 0.84em; color: #6b7280; font-weight: 500; }
+        .resumo-dia strong { font-size: 1.38em; color: #14171f; }
+        .alerta-valor { background: #fffbeb; border: 1px solid rgba(217, 119, 6, 0.35); color: #92400e; padding: 8px 10px; border-radius: 8px; font-size: 0.85em; margin-bottom: 10px; }
+        .btn-imprimir { background: #f1efe9; color: #14171f; border: 1px solid rgba(20, 23, 31, 0.1); border-radius: 8px; padding: 6px 10px; cursor: pointer; min-width: 44px; min-height: 44px; font-size: 1em; }
+    </style>
+</head>
+<body data-pagina="painel">
+    <div class="header" style="display:block;">
+        <h1 class="painel-titulo-pagina" id="painel-titulo-pagina"><i class="fa-solid fa-clipboard-list" style="color:#e85d04;margin-right:6px;"></i> <span data-bind="nome">Nome da Sua Loja</span></h1>
+        <p class="painel-intro-grande" id="painel-intro-grande">Cada pedido é um cartão. Use o botão laranja grande em cada cartão para avançar a etapa.</p>
+        <p id="last-update" style="color: #6b7280; font-size: 1rem; margin: 0 0 12px;">Atualizado agora</p>
+
+        <div class="ferramentas-grade" aria-label="Ferramentas do painel de pedidos">
+            <div class="ferramenta-linha">
+                <button id="btn-som" type="button" class="btn-ferramenta" onclick="alternarSom()" style="background:#059669;"><i class="fa-solid fa-bell"></i> Som ligado</button>
+                <div class="ferramenta-explica"><strong id="ajuda-titulo-som">Som de novo pedido</strong><span id="ajuda-texto-som"></span></div>
+            </div>
+            <div class="ferramenta-linha">
+                <a id="link-atendimento-painel" href="atendimento.html" class="btn-ferramenta" style="background:#0d9488;"><i class="fa-solid fa-headset"></i> Pedido manual</a>
+                <div class="ferramenta-explica"><strong id="ajuda-titulo-atendimento">Pedido no balcão</strong><span id="ajuda-texto-atendimento"></span></div>
+            </div>
+            <div class="ferramenta-linha">
+                <button type="button" class="btn-ferramenta" onclick="copiarLinkCozinha(false)" style="background:#b45309;"><i class="fa-solid fa-fire-burner"></i> Link da cozinha</button>
+                <div class="ferramenta-explica"><strong id="ajuda-titulo-cozinha">Link da cozinha</strong><span id="ajuda-texto-cozinha"></span></div>
+            </div>
+            <div class="ferramenta-linha">
+                <button type="button" id="btn-imprimir-cozinha" class="btn-ferramenta" onclick="alternarImpressaoCozinha()" style="background:#0369a1;color:#fff;"><i class="fa-solid fa-print"></i> Impressão da comanda</button>
+                <div class="ferramenta-explica"><strong id="ajuda-titulo-impressao">Imprimir comanda</strong><span id="ajuda-texto-impressao"></span></div>
+            </div>
+            <div class="ferramenta-linha">
+                <button type="button" class="btn-ferramenta" onclick="copiarLinkEntregador(false)" style="background:#1f2937;"><i class="fa-solid fa-motorcycle"></i> Link do entregador</button>
+                <div class="ferramenta-explica"><strong id="ajuda-titulo-entregador">Link do entregador</strong><span id="ajuda-texto-entregador"></span></div>
+            </div>
+            <div class="ferramenta-linha">
+                <button type="button" class="btn-ferramenta" onclick="copiarLinkEntregador(true)" style="background:#6b7280;color:#fff;"><i class="fa-solid fa-link"></i> Trocar link entregador</button>
+                <div class="ferramenta-explica"><strong id="ajuda-titulo-trocar_entregador">Trocar link</strong><span id="ajuda-texto-trocar_entregador"></span></div>
+            </div>
+            <div class="ferramenta-linha">
+                <button type="button" class="btn-ferramenta" onclick="carregarPedidos()" style="background:#f97136;"><i class="fa-solid fa-rotate"></i> Atualizar lista</button>
+                <div class="ferramenta-explica"><strong id="ajuda-titulo-atualizar">Atualizar</strong><span id="ajuda-texto-atualizar"></span></div>
+            </div>
+            <div class="ferramenta-linha">
+                <a id="link-voltar-admin-painel" href="admin.html" class="btn-ferramenta" style="background:#4b5563;"><i class="fa-solid fa-store"></i> Painel da loja</a>
+                <div class="ferramenta-explica"><strong id="ajuda-titulo-voltar">Painel da loja</strong><span id="ajuda-texto-voltar"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="resumo-dia" class="resumo-dia" aria-live="polite"></div>
+
+    <p class="aviso-painel" id="aviso-painel" hidden></p>
+    <p class="painel-intro-grande" id="painel-dica-colunas" style="background:#eff6ff;border-color:#93c5fd;color:#1e3a8a;margin-bottom:16px;"></p>
+
+    <div class="aki-kanban-tabs" id="aki-kanban-mobile-tabs" role="tablist" aria-label="Etapas dos pedidos">
+        <button type="button" class="ativo" data-col-alvo="col-novo">Novos <span class="aki-kt-count">0</span></button>
+        <button type="button" data-col-alvo="col-preparo">Cozinha <span class="aki-kt-count">0</span></button>
+        <button type="button" data-col-alvo="col-em-rota">Em rota <span class="aki-kt-count">0</span></button>
+        <button type="button" data-col-alvo="col-concluido">Entregues <span class="aki-kt-count">0</span></button>
+        <button type="button" data-col-alvo="col-arquivado">Guardados <span class="aki-kt-count">0</span></button>
+    </div>
+
+    <div class="board">
+        <div class="column aki-col-ativa" id="col-novo" data-status="novo">
+            <div class="column-header">Pedidos novos <span class="count">0</span></div>
+            <p class="coluna-dica" id="dica-col-novo"></p>
+            <div class="column-content" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+        </div>
+        <div class="column" id="col-preparo" data-status="preparo">
+            <div class="column-header">Na cozinha <span class="count">0</span></div>
+            <p class="coluna-dica" id="dica-col-preparo"></p>
+            <div class="column-content" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+        </div>
+        <div class="column" id="col-em-rota" data-status="em-rota">
+            <div class="column-header">Saiu para entrega <span class="count">0</span></div>
+            <p class="coluna-dica" id="dica-col-em-rota"></p>
+            <div class="column-content" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+        </div>
+        <div class="column" id="col-concluido" data-status="concluido">
+            <div class="column-header">Entregues <span class="count">0</span></div>
+            <p class="coluna-dica" id="dica-col-concluido"></p>
+            <div class="column-content" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+        </div>
+        <div class="column" id="col-arquivado" data-status="arquivado">
+            <div class="column-header" style="color: #dc2626;">Guardados <span class="count">0</span></div>
+            <p class="coluna-dica" id="dica-col-arquivado"></p>
+            <div class="column-content" ondrop="drop(event)" ondragover="allowDrop(event)" style="background: #fee2e2;"></div>
+            <div style="padding: 10px; text-align: center;">
+                <p id="dica-lixeira" style="font-size:1rem;color:#991b1b;margin:0 0 10px;line-height:1.4;"></p>
+                <button onclick="esvaziarLixeira()" style="width: 100%; padding: 16px; background: #dc2626; color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 1.1rem; font-weight: 800; min-height: 58px;">Apagar todos os guardados</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/tenant.js"></script>
+    <script src="js/celulas-sync.js"></script>
+    <script>
+        if (!sessionStorage.getItem('admin_logado')) {
+            var dest = (typeof TENANT !== 'undefined' && TENANT.apiUrl) ? TENANT.apiUrl('admin.html') : 'admin.html';
+            location.replace(dest);
+        }
+    </script>
+    <script src="js/store-loader.js"></script>
+    <script>PedidoZapStore.load({ fallbackStatic: true, silent: true }).catch(function(){});</script>
+    <script src="js/comanda.js?v=2"></script>
+    <script src="js/ajuda-loja.js?v=1"></script>
+    <script src="js/assistente-ia.js?v=1"></script>
+    <script>
+        document.write('<script src="js/painel.js?v=' + Date.now() + '"><\/script>');
+    </script>
+    <script>
+        (function () {
+            const tabs = document.querySelectorAll('#aki-kanban-mobile-tabs button');
+            if (!tabs.length) return;
+            tabs.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    tabs.forEach(function (b) { b.classList.remove('ativo'); });
+                    btn.classList.add('ativo');
+                    document.querySelectorAll('.board .column').forEach(function (col) {
+                        col.classList.toggle('aki-col-ativa', col.id === btn.getAttribute('data-col-alvo'));
+                    });
+                });
+            });
+            function syncCounts() {
+                tabs.forEach(function (btn) {
+                    const col = document.getElementById(btn.getAttribute('data-col-alvo'));
+                    const src = col ? col.querySelector('.column-header .count') : null;
+                    const dst = btn.querySelector('.aki-kt-count');
+                    if (src && dst) dst.textContent = src.textContent;
+                });
+            }
+            const obs = new MutationObserver(syncCounts);
+            document.querySelectorAll('.board .column-header .count').forEach(function (el) {
+                obs.observe(el, { childList: true, characterData: true, subtree: true });
+            });
+            setInterval(syncCounts, 2000);
+        })();
+    </script>
+</body>
+</html>

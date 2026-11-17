@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorial — primeiros passos</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/jpeg" href="assets/images/acheiaki-icon.jpg">
+    <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #f7f6f2;
+            color: #14171f;
+            font-size: 16px;
+            line-height: 1.55;
+        }
+
+        .wrap {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 24px 16px 56px;
+        }
+
+        .topo {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .topo a {
+            color: #14171f;
+            background: #fff;
+            border: 1px solid rgba(20, 23, 31, .12);
+            padding: 9px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .hero {
+            background: #fff;
+            border-radius: 18px;
+            padding: 26px;
+            border: 1px solid rgba(20, 23, 31, .09);
+            box-shadow: 0 1px 2px rgba(20, 23, 31, .04), 0 8px 24px -8px rgba(20, 23, 31, .07);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 1.55rem;
+            color: #14171f;
+        }
+
+        .lead {
+            margin: 0;
+            color: #4b5563;
+        }
+
+        .barra {
+            height: 10px;
+            background: #ece9e0;
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 16px 0 8px;
+        }
+
+        .barra span {
+            display: block;
+            height: 100%;
+            background: #15803d;
+            width: 0%;
+            transition: width .25s ease;
+        }
+
+        .progresso-txt {
+            font-weight: 700;
+            color: #15803d;
+            font-size: 0.96rem;
+        }
+
+        .video {
+            margin-top: 16px;
+            aspect-ratio: 16/9;
+            background: #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .video iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .lista {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .passo {
+            background: #fff;
+            border: 1px solid rgba(20, 23, 31, .09);
+            border-radius: 14px;
+            padding: 18px;
+            display: grid;
+            gap: 10px;
+            box-shadow: 0 1px 2px rgba(20, 23, 31, .03);
+        }
+
+        .passo.feito {
+            border-color: rgba(21, 128, 61, .28);
+            background: #f8fdf9;
+        }
+
+        .passo h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .num {
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #f1efe9;
+            color: #14171f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: .9rem;
+        }
+
+        .passo.feito .num {
+            background: #15803d;
+            color: #fff;
+        }
+
+        .acoes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 11px 16px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 46px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-prim {
+            background: #e85d04;
+            color: #fff;
+        }
+
+        .btn-sec {
+            background: #f1efe9;
+            color: #14171f;
+        }
+
+        .btn-ok {
+            background: #0b192c;
+            color: #fff;
+        }
+
+        .vazio {
+            text-align: center;
+            color: #6b7280;
+            padding: 32px;
+        }
+    </style>
+</head>
+
+<body data-pagina="tutorial">
+    <div class="wrap">
+        <div class="topo">
+            <a href="admin.html" id="link-voltar-admin"><i class="fa-solid fa-arrow-left"></i> Voltar ao painel</a>
+            <a href="painel.html" id="link-pedidos">Pedidos</a>
+        </div>
+        <div class="hero">
+            <h1 id="tut-titulo">Carregando...</h1>
+            <p class="lead" id="tut-intro"></p>
+            <div class="barra" aria-hidden="true"><span id="tut-barra"></span></div>
+            <p class="progresso-txt" id="tut-progresso"></p>
+            <div class="video" id="tut-video-wrap"><iframe id="tut-video" title="Vídeo de ajuda" allowfullscreen
+                    loading="lazy"></iframe></div>
+        </div>
+        <div class="lista" id="tut-lista"></div>
+        <p class="vazio" id="tut-vazio" hidden>Nenhum passo configurado. Peça suporte ou edite no painel, aba Primeiros
+            passos.</p>
+    </div>
+    <script>
+        (function () {
+            const v = Date.now();
+            document.write('<script src="js/tenant.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/store-loader.js?v=' + v + '"><\/script>');
+        })();
+    </script>
+    <script>
+        PedidoZapStore.bootstrap(['js/tutorial.js'], { fallbackStatic: true, showLoading: true, allowEmptyTenant: true });
+    </script>
+</body>
+
+</html>

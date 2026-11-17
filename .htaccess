@@ -1,0 +1,41 @@
+# ----------------------------------------------------------------------
+# AcheIAki - O Marketplace Inteligente da sua Região (multi-tenant)
+# ----------------------------------------------------------------------
+
+# 1. Definir prioridade de carregamento de arquivos na raiz (entra direto no Marketplace AcheIAki)
+DirectoryIndex marketplace.html index.php index.html
+
+# 2. Desabilitar listagem de diretório e bloquear arquivos sensíveis por segurança
+Options -Indexes
+
+<FilesMatch "^(router\.php|auth_config\.php|Dockerfile|Procfile|railway\.json|\.env.*|.*\.md|.*\.log|.*\.sql)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 2.1 SEO Dinâmico (Google Search Console) + Multi-tenant: /loja/{slug}/ e /loja/{slug}/pagina.html
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^sitemap\.xml$ sitemap.php [L,NC]
+    RewriteRule ^robots\.txt$ robots.php [L,NC]
+    RewriteRule ^loja/([a-zA-Z0-9_-]+)/(css|js|assets)/(.*)$ $2/$3 [L,NC]
+    RewriteRule ^loja/([a-zA-Z0-9_-]+)/([A-Za-z0-9_-]+\.php)$ $2?tenant=$1 [L,QSA,NC]
+    RewriteRule ^loja/([a-zA-Z0-9_-]+)/?$ index.html?tenant=$1 [L,QSA,NC]
+    RewriteRule ^loja/([a-zA-Z0-9_-]+)/([A-Za-z0-9_-]+\.html)$ $2?tenant=$1 [L,QSA,NC]
+</IfModule>
+
+# 3. Segurança HTTP e controle de cache
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    <FilesMatch "\.(css|js|html|php)$">
+        Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "Wed, 11 Jan 1984 05:00:00 GMT"
+    </FilesMatch>
+</IfModule>

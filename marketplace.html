@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b192c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AcheIAki">
+    <title>AcheIAki — O Marketplace Inteligente da sua Região | Taxa Zero</title>
+    <meta name="description" content="AcheIAki: compare preços por segmento na sua cidade com inteligência artificial e peça direto pelo WhatsApp ou vitrine da loja — sem taxa intermediária.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="AcheIAki">
+    <meta property="og:title" content="AcheIAki — O Marketplace Inteligente da sua Região">
+    <meta property="og:description" content="Compare preços por segmento na sua cidade com IA e peça direto da loja sem comissão abusiva.">
+    <meta property="og:image" content="assets/images/acheiaki-hero.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/jpeg" href="assets/images/acheiaki-icon.jpg">
+    <link rel="apple-touch-icon" href="assets/images/acheiaki-icon.jpg">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "AcheIAki",
+      "alternateName": "AcheIAki — O Marketplace Inteligente da sua Região",
+      "description": "Marketplace regional inteligente para comparar preços e pedir direto das lojas locais com taxa zero.",
+      "inLanguage": "pt-BR",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "/marketplace.html?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
+    <link rel="stylesheet" href="css/marketplace.css?v=2">
+    <link rel="stylesheet" href="css/localizacao-gate.css?v=2">
+    <link rel="stylesheet" href="css/lgpd-consent.css?v=2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="mkt-body" data-exige-localizacao="1">
+    <header class="mkt-header">
+        <div class="mkt-header-inner">
+            <a href="marketplace.html" class="mkt-brand" title="AcheIAki — O Marketplace Inteligente da sua Região">
+                <img src="assets/images/acheiaki-icon.jpg" alt="AcheIAki IA" class="mkt-brand-img">
+                <span class="mkt-brand-word">Ache<span class="aki-ia">IA</span>ki <small>Marketplace IA</small></span>
+            </a>
+
+            <button type="button" id="mkt-btn-local" class="mkt-loc-pill" title="Definir ou atualizar endereço de entrega">
+                <i class="fa-solid fa-location-dot"></i>
+                <span id="mkt-local-texto">Definindo localização...</span>
+                <i class="fa-solid fa-chevron-down mkt-loc-caret"></i>
+            </button>
+
+            <div class="mkt-actions">
+                <button type="button" id="mkt-btn-conta" class="mkt-btn-pill mkt-hide-app-nav">
+                    <i class="fa-regular fa-user"></i>
+                    <span id="mkt-conta-label">Entrar / Minha Conta</span>
+                </button>
+                <a href="cadastro.html" class="mkt-btn-cta">
+                    <i class="fa-solid fa-store"></i> <span class="aki-hide-xs">Sou </span>Empresa<span class="aki-hide-xs"> (CNPJ)</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <nav class="mkt-tabs-bar" aria-label="Navegação do Painel do Cliente">
+        <div class="mkt-tabs-inner" id="mkt-tabs">
+            <button type="button" class="mkt-tab ativo" data-tab="descobrir">
+                <span class="mkt-tab-ico"><i class="fa-solid fa-compass"></i></span>
+                <span class="mkt-tab-txt">Explorar</span>
+            </button>
+            <button type="button" class="mkt-tab" data-tab="favoritos">
+                <span class="mkt-tab-ico"><i class="fa-solid fa-heart"></i><span class="mkt-badge" id="mkt-badge-fav">0</span></span>
+                <span class="mkt-tab-txt">Favoritos</span>
+            </button>
+            <button type="button" class="mkt-tab" data-tab="pedidos">
+                <span class="mkt-tab-ico"><i class="fa-solid fa-motorcycle"></i><span class="mkt-badge" id="mkt-badge-ped">0</span></span>
+                <span class="mkt-tab-txt">Pedidos</span>
+            </button>
+            <button type="button" class="mkt-tab" data-tab="conta">
+                <span class="mkt-tab-ico"><i class="fa-regular fa-user"></i></span>
+                <span class="mkt-tab-txt">Conta</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="mkt-main">
+        <section id="mkt-banner-pedido-ativo" class="mkt-banner-ativo" hidden aria-live="polite"></section>
+
+        <!-- ABA 1: DESCOBRIR (INTERFACE HUMANA, DIRETA E FÁCIL DE TOCAR) -->
+        <section id="mkt-pane-descobrir" class="mkt-pane">
+            <!-- Atalhos Diretos -->
+            <section id="mkt-atalhos-faceis" class="aki-quick-bar" aria-label="Atalhos rápidos">
+                <div class="aki-quick-top">
+                    <div>
+                        <h2 id="mkt-boas-vindas-nome">Olá! O que você gostaria de pedir hoje?</h2>
+                        <p>Escolha uma opção rápida abaixo ou pesquise pelo prato ou loja de sua preferência.</p>
+                    </div>
+                    <button type="button" id="mkt-btn-trocar-perfil" class="aki-quick-switch">
+                        <i class="fa-solid fa-arrow-right-arrow-left"></i> Trocar perfil (Cliente / Empresa)
+                    </button>
+                </div>
+                <div class="aki-quick-grid">
+                    <button type="button" class="aki-quick-btn" data-atalho-nicho="lanchonete">
+                        <span class="aki-qb-ico aki-ico-warm"><i class="fa-solid fa-burger"></i></span>
+                        <strong>Pedir lanches</strong>
+                        <small>Artesanais, combos e pastéis</small>
+                    </button>
+                    <button type="button" class="aki-quick-btn" data-atalho-nicho="pizzaria">
+                        <span class="aki-qb-ico aki-ico-red"><i class="fa-solid fa-pizza-slice"></i></span>
+                        <strong>Pedir pizzas</strong>
+                        <small>Pizzas, esfihas e massas</small>
+                    </button>
+                    <button type="button" class="aki-quick-btn" id="mkt-atalho-baratos">
+                        <span class="aki-qb-ico aki-ico-green"><i class="fa-solid fa-tag"></i></span>
+                        <strong>Mais em conta</strong>
+                        <small>Melhores preços perto de você</small>
+                    </button>
+                    <button type="button" class="aki-quick-btn" id="mkt-atalho-pedidos">
+                        <span class="aki-qb-ico aki-ico-blue"><i class="fa-solid fa-motorcycle"></i></span>
+                        <strong>Meus pedidos</strong>
+                        <small>Acompanhar entrega ao vivo</small>
+                    </button>
+                </div>
+            </section>
+
+            <section class="mkt-hero">
+                <div class="mkt-hero-copy">
+                    <span class="mkt-hero-chip"><i class="fa-solid fa-compass"></i> AcheIAki • Marketplace Inteligente Regional</span>
+                    <h1>Compare preços da sua região e peça direto da loja</h1>
+                    <p>Empresas verificadas com CNPJ perto do seu endereço, ordenadas por custo-benefício, tempo de entrega e avaliações reais — sem taxa intermediária.</p>
+                </div>
+                <div class="mkt-search-wrap">
+                    <div class="mkt-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="search" id="mkt-busca" placeholder="Buscar prato, restaurante, bairro ou CNPJ...">
+                        <button type="button" id="mkt-btn-gps-topo" class="mkt-btn-gps" title="Atualizar minha localização agora">
+                            <i class="fa-solid fa-location-crosshairs"></i> <span class="aki-hide-xs">Usar </span>GPS
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Segmentos -->
+            <div class="mkt-segmentos" id="mkt-segmentos" role="tablist" aria-label="Segmentos">
+                <button type="button" class="mkt-seg ativo" data-nicho=""><span class="mkt-seg-ico"><i class="fa-solid fa-utensils"></i></span><strong>Todos</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="lanchonete"><span class="mkt-seg-ico"><i class="fa-solid fa-burger"></i></span><strong>Lanches</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="pizzaria"><span class="mkt-seg-ico"><i class="fa-solid fa-pizza-slice"></i></span><strong>Pizzas</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="marmitaria"><span class="mkt-seg-ico"><i class="fa-solid fa-bowl-food"></i></span><strong>Marmitas</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="pensao"><span class="mkt-seg-ico"><i class="fa-solid fa-kitchen-set"></i></span><strong>Comida caseira</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="acai"><span class="mkt-seg-ico"><i class="fa-solid fa-ice-cream"></i></span><strong>Açaí</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="confeitaria"><span class="mkt-seg-ico"><i class="fa-solid fa-cake-candles"></i></span><strong>Doces</strong></button>
+            </div>
+
+            <!-- Filtros -->
+            <section class="mkt-filtros">
+                <select id="mkt-cidade" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option></select>
+                <select id="mkt-bairro" aria-label="Filtrar por bairro"><option value="">Todos os bairros</option></select>
+                <select id="mkt-ordenar" aria-label="Ordenar lojas">
+                    <option value="algoritmo">Recomendadas para você</option>
+                    <option value="preco">Menor preço primeiro</option>
+                    <option value="territorio">Melhor avaliação da região</option>
+                    <option value="nota">Maior nota dos clientes</option>
+                    <option value="tempo">Entrega mais rápida</option>
+                    <option value="taxa">Menor taxa de entrega</option>
+                    <option value="distancia">Mais próximas de você</option>
+                </select>
+                <label class="mkt-check"><input type="checkbox" id="mkt-abertas"> Só abertas agora</label>
+                <label class="mkt-check"><input type="checkbox" id="mkt-gratis"> Entrega grátis</label>
+            </section>
+
+            <!-- Alerta de Expansão por Raio CNPJ / Alternativas da IA -->
+            <section id="mkt-expansao-box" class="mkt-expansao-box" hidden></section>
+
+            <!-- Comparativo de Segmentos e Melhores Preços da IA -->
+            <section id="mkt-comparativo-box" class="mkt-secao" hidden>
+                <div class="mkt-sec-head">
+                    <h2><i class="fa-solid fa-scale-balanced"></i> Comparativo de Preços por Segmento (IA)</h2>
+                    <span class="mkt-sec-sub">Toque em um segmento para filtrar e aproveitar o melhor custo-benefício</span>
+                </div>
+                <div id="mkt-comparativo-lista" class="mkt-comp-grid"></div>
+            </section>
+
+            <!-- Radar Inteligente AcheIAki (Loja onde mais compra + buscas + gostos) -->
+            <section id="mkt-ia-radar" class="mkt-ia-radar" hidden></section>
+
+            <!-- Pratos Recomendados para Você pela IA -->
+            <section id="mkt-secao-pratos" class="mkt-secao" hidden>
+                <div class="mkt-sec-head">
+                    <h2 id="mkt-pratos-titulo"><i class="fa-solid fa-fire-flame-curved"></i> Recomendados para você neste horário</h2>
+                    <span class="mkt-sec-sub" id="mkt-pratos-sub">Seleção por preço, região e preferências</span>
+                </div>
+                <div id="mkt-pratos-lista" class="mkt-pratos-rail"></div>
+            </section>
+
+            <!-- Grid de Lojas -->
+            <section class="mkt-secao">
+                <div class="mkt-sec-head">
+                    <h2><i class="fa-solid fa-store"></i> Empresas disponíveis</h2>
+                    <span class="mkt-sec-sub" id="mkt-lojas-resumo">Carregando lojas verificadas...</span>
+                </div>
+                <section id="mkt-grid-lojas" class="mkt-grid"></section>
+            </section>
+        </section>
+
+        <!-- ABA 2: FAVORITOS -->
+        <section id="mkt-pane-favoritos" class="mkt-pane" hidden>
+            <div class="mkt-sec-head">
+                <h2><i class="fa-solid fa-heart" style="color:#e11d48"></i> Suas Empresas Favoritas</h2>
+                <span class="mkt-sec-sub">Acesso rápido às lojas que você salvou</span>
+            </div>
+            <div id="mkt-grid-favoritos" class="mkt-grid"></div>
+        </section>
+
+        <!-- ABA 3: MEUS PEDIDOS EM TEMPO REAL -->
+        <section id="mkt-pane-pedidos" class="mkt-pane" hidden>
+            <div class="mkt-pedidos-topo">
+                <div>
+                    <h2><i class="fa-solid fa-motorcycle" style="color:#ea1d2c"></i> Acompanhe seus pedidos em tempo real</h2>
+                    <p class="mkt-sec-sub">Atualização automática direta da cozinha e entregador de cada empresa</p>
+                </div>
+                <div class="mkt-pedidos-acoes">
+                    <input type="tel" id="mkt-tel-pedido" placeholder="WhatsApp com DDD">
+                    <button type="button" id="mkt-buscar-pedidos" class="mkt-btn-prim">
+                        <i class="fa-solid fa-rotate"></i> Atualizar agora
+                    </button>
+                </div>
+            </div>
+            <div id="mkt-lista-pedidos" class="mkt-pedidos-lista"></div>
+        </section>
+
+        <!-- ABA 4: MINHA CONTA & ENDEREÇOS -->
+        <section id="mkt-pane-conta" class="mkt-pane" hidden>
+            <div class="mkt-conta-grid aki-conta-facil">
+                <div class="mkt-card-box">
+                    <div class="mkt-card-box-head">
+                        <h3><i class="fa-regular fa-user" style="color:var(--aki-brand);"></i> Meus dados pessoais</h3>
+                        <button type="button" id="mkt-btn-sair" class="aki-btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair da conta</button>
+                    </div>
+                    <form id="mkt-form-perfil" class="mkt-form aki-form-grande">
+                        <label>Seu nome
+                            <input type="text" id="mkt-p-nome" placeholder="Como prefere ser chamado">
+                        </label>
+                        <label>WhatsApp de contato
+                            <input type="tel" id="mkt-p-tel" readonly>
+                        </label>
+                        <label>E-mail *
+                            <input type="email" id="mkt-p-email" required placeholder="seuemail@gmail.com">
+                        </label>
+                        <label>CPF (opcional, para nota)
+                            <input type="text" id="mkt-p-cpf" maxlength="14" placeholder="000.000.000-00">
+                        </label>
+                        <button type="submit" class="mkt-btn-prim aki-btn-grande"><i class="fa-solid fa-check"></i> Salvar alterações</button>
+                        <p id="mkt-p-msg" class="mkt-msg"></p>
+                    </form>
+                </div>
+
+                <div class="mkt-card-box">
+                    <h3><i class="fa-solid fa-location-dot" style="color:var(--aki-accent);"></i> Endereço de entrega</h3>
+                    <button type="button" id="mkt-conta-gps-btn" class="aki-btn-gps-gigante">
+                        <i class="fa-solid fa-location-crosshairs"></i> Usar minha localização atual (GPS)
+                    </button>
+                    <p id="mkt-conta-gps-status" class="mkt-gps-status" style="margin:6px 0 12px;font-size:0.92rem;"></p>
+
+                    <div id="mkt-enderecos-lista" class="mkt-end-lista"></div>
+                    <hr class="mkt-hr">
+                    <h4 style="margin:0 0 12px;font-size:1.05rem;">Adicionar ou atualizar pelo CEP</h4>
+                    <form id="mkt-form-novo-end" class="mkt-form aki-form-grande">
+                        <div class="mkt-form-2">
+                            <label>CEP *
+                                <input type="text" id="mkt-ne-cep" maxlength="9" placeholder="00000-000" required>
+                            </label>
+                            <label>Número *
+                                <input type="text" id="mkt-ne-numero" placeholder="Ex.: 120" required>
+                            </label>
+                        </div>
+                        <label>Rua ou avenida *
+                            <input type="text" id="mkt-ne-rua" placeholder="Nome da rua" required>
+                        </label>
+                        <div class="mkt-form-2">
+                            <label>Bairro *
+                                <input type="text" id="mkt-ne-bairro" required>
+                            </label>
+                            <label>Cidade *
+                                <input type="text" id="mkt-ne-cidade" required>
+                            </label>
+                        </div>
+                        <div class="mkt-form-2">
+                            <label>Estado (UF) *
+                                <input type="text" id="mkt-ne-estado" maxlength="2" placeholder="GO" required>
+                            </label>
+                            <label>Identificação (Casa, Trabalho)
+                                <input type="text" id="mkt-ne-rotulo" value="Casa" placeholder="Casa" required>
+                            </label>
+                        </div>
+                        <label>Complemento (opcional)
+                            <input type="text" id="mkt-ne-comp" placeholder="Apartamento, bloco, referência">
+                        </label>
+                        <button type="submit" class="mkt-btn-prim aki-btn-grande" style="background:var(--aki-success);"><i class="fa-solid fa-plus"></i> Salvar endereço</button>
+                        <p id="mkt-ne-msg" class="mkt-msg"></p>
+                    </form>
+                </div>
+
+                <!-- Privacidade, Termos e LGPD recolhidos no background -->
+                <details class="mkt-card-box aki-lgpd-bg-box" style="grid-column:1/-1;">
+                    <summary style="cursor:pointer;font-weight:700;font-size:0.98rem;color:var(--aki-ink);display:flex;align-items:center;gap:10px;list-style:none;">
+                        <i class="fa-solid fa-shield-halved" style="color:var(--aki-brand);"></i>
+                        <span>Privacidade, Termos de Uso e Controle de Dados (LGPD)</span>
+                        <span style="margin-left:auto;font-size:0.86rem;color:var(--aki-brand);font-weight:600;">Ver opções <i class="fa-solid fa-chevron-down"></i></span>
+                    </summary>
+                    <div style="margin-top:16px;">
+                        <p style="margin:0 0 12px;color:var(--aki-ink-2);font-size:0.94rem;">Conforme a Lei nº 13.709/2018 (LGPD), você decide sobre a personalização por região e pode baixar ou excluir seus dados a qualquer momento.</p>
+                        <label style="display:flex;align-items:flex-start;gap:12px;background:var(--aki-canvas);border:1px solid var(--aki-line);padding:14px;border-radius:12px;margin-bottom:14px;cursor:pointer;">
+                            <input type="checkbox" id="mkt-conta-ia-chk" style="width:20px;height:20px;margin-top:2px;accent-color:var(--aki-brand);">
+                            <span><strong>Permitir recomendações personalizadas de preço e região</strong><br><small style="color:var(--aki-muted);">Utiliza suas buscas e bairro para sugerir ofertas mais relevantes. Desmarcar apaga o histórico comportamental.</small></span>
+                        </label>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button type="button" id="mkt-btn-exportar-lgpd" class="mkt-btn-outline"><i class="fa-solid fa-download"></i> Baixar meus dados (JSON)</button>
+                            <button type="button" id="mkt-btn-pref-lgpd" class="mkt-btn-outline" onclick="window.AcheIAkiLGPD && window.AcheIAkiLGPD.abrirPreferencias()"><i class="fa-solid fa-sliders"></i> Preferências de cookies</button>
+                            <button type="button" id="mkt-btn-excluir-lgpd" class="mkt-btn-outline" style="color:var(--aki-danger);border-color:#fecaca;background:var(--aki-danger-bg);"><i class="fa-solid fa-trash-can"></i> Excluir minha conta</button>
+                        </div>
+                        <p id="mkt-lgpd-msg" class="mkt-msg"></p>
+                    </div>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="aki-footer-legal">
+        <span><strong>Ache<span style="color:#0284c7;">IA</span>ki</strong> — O Marketplace Inteligente da sua Região · Direto da loja, taxa zero.</span>
+        <span style="display:flex;gap:14px;flex-wrap:wrap;">
+            <a href="termos.html">Termos de Uso</a>
+            <a href="privacidade.html">Política de Privacidade (LGPD)</a>
+            <button type="button" onclick="window.AcheIAkiLGPD && window.AcheIAkiLGPD.abrirPreferencias()">Privacidade e IA</button>
+        </span>
+    </footer>
+
+    <!-- PORTAL DE ENTRADA OBRIGATÓRIO: PERGUNTA "USUÁRIO OU CNPJ?" -->
+    <div id="mkt-modal-conta" class="mkt-modal aki-portal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="mkt-gate-titulo">
+        <div class="mkt-modal-card mkt-modal-gate aki-portal-card">
+            <button type="button" class="mkt-modal-x" id="mkt-fechar-conta" aria-label="Fechar" hidden>&times;</button>
+
+            <div class="aki-portal-brand">
+                <img src="assets/images/acheiaki-icon.jpg" alt="AcheIAki">
+                <div>
+                    <div class="aki-portal-logo-txt">Ache<span>IA</span>ki</div>
+                    <small>Marketplace inteligente da sua região</small>
+                </div>
+            </div>
+
+            <!-- PASSO 0: ESCOLHA DE PERFIL -->
+            <div id="mkt-gate-escolha">
+                <div class="mkt-gate-top">
+                    <h2 id="mkt-gate-titulo">Bem-vindo. Como você deseja acessar?</h2>
+                    <p id="mkt-gate-sub">Escolha uma opção abaixo para ir direto ao lugar certo:</p>
+                </div>
+
+                <div class="aki-role-grid">
+                    <button type="button" id="mkt-escolha-cliente" class="aki-role-btn aki-role-cliente">
+                        <span class="aki-role-ico"><i class="fa-solid fa-bag-shopping"></i></span>
+                        <span class="aki-role-title">Sou cliente (usuário)</span>
+                        <span class="aki-role-desc">Quero ver lojas perto de mim, comparar preços e fazer pedidos</span>
+                        <span class="aki-role-go">Entrar ou criar conta <i class="fa-solid fa-arrow-right"></i></span>
+                    </button>
+
+                    <button type="button" id="mkt-escolha-empresa" class="aki-role-btn aki-role-empresa">
+                        <span class="aki-role-ico"><i class="fa-solid fa-store"></i></span>
+                        <span class="aki-role-title">Sou empresa (CNPJ)</span>
+                        <span class="aki-role-desc">Quero cadastrar meu restaurante/loja ou abrir o painel de gestão</span>
+                        <span class="aki-role-go">Acessar área da empresa <i class="fa-solid fa-arrow-right"></i></span>
+                    </button>
+                </div>
+
+                <p class="aki-portal-legal-mini">
+                    Ao continuar, você concorda com nossos <a href="termos.html" target="_blank">Termos de Uso</a> e <a href="privacidade.html" target="_blank">Política de Privacidade</a>.
+                </p>
+                <div id="mkt-gate-demo-wrap" hidden style="text-align:center;margin-top:10px;">
+                    <button type="button" id="mkt-gate-pular-demo" style="background:none;border:none;color:var(--aki-muted);font-weight:600;cursor:pointer;text-decoration:underline;font-size:0.88rem;">Modo Análise: explorar sem conta</button>
+                </div>
+            </div>
+
+            <!-- CAMINHO EMPRESA (CNPJ) -->
+            <div id="mkt-gate-empresa" hidden>
+                <button type="button" id="mkt-voltar-empresa" class="aki-back-btn"><i class="fa-solid fa-arrow-left"></i> Voltar à escolha</button>
+                <div class="mkt-gate-top">
+                    <h2 style="font-size:1.4rem;">Área da Empresa (CNPJ)</h2>
+                    <p>O que sua empresa precisa fazer agora?</p>
+                </div>
+                <div class="aki-role-grid" style="grid-template-columns:1fr;">
+                    <a href="cadastro.html?modo=cadastrar" class="aki-role-btn aki-role-cliente" style="text-decoration:none;">
+                        <span class="aki-role-ico"><i class="fa-solid fa-plus"></i></span>
+                        <span class="aki-role-title">Ainda não tenho loja — Cadastrar empresa</span>
+                        <span class="aki-role-desc">Crie seu cardápio e apareça no marketplace regional informando o CNPJ</span>
+                        <span class="aki-role-go">Ir para cadastro da empresa <i class="fa-solid fa-arrow-right"></i></span>
+                    </a>
+                    <a href="cadastro.html?modo=entrar" class="aki-role-btn aki-role-empresa" style="text-decoration:none;">
+                        <span class="aki-role-ico"><i class="fa-solid fa-right-to-bracket"></i></span>
+                        <span class="aki-role-title">Já tenho loja — Entrar no painel</span>
+                        <span class="aki-role-desc">Acesse seus pedidos, cozinha, cardápio e financeiro</span>
+                        <span class="aki-role-go">Entrar na minha loja <i class="fa-solid fa-arrow-right"></i></span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- CAMINHO CLIENTE: ENTRAR OU CADASTRAR ANTES DE USAR -->
+            <div id="mkt-gate-cliente" hidden>
+                <button type="button" id="mkt-voltar-cliente" class="aki-back-btn"><i class="fa-solid fa-store"></i> Sou empresa (CNPJ) — mudar acesso</button>
+
+                <div class="mkt-gate-top">
+                    <h2 id="mkt-cli-titulo" style="font-size:1.38rem;">Acesse sua conta de cliente</h2>
+                    <p id="mkt-cli-sub">Entre ou cadastre-se em menos de 1 minuto para ver lojas e fazer pedidos.</p>
+                </div>
+
+                <div id="mkt-gate-pendencias" class="mkt-alerta-erro" hidden></div>
+
+                <div class="mkt-conta-tabs aki-tabs-grandes" id="mkt-auth-tabs">
+                    <button type="button" data-auth="cadastrar" class="ativo">Sou novo (Criar conta)</button>
+                    <button type="button" data-auth="login">Já tenho conta (Entrar)</button>
+                </div>
+
+                <div id="mkt-google-wrap" hidden style="margin-bottom:14px;">
+                    <div id="mkt-google-btn-oficial" style="display:flex;justify-content:center;"></div>
+                </div>
+
+                <!-- FORM CADASTRO DO CLIENTE -->
+                <form id="mkt-form-cadastro" class="mkt-form aki-form-grande">
+                    <label>Seu nome *
+                        <input type="text" name="nome" id="mkt-cad-nome" placeholder="Ex.: Maria da Silva" required>
+                    </label>
+                    <label>WhatsApp com DDD *
+                        <input type="tel" name="telefone" id="mkt-cad-tel" placeholder="Ex.: (62) 99999-9999" required>
+                    </label>
+                    <label>E-mail *
+                        <input type="email" name="email" id="mkt-cad-email" placeholder="Ex.: maria@gmail.com" required>
+                    </label>
+                    <div id="mkt-cad-senhas-row">
+                        <label>Crie uma senha (mínimo 6 caracteres) *
+                            <div class="aki-pass-wrap">
+                                <input type="password" name="senha" id="mkt-cad-senha" minlength="6" placeholder="Digite sua senha">
+                                <button type="button" class="aki-btn-ver-senha" data-ver-senha="mkt-cad-senha"><i class="fa-regular fa-eye"></i> Ver</button>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="mkt-cad-end-box aki-end-simples">
+                        <label style="margin-bottom:4px;">Onde você está? (Para achar lojas próximas)</label>
+                        <button type="button" id="mkt-cad-gps-btn" class="aki-btn-gps-gigante">
+                            <i class="fa-solid fa-location-crosshairs"></i> Usar minha localização atual (GPS)
+                        </button>
+                        <small id="mkt-cad-gps-status" class="mkt-gps-status" style="font-size:0.9rem;"></small>
+                        <div class="mkt-form-2">
+                            <label>Ou digite o CEP
+                                <input type="text" name="cep" id="mkt-cad-cep" maxlength="9" placeholder="00000-000">
+                            </label>
+                            <label>Número
+                                <input type="text" name="numero" id="mkt-cad-numero" placeholder="Ex.: 120">
+                            </label>
+                        </div>
+                        <div class="mkt-form-2">
+                            <label>Cidade
+                                <input type="text" name="cidade" id="mkt-cad-cidade" placeholder="Sua cidade">
+                            </label>
+                            <label>Bairro
+                                <input type="text" name="bairro" id="mkt-cad-bairro" placeholder="Seu bairro">
+                            </label>
+                        </div>
+                        <input type="hidden" name="rua" id="mkt-cad-rua">
+                        <input type="hidden" name="estado" id="mkt-cad-estado">
+                        <input type="hidden" name="complemento" id="mkt-cad-comp">
+                        <input type="hidden" name="cpf" id="mkt-cad-cpf">
+                        <input type="hidden" id="mkt-cad-lat" value="0">
+                        <input type="hidden" id="mkt-cad-lng" value="0">
+                    </div>
+
+                    <label class="aki-check-gigante">
+                        <input type="checkbox" id="mkt-cad-termos" checked required>
+                        <span>Concordo com os <a href="termos.html" target="_blank">Termos de Uso</a> e autorizo recomendações de preços na minha região (<a href="privacidade.html" target="_blank">Privacidade</a>).</span>
+                    </label>
+                    <input type="checkbox" id="mkt-cad-ia" checked hidden>
+
+                    <button type="submit" id="mkt-cad-submit" class="mkt-btn-prim aki-btn-grande" style="background:var(--aki-accent);">Criar conta e continuar <i class="fa-solid fa-arrow-right"></i></button>
+                </form>
+
+                <!-- FORM LOGIN CLIENTE -->
+                <form id="mkt-form-login" class="mkt-form aki-form-grande" hidden>
+                    <label>WhatsApp ou E-mail *
+                        <input type="text" name="telefone" id="mkt-login-ident" placeholder="Ex.: 62999999999 ou seuemail@gmail.com" autocomplete="username" required>
+                    </label>
+                    <label>Sua senha *
+                        <div class="aki-pass-wrap">
+                            <input type="password" name="senha" id="mkt-login-senha" placeholder="Digite sua senha" autocomplete="current-password" required>
+                            <button type="button" class="aki-btn-ver-senha" data-ver-senha="mkt-login-senha"><i class="fa-regular fa-eye"></i> Ver</button>
+                        </div>
+                    </label>
+                    <label class="aki-check-gigante">
+                        <input type="checkbox" id="mkt-login-termos" checked required>
+                        <span>Continuar aceitando os <a href="termos.html" target="_blank">Termos</a> e recomendações da região.</span>
+                    </label>
+                    <button type="submit" class="mkt-btn-prim aki-btn-grande">Entrar na conta <i class="fa-solid fa-arrow-right"></i></button>
+                </form>
+
+                <p id="mkt-conta-msg" class="mkt-msg" style="font-size:0.96rem;text-align:center;"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL VISUALIZADOR DA PÁGINA COMPLETA DA EMPRESA CNPJ -->
+    <div id="mkt-modal-loja" class="mkt-modal" hidden role="dialog" aria-modal="true">
+        <div class="mkt-modal-loja-card" id="mkt-loja-view">
+            <button type="button" class="mkt-modal-x mkt-loja-x" id="mkt-fechar-loja" aria-label="Fechar">&times;</button>
+            <div id="mkt-loja-conteudo">
+                <div class="mkt-empty">Carregando página completa da empresa...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AVALIAR -->
+    <div id="mkt-modal-avaliar" class="mkt-modal" hidden>
+        <div class="mkt-modal-card">
+            <button type="button" class="mkt-modal-x" id="mkt-fechar-avaliar">&times;</button>
+            <h3>Avaliar pedido</h3>
+            <p id="mkt-av-loja-nome" style="color:#64748b;margin-top:0;"></p>
+            <form id="mkt-form-avaliar" class="mkt-form">
+                <input type="hidden" id="mkt-av-slug">
+                <input type="hidden" id="mkt-av-codigo">
+                <label>Nota (1 a 5 estrelas)
+                    <select id="mkt-av-nota">
+                        <option value="5">★★★★★ Excelente (5)</option>
+                        <option value="4">★★★★☆ Muito bom (4)</option>
+                        <option value="3">★★★☆☆ Razoável (3)</option>
+                        <option value="2">★★☆☆☆ Ruim (2)</option>
+                        <option value="1">★☆☆☆☆ Muito ruim (1)</option>
+                    </select>
+                </label>
+                <label>Comentário<textarea id="mkt-av-coment" rows="3" placeholder="Conte como foi seu pedido..."></textarea></label>
+                <button type="submit" class="mkt-btn-prim">Enviar avaliação</button>
+                <p id="mkt-av-msg" class="mkt-msg"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="mkt-toast" class="mkt-toast" hidden></div>
+
+    <script src="js/modo-apresentacao.js"></script>
+    <script src="js/lgpd-consent.js"></script>
+    <script src="js/localizacao-gate.js"></script>
+    <script src="js/celulas-sync.js"></script>
+    <script src="js/marketplace.js"></script>
+    <script>
+        if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+            navigator.serviceWorker.register('sw.js').catch(function () {});
+        }
+    </script>
+</body>
+</html>

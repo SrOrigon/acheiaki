@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b1120">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Tela da Cozinha</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
+    <link rel="stylesheet" href="css/ajuda-visivel.css?v=2">
+    <link rel="icon" type="image/jpeg" href="assets/images/acheiaki-icon.jpg">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #0b1120;
+            color: #f8fafc;
+            min-height: 100vh;
+            font-size: 16px;
+        }
+        .topo {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(11, 17, 32, 0.94);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 18px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .topo h1 { margin: 0; font-size: 1.4rem; color: #f8fafc; }
+        .topo .meta { color: #94a3b8; font-size: 0.94rem; }
+        .acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+        .acoes button {
+            border: none;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            min-height: 54px;
+        }
+        #btn-auto-imprimir { background: #0369a1; color: #fff; }
+        #btn-som-cozinha { background: #15803d; color: #fff; }
+        #btn-atualizar { background: #e85d04; color: #fff; }
+        #btn-notificacao { background: #475569; color: #fff; }
+        .erro { background: #7f1d1d; color: #fecaca; padding: 12px 16px; font-weight: 600; }
+        .conteudo { padding: 16px; }
+        .vazio {
+            text-align: center;
+            padding: 48px 16px;
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+        .grade {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr));
+            gap: 14px;
+        }
+        @media (min-width: 640px) and (max-width: 1024px) {
+            .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 639px) {
+            .topo { padding: 10px 14px; }
+            .topo h1 { font-size: 1.2rem; }
+            .conteudo { padding: 12px 12px calc(24px + env(safe-area-inset-bottom)); }
+        }
+        .ficha {
+            background: #162032;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-top: 3px solid #e85d04;
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.45);
+        }
+        @keyframes entrada {
+            from { transform: scale(0.97); opacity: 0.6; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .ficha header { display: flex; justify-content: space-between; align-items: center; }
+        .num { font-size: 1.6rem; font-weight: 800; color: #fdba74; }
+        .tempo { background: #334155; padding: 4px 10px; border-radius: 999px; font-size: 0.9rem; }
+        .cliente { margin: 0; color: #cbd5e1; font-size: 1rem; }
+        .itens { margin: 0; padding-left: 1.2rem; font-size: 1.15rem; line-height: 1.45; }
+        .itens .tam { color: #94a3b8; font-size: 0.95rem; }
+        .ops { margin: 4px 0 0; padding-left: 1rem; font-size: 0.95rem; color: #fcd34d; list-style: none; }
+        .obs-card {
+            background: #450a0a;
+            border: 1px solid #f87171;
+            color: #fecaca;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 1.05rem;
+        }
+        .ficha footer { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+        .btn-imprimir { background: #e2e8f0; color: #0f172a; font-weight: 800; border: none; border-radius: 12px; padding: 14px; cursor: pointer; min-height: 58px; font-size: 1.05rem; }
+        .btn-pronto { background: #16a34a; color: #fff; font-weight: 800; border: none; border-radius: 12px; padding: 16px; cursor: pointer; font-size: 1.12rem; min-height: 58px; }
+        .selo-balcao { font-size: 0.55em; background: #0d9488; color: #fff; padding: 2px 6px; border-radius: 6px; vertical-align: middle; margin-left: 4px; }
+        .dica {
+            background: #1e3a5f;
+            border: 1px solid #38bdf8;
+            color: #e0f2fe;
+            padding: 12px 16px;
+            margin: 0 16px 16px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            line-height: 1.45;
+        }
+    </style>
+</head>
+<body data-pagina="cozinha">
+    <div id="erro-cozinha" class="erro" hidden></div>
+    <header class="topo">
+        <div>
+            <h1 id="nome-loja">Cozinha</h1>
+            <p class="meta"><span id="contagem-cozinha">0</span> pedido(s) preparando · <span id="atualizado">Aguardando...</span></p>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <a id="cozinha-link-painel" href="painel.html" style="display:inline-flex; align-items:center; gap:6px; padding:10px 14px; border-radius:10px; background:#334155; color:#f8fafc; font-weight:700; text-decoration:none; font-size:0.9rem;"><i class="fa-solid fa-arrow-left"></i> Painel</a>
+            <a id="cozinha-link-loja" href="index.html" style="display:inline-flex; align-items:center; gap:6px; padding:10px 14px; border-radius:10px; background:#ea580c; color:#ffffff; font-weight:700; text-decoration:none; font-size:0.9rem;"><i class="fa-solid fa-store"></i> Ver loja</a>
+        </div>
+    </header>
+    <p class="dica ajuda-visivel-bloco" id="cozinha-intro" style="margin:12px 16px;background:#1e293b;border-color:#f97316;color:#fdba74;"></p>
+    <div class="ferramentas-grade" style="padding:0 16px 8px;" id="cozinha-ferramentas">
+        <div class="ferramenta-linha">
+            <button type="button" id="btn-auto-imprimir" class="btn-ferramenta" style="background:#0369a1;"><i class="fa-solid fa-print"></i> Impressão automática</button>
+            <div class="ferramenta-explica"><strong id="ajuda-cozinha-titulo-impressao">Impressão</strong><span id="ajuda-cozinha-texto-impressao"></span></div>
+        </div>
+        <div class="ferramenta-linha">
+            <button type="button" id="btn-som-cozinha" class="btn-ferramenta" style="background:#059669;"><i class="fa-solid fa-bell"></i> Som ligado</button>
+            <div class="ferramenta-explica"><strong id="ajuda-cozinha-titulo-som">Som</strong><span id="ajuda-cozinha-texto-som"></span></div>
+        </div>
+        <div class="ferramenta-linha">
+            <button type="button" id="btn-atualizar" class="btn-ferramenta" style="background:#f97316;"><i class="fa-solid fa-rotate"></i> Atualizar</button>
+            <div class="ferramenta-explica"><strong id="ajuda-cozinha-titulo-atualizar">Atualizar</strong><span id="ajuda-cozinha-texto-atualizar"></span></div>
+        </div>
+        <button type="button" id="btn-notificacao" style="display:none;">Notificação</button>
+    </div>
+    <p class="dica" id="cozinha-dica">Carregando instruções...</p>
+    <h2 class="cozinha-fichas-titulo" id="cozinha-fichas-titulo">Botões em cada pedido da lista</h2>
+    <div class="ferramentas-grade" style="padding:0 16px 12px;" id="cozinha-fichas-ajuda"></div>
+  <div class="conteudo">
+        <p id="cozinha-vazia" class="vazio" hidden>Nenhum pedido na cozinha no momento.</p>
+        <div id="lista-cozinha" class="grade"></div>
+    </div>
+    <script src="js/tenant.js"></script>
+    <script src="js/celulas-sync.js"></script>
+    <script src="js/store-loader.js"></script>
+    <script>PedidoZapStore.load({ fallbackStatic: true, silent: true }).catch(function () {});</script>
+    <script src="js/comanda.js?v=2"></script>
+    <script src="js/ajuda-loja.js?v=1"></script>
+    <script src="js/cozinha.js?v=3"></script>
+    <script>
+        (function () {
+            const err = document.getElementById('erro-cozinha');
+            const sk = (typeof TENANT !== 'undefined') ? TENANT.storageKey('cozinha_k') : 'cozinha_k';
+            if (!new URLSearchParams(location.search).get('k') && !sessionStorage.getItem(sk)) {
+                err.hidden = false;
+                const aj = (window.APP_CONFIG && APP_CONFIG.AJUDA && APP_CONFIG.AJUDA.cozinha) || {};
+                err.textContent = aj.sem_link || 'Abra esta tela pelo botão marrom Link da cozinha, na tela de pedidos.';
+            }
+        })();
+        document.addEventListener('pedidozap-store', function () {
+            const err = document.getElementById('erro-cozinha');
+            if (!err || err.hidden) return;
+            const aj = (window.APP_CONFIG && APP_CONFIG.AJUDA && APP_CONFIG.AJUDA.cozinha) || {};
+            if (aj.sem_link) err.textContent = aj.sem_link;
+        });
+    </script>
+</body>
+</html>

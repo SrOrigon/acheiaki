@@ -1,0 +1,419 @@
+/* Assistente IA — diálogo flutuante e barra de modo simples */
+#pz-assistente-fab {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 15000;
+    min-height: 52px;
+    padding: 12px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    background: #0b192c;
+    color: #fff;
+    font-size: 0.96rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 10px 26px -6px rgba(11, 25, 44, 0.38);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+#pz-assistente-fab[aria-expanded="true"] {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#pz-assistente-painel {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 15001;
+    width: min(410px, calc(100vw - 24px));
+    max-height: min(620px, calc(100vh - 32px));
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 24px 60px -16px rgba(11, 25, 44, 0.34);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(20, 23, 31, 0.12);
+}
+
+#pz-assistente-painel[hidden] {
+    display: none !important;
+}
+
+.pz-assist-topo {
+    background: #0b192c;
+    color: #fff;
+    padding: 15px 18px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pz-assist-topo h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    line-height: 1.3;
+}
+
+.pz-assist-topo p {
+    margin: 6px 0 0;
+    font-size: 0.9rem;
+    opacity: 0.92;
+}
+
+.pz-assist-fechar {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.pz-assist-mensagens {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 14px 8px;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pz-msg {
+    max-width: 92%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 1rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+}
+
+.pz-msg-bot {
+    align-self: flex-start;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    color: #1e293b;
+}
+
+.pz-msg-user {
+    align-self: flex-end;
+    background: #0d9488;
+    color: #fff;
+}
+
+.pz-assist-atalhos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 14px 10px;
+    background: #f8fafc;
+}
+
+.pz-assist-atalhos button {
+    border: 2px solid #cbd5e1;
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: #334155;
+}
+
+.pz-assist-atalhos button:hover {
+    border-color: #0d9488;
+    color: #0f766e;
+}
+
+.pz-assist-entrada {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid #e2e8f0;
+    background: #fff;
+}
+
+.pz-assist-entrada input {
+    flex: 1;
+    min-height: 52px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 1.05rem;
+}
+
+.pz-assist-entrada button {
+    min-width: 52px;
+    min-height: 52px;
+    border: none;
+    border-radius: 12px;
+    background: #f97136;
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.admin-modo-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid rgba(20, 23, 31, 0.09);
+    border-radius: 12px;
+}
+
+.admin-modo-bar label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    margin: 0;
+}
+
+.admin-modo-bar .dica-modo {
+    font-size: 0.95rem;
+    color: #065f46;
+    flex: 1;
+    min-width: 200px;
+}
+
+body[data-modo-admin="facil"] #admin-tabs [data-modo="avancado"] {
+    display: none;
+}
+
+body[data-modo-admin="facil"] [data-painel-avancado="1"] {
+    display: none !important;
+}
+
+.admin-card-assistente-home {
+    border: 2px solid #5eead4;
+    background: linear-gradient(180deg, #f0fdfa 0%, #fff 100%);
+}
+
+.cadastro-assistente {
+    margin-top: 16px;
+}
+
+.cadastro-toggle-modos {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.cadastro-toggle-modos button {
+    flex: 1;
+    min-width: 140px;
+    min-height: 52px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cadastro-toggle-modos button.ativo {
+    border-color: #0d9488;
+    background: #ccfbf1;
+    color: #0f766e;
+}
+
+#cadastro-assistente-embed .pz-assist-mensagens {
+    min-height: 220px;
+    max-height: 360px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+#cadastro-assistente-embed .pz-assist-entrada {
+    border: none;
+    padding: 12px 0 0;
+}
+
+/* Metadados ricos do Agente IA (Cards, Origem dos Números, Ações) */
+.pz-msg-meta {
+    margin-top: 8px;
+    padding-top: 7px;
+    border-top: 1px dashed #cbd5e1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.pz-origem-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #0f766e;
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+    border-radius: 999px;
+    padding: 2px 8px;
+}
+
+.pz-acao-ok {
+    margin-top: 6px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #ecfdf5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.pz-msg-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.pz-mini-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px 8px;
+}
+
+.pz-mini-card span {
+    display: block;
+    font-size: 0.7rem;
+    color: #64748b;
+    font-weight: 700;
+}
+
+.pz-mini-card strong {
+    font-size: 0.92rem;
+    color: #0f172a;
+}
+
+.pz-msg-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.pz-msg-acao-btn {
+    border: none;
+    background: #0f766e;
+    color: #fff;
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Atendente Virtual da Vitrine (index.html) */
+#pz-vitrine-ia-fab {
+    position: fixed;
+    left: 14px;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    z-index: 12000;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    padding: 11px 16px;
+    background: #0b192c;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 10px 24px -6px rgba(11, 25, 44, 0.36);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#pz-vitrine-ia-box {
+    position: fixed;
+    left: 16px;
+    bottom: 84px;
+    z-index: 12001;
+    width: min(370px, calc(100vw - 32px));
+    max-height: min(520px, calc(100vh - 120px));
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 24px 60px -16px rgba(11, 25, 44, 0.34);
+    border: 1px solid rgba(20, 23, 31, 0.12);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#pz-vitrine-ia-box[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 640px) {
+    #pz-assistente-fab {
+        bottom: calc(14px + env(safe-area-inset-bottom));
+        right: 14px;
+        min-height: 48px;
+        padding: 11px 16px;
+    }
+    #pz-assistente-painel,
+    #pz-vitrine-ia-box {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        max-height: 88dvh;
+        border-radius: 22px 22px 0 0;
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* Botão de Voz (liberado apenas quando cliente cadastra IA Pessoal com voz ativa) */
+.pz-btn-voz {
+    border: 2px solid #0d9488;
+    border-radius: 10px;
+    background: #f0fdfa;
+    color: #0f766e;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.pz-btn-voz[hidden] {
+    display: none !important;
+}
+
+.pz-btn-voz:hover {
+    background: #ccfbf1;
+}
+
+.pz-btn-voz.ouvindo {
+    background: #dc2626;
+    border-color: #b91c1c;
+    color: #fff;
+    animation: pz-voz-pulso 1.1s infinite;
+}
+
+@keyframes pz-voz-pulso {
+    0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55); }
+    70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}

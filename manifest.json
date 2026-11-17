@@ -1,0 +1,20 @@
+{
+  "name": "AcheIAki — O Marketplace Inteligente da sua Região",
+  "short_name": "AcheIAki",
+  "description": "Compare preços por segmento perto de você e peça direto da loja sem taxa escondida.",
+  "start_url": "marketplace.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7f6f2",
+  "theme_color": "#0b192c",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "assets/images/acheiaki-icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /painel.html
+Disallow: /motoboy.html
+Disallow: /rastreio.html
+Disallow: /data/
+Disallow: /login.php
+Disallow: /save_order.php
+Disallow: /save_data.php
+Disallow: /get_orders.php
+Disallow: /get_active_orders.php
+Disallow: /get_order_status.php
+Disallow: /update_order_status.php
+Disallow: /update_location.php
+Disallow: /delete_archived_orders.php
+Disallow: /auth_config.php
+
+Sitemap: https://acheiaki.com.br/sitemap.xml

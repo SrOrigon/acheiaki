@@ -1,0 +1,131 @@
+/* Painel admin — leitura limpa, espaçamento equilibrado e toques amplos */
+body[data-pagina="admin"] {
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-text-size-adjust: 100%;
+}
+
+body[data-pagina="admin"] .form-group-admin input,
+body[data-pagina="admin"] .form-group-admin textarea,
+body[data-pagina="admin"] .form-group-admin select {
+    min-height: 48px;
+    font-size: 1rem;
+}
+
+body[data-pagina="admin"] .admin-tabs button {
+    min-height: 46px;
+    font-size: 0.94rem;
+    line-height: 1.25;
+}
+
+body[data-pagina="admin"] .btn-save-file {
+    min-height: 48px;
+    font-size: 0.98rem;
+}
+
+body[data-pagina="admin"] .btn-mini {
+    min-height: 42px;
+    font-size: 0.9rem;
+    padding: 9px 14px;
+}
+
+body[data-pagina="admin"] :focus-visible {
+    outline: 2.5px solid #0284c7;
+    outline-offset: 2px;
+}
+
+.dica-abas {
+    background: #fff;
+    border: 1px solid rgba(20, 23, 31, 0.09);
+    border-left: 3px solid #0284c7;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 0 0 14px;
+    font-size: 0.96rem;
+    color: #374151;
+    font-weight: 500;
+}
+
+.regras-faceis {
+    background: #fff;
+    border: 1px solid rgba(20, 23, 31, 0.09);
+    border-left: 3px solid #15803d;
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 18px;
+}
+
+.regras-faceis h3 {
+    margin: 0 0 8px;
+    color: #14171f;
+    font-size: 1.05rem;
+}
+
+.regras-faceis ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: #4b5563;
+}
+
+.regras-faceis li {
+    margin-bottom: 6px;
+    font-size: 0.94rem;
+}
+
+.dica-secao {
+    background: #f7f6f2;
+    border-left: 3px solid #0284c7;
+    padding: 12px 16px;
+    margin: 0 0 16px;
+    border-radius: 0 10px 10px 0;
+    color: #374151;
+    font-size: 0.96rem;
+}
+
+.modal-boas-vindas {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20000;
+    padding: 20px;
+}
+
+.modal-boas-vindas[hidden] {
+    display: none !important;
+}
+
+.modal-boas-vindas .caixa {
+    max-width: 520px;
+    width: 100%;
+    background: #fff;
+    border-radius: 20px;
+    padding: 28px 24px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.modal-boas-vindas .caixa h2 {
+    margin: 0 0 12px;
+    font-size: 1.55rem;
+    color: #0f766e;
+}
+
+.modal-boas-vindas .caixa p {
+    margin: 0 0 20px;
+    color: #4b5563;
+    line-height: 1.5;
+}
+
+.modal-boas-vindas .acoes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-boas-vindas .acoes .btn-save-file {
+    width: 100%;
+    justify-content: center;
+}

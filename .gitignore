@@ -1,0 +1,24 @@
+# Ambientes e segredos locais
+.env
+.env.local
+.env.*.local
+
+# Editor e scripts auxiliares
+.vscode/
+check_braces.js
+
+# Dados sensiveis / runtime local (em producao vem do PostgreSQL/MySQL ou Volume)
+data/auth.json
+data/master_auth.json
+data/db_config.json
+data/integracoes.json
+data/saas_config.json
+data/pedidos.json
+data/tenants_registry.json
+data/tenants/
+data/logs/
+
+# Logs e arquivos temporarios do sistema
+*.log
+.DS_Store
+Thumbs.db

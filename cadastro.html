@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b192c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <title>AcheIAki — Cadastre sua empresa sem comissão por pedido (Taxa Zero)</title>
+    <meta name="description" content="Pare de perder até 25% por pedido. Cadastre sua empresa no AcheIAki: cardápio digital, IA regional, kit pronto para converter clientes na sacola/WhatsApp e 0% de comissão.">
+    <meta name="robots" content="index, follow">
+    <link rel="icon" type="image/jpeg" href="assets/images/acheiaki-icon.jpg">
+    <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
+    <style>
+        body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--aki-canvas, #f7f6f2); color: var(--aki-ink, #14171f); font-size: 16px; line-height: 1.55; }
+        main { max-width: 780px; margin: 0 auto; padding: 24px 18px 56px; }
+        .aki-top-brand { background: #0b192c; color: #fff; border-radius: 16px; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 26px -10px rgba(11,25,44,0.28); }
+        .aki-top-brand-left { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
+        .aki-top-brand-left img { width: 42px; height: 42px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); object-fit: cover; }
+        .aki-top-word { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.025em; line-height: 1.1; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+        .aki-top-word .aki-ia { color: #38bdf8; }
+        .aki-top-sub { font-size: 0.82rem; color: #cbd5e1; margin-top: 2px; }
+        .aki-back-mkt { color: #fff; text-decoration: none; font-size: 0.88rem; font-weight: 600; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); display: inline-flex; align-items: center; gap: 7px; }
+        .aki-back-mkt:hover { background: rgba(255,255,255,0.16); }
+        h1 { font-size: 1.85rem; line-height: 1.2; margin: 10px 0 8px; color: #14171f; font-weight: 700; }
+        .promessa { background: #fff; border-radius: 14px; padding: 16px 20px; margin: 16px 0; border: 1px solid rgba(20,23,31,0.08); }
+        .promessa li { margin: 8px 0; }
+        .aki-pitch { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
+        .aki-roi-box { background: #0b192c; color: #fff; border-radius: 18px; padding: 20px 22px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 12px 28px -12px rgba(11,25,44,0.35); }
+        .aki-roi-kicker { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(56,189,248,0.16); color: #7dd3fc; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em; margin-bottom: 8px; }
+        .aki-roi-box h2 { margin: 0 0 6px; font-size: 1.25rem; color: #fff; }
+        .aki-roi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+        .aki-roi-box label { color: #cbd5e1; margin: 0 0 4px; font-size: 0.85rem; }
+        .aki-roi-box input[type="number"] { min-height: 44px; padding: 8px 12px; background: rgba(255,255,255,0.96); color: #14171f; font-weight: 700; }
+        .aki-roi-result { margin-top: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; padding: 14px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+        .aki-roi-stat small { display: block; font-size: 0.78rem; color: #cbd5e1; }
+        .aki-roi-stat strong { display: block; font-size: 1.35rem; font-variant-numeric: tabular-nums; margin-top: 2px; color: #38bdf8; }
+        .aki-roi-stat strong.alerta { color: #fca5a5; }
+        .aki-engines-card { background: #fff; border-radius: 18px; padding: 20px 22px; border: 1px solid rgba(20,23,31,0.09); box-shadow: 0 1px 2px rgba(20,23,31,0.04), 0 8px 20px -10px rgba(20,23,31,0.08); }
+        .aki-engines-card h2 { margin: 0 0 4px; font-size: 1.15rem; color: #14171f; }
+        .aki-engines-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+        .aki-engine-item { background: #faf9f6; border: 1px solid rgba(20,23,31,0.08); border-radius: 14px; padding: 14px; }
+        .aki-engine-tag { display: inline-block; font-size: 0.73rem; font-weight: 700; color: #0369a1; background: #e0f2fe; padding: 3px 8px; border-radius: 999px; margin-bottom: 6px; }
+        .aki-engine-item h3 { margin: 0 0 5px; font-size: 0.96rem; color: #14171f; line-height: 1.3; }
+        .aki-engine-item p { margin: 0; font-size: 0.84rem; color: #4b5563; line-height: 1.45; }
+        .aki-garantia-box { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: 14px; padding: 12px 16px; display: flex; align-items: flex-start; gap: 11px; font-size: 0.9rem; line-height: 1.45; }
+        .aki-garantia-box i { font-size: 1.2rem; margin-top: 2px; color: #059669; }
+        @media (max-width: 720px) {
+            .aki-roi-grid, .aki-engines-grid { grid-template-columns: 1fr; }
+        }
+        form, .pronto { background: #fff; border-radius: 18px; padding: 26px 24px; box-shadow: 0 1px 2px rgba(20,23,31,0.04), 0 8px 24px -8px rgba(20,23,31,0.08); border: 1px solid rgba(20,23,31,0.08); }
+        label { display: block; font-weight: 600; font-size: 0.94rem; margin: 14px 0 6px; color: #14171f; }
+        input, select { width: 100%; box-sizing: border-box; font-size: 1rem; min-height: 48px; padding: 11px 14px; border: 1px solid rgba(20,23,31,0.16); border-radius: 10px; background: #fff; font-family: inherit; }
+        input:focus, select:focus { outline: none; border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2,132,199,0.14); }
+        button, .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; background: #0b192c; color: #fff; border: 0; border-radius: 12px; min-height: 50px; padding: 12px 18px; font-size: 1rem; font-weight: 700; cursor: pointer; text-decoration: none; }
+        button:hover, .btn:hover { background: #132845; }
+        .cadastro-toggle-modos { background: #ece9e0; padding: 5px; border-radius: 14px; margin-bottom: 18px; }
+        .cadastro-toggle-modos button { margin-top: 0; background: transparent; color: #4b5563; border-radius: 10px; font-weight: 600; box-shadow: none; }
+        .cadastro-toggle-modos button.ativo { background: #fff; color: #14171f; font-weight: 700; box-shadow: 0 1px 3px rgba(20,23,31,0.09); }
+        .hp { position: absolute; left: -9999px; }
+        .erro { color: #b91c1c; font-weight: 600; background: #fef2f2; border: 1px solid #fecaca; padding: 10px 12px; border-radius: 10px; }
+        a.link { color: #0284c7; font-weight: 600; }
+        @media (max-width: 640px) {
+            main { padding: 14px 12px calc(32px + env(safe-area-inset-bottom)); }
+            form, .pronto { padding: 20px 16px; border-radius: 16px; }
+            form > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+        }
+    </style>
+    <link rel="stylesheet" href="css/assistente-ia.css">
+    <link rel="stylesheet" href="css/perfil-qualificado.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <main>
+        <div class="aki-top-brand">
+            <a href="marketplace.html" class="aki-top-brand-left">
+                <img src="assets/images/acheiaki-icon.jpg" alt="AcheIAki">
+                <div>
+                    <div class="aki-top-word">Ache<span class="aki-ia">IA</span>ki</div>
+                    <div class="aki-top-sub">Área da Empresa (CNPJ)</div>
+                </div>
+            </a>
+            <a href="marketplace.html?escolha=cliente" class="aki-back-mkt"><i class="fa-solid fa-bag-shopping"></i> Sou Cliente (Quero Comprar)</a>
+        </div>
+        <div style="background:#fff;border:1px solid rgba(20,23,31,0.09);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span style="font-weight:500;color:#4b5563;font-size:0.94rem;">Você está na área exclusiva de <strong style="color:#14171f;">empresas e restaurantes (CNPJ)</strong>.</span>
+            <a href="marketplace.html?escolha=cliente" style="color:#0284c7;font-weight:600;text-decoration:none;font-size:0.94rem;">Ir para compras como cliente <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <h1>Cadastre ou acesse sua loja no AcheIAki</h1>
+        <p style="font-size:1.02rem;color:#4b5563;">Escolha abaixo se deseja criar uma nova loja com seu CNPJ ou entrar no painel de uma loja já cadastrada:</p>
+        <div class="cadastro-toggle-modos" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:6px;">
+            <button type="button" id="btn-modo-form" class="ativo" style="min-height:50px;font-size:0.96rem;"><i class="fa-solid fa-store"></i> Cadastrar empresa</button>
+            <button type="button" id="btn-modo-entrar" style="min-height:50px;font-size:0.96rem;"><i class="fa-solid fa-right-to-bracket"></i> Já tenho loja (Entrar)</button>
+            <button type="button" id="btn-modo-assistente" style="min-height:50px;font-size:0.96rem;"><i class="fa-solid fa-comments"></i> Criar com ajuda</button>
+        </div>
+
+        <section id="cad-pitch-vendas" class="aki-pitch" aria-label="Como sua empresa vende mais sem pagar comissão">
+            <div class="aki-roi-box">
+                <span class="aki-roi-kicker"><i class="fa-solid fa-calculator"></i> Simulador Taxa Zero</span>
+                <h2>Quanto você deixa na mesa pagando comissão em outros apps?</h2>
+                <p style="margin:0;color:#cbd5e1;font-size:0.9rem;">No AcheIAki você paga <strong>0% de comissão</strong> por pedido. Veja quanto fica no seu caixa convertendo pedidos para o seu link direto:</p>
+                <div class="aki-roi-grid">
+                    <div>
+                        <label for="roi-pedidos">Pedidos/mês em apps com taxa (ex.: 25%)</label>
+                        <input id="roi-pedidos" type="number" min="1" max="5000" value="120" inputmode="numeric">
+                    </div>
+                    <div>
+                        <label for="roi-ticket">Valor médio de cada pedido (R$)</label>
+                        <input id="roi-ticket" type="number" min="10" max="500" value="55" inputmode="numeric">
+                    </div>
+                </div>
+                <div class="aki-roi-result">
+                    <div class="aki-roi-stat">
+                        <small>Taxa (~25%) perdida por mês</small>
+                        <strong id="roi-perda-mes" class="alerta">R$ 1.650,00</strong>
+                    </div>
+                    <div class="aki-roi-stat">
+                        <small>Economia em 12 meses com Taxa Zero</small>
+                        <strong id="roi-economia-ano">R$ 19.800,00</strong>
+                    </div>
+                    <div class="aki-roi-stat">
+                        <small>Vendas diretas que pagam o sistema</small>
+                        <strong id="roi-ponto-equilibrio">3 pedidos</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="aki-engines-card">
+                <h2>De onde vêm as vendas no AcheIAki desde o Dia 1?</h2>
+                <p style="margin:0;font-size:0.88rem;color:#4b5563;">Você não depende só de tráfego futuro: o sistema já traz ferramentas prontas para faturar hoje e crescer no Google:</p>
+                <div class="aki-engines-grid">
+                    <div class="aki-engine-item">
+                        <span class="aki-engine-tag">Dia 1 • Seus clientes</span>
+                        <h3>1. Kit de Sacola &amp; WhatsApp</h3>
+                        <p>Painel gera pronto o link da sua loja, mensagem de status no WhatsApp e <strong>panfleto imprimível para colocar nas sacolas e balcão</strong> puxando quem já compra de você para o pedido sem taxa.</p>
+                    </div>
+                    <div class="aki-engine-item">
+                        <span class="aki-engine-tag">Semana 1–4 • Orgânico</span>
+                        <h3>2. Página no Google &amp; Maps</h3>
+                        <p>Sua empresa entra automaticamente no mapa de busca do AcheIAki indexado no <strong>Google</strong>, e você já copia o link pronto para colocar no Google Meu Negócio e na bio do Instagram.</p>
+                    </div>
+                    <div class="aki-engine-item">
+                        <span class="aki-engine-tag">Contínuo • Rede IA</span>
+                        <h3>3. Descoberta pela IA Local</h3>
+                        <p>Cada cliente da sua cidade que entra no marketplace recebe recomendações inteligentes por preço, tempo de entrega e avaliações reais perto dele — sem leilão nem taxa.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="aki-garantia-box">
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                <div>
+                    <strong>Condição Loja Fundadora — Risco Zero:</strong> comece com teste grátis completo, cadastre seu cardápio com ajuda da nossa IA em minutos, <strong>sem fidelidade e sem multa de cancelamento</strong>.
+                </div>
+            </div>
+        </section>
+
+        <form id="form-entrar-empresa" hidden>
+            <h2 style="margin-top:0;font-size:1.3rem;color:#14171f;">Entrar no painel da sua loja</h2>
+            <p style="margin-top:0;color:#4b5563;font-size:0.95rem;">Informe o usuário de acesso ou o nome da empresa e a senha escolhida no cadastro:</p>
+            <label for="entrar-empresa-user">Usuário ou Nome da Loja *</label>
+            <input id="entrar-empresa-user" required autocomplete="username" placeholder="Ex.: maria ou Pizzaria Sabor">
+            <label for="entrar-empresa-pass">Sua Senha *</label>
+            <div style="display:flex;gap:8px;align-items:stretch;">
+                <input id="entrar-empresa-pass" type="password" required autocomplete="current-password" placeholder="Digite sua senha" style="flex:1;">
+                <button type="button" data-cad-ver="entrar-empresa-pass" style="margin-top:0;min-height:48px;background:#f7f6f2;color:#14171f;border:1px solid rgba(20,23,31,0.16);padding:0 14px;font-size:0.92rem;font-weight:600;"><i class="fa-regular fa-eye"></i> Ver</button>
+            </div>
+            <p id="entrar-empresa-erro" class="erro" hidden></p>
+            <button type="submit" id="btn-entrar-empresa" style="width:100%;min-height:52px;font-size:1.05rem;background:#e85d04;">Entrar no painel da loja <i class="fa-solid fa-arrow-right"></i></button>
+        </form>
+
+        <section id="secao-assistente-cadastro" class="cadastro-assistente" hidden>
+            <p style="margin-top:0;">Conte o nome da loja, o tipo de comida e o WhatsApp — eu monto o resto.</p>
+            <div id="cadastro-assistente-embed">
+                <div class="pz-assist-mensagens"></div>
+                <div class="pz-assist-atalhos"></div>
+                <div class="pz-assist-entrada">
+                    <input type="text" placeholder="Digite sua resposta..." autocomplete="off">
+                    <button type="button" data-enviar title="Enviar">→</button>
+                </div>
+            </div>
+        </section>
+
+        <div id="pz-perfil-root" class="pz-perfil"></div>
+
+        <div id="cad-demo-bar" hidden style="margin:12px 0;padding:10px 14px;border-radius:12px;background:#fff7ed;border:1px dashed #fb923c;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <span style="font-size:0.88rem;color:#9a3412;font-weight:700;">Modo Análise: crie uma loja de teste instantaneamente mantendo todas as regras CNPJ.</span>
+            <button type="button" id="btn-cad-demo-apresentacao" style="margin:0;padding:8px 12px;min-height:auto;font-size:0.85rem;background:#ea580c;border-radius:8px;">Preencher empresa de teste</button>
+        </div>
+
+        <form id="form-cadastro">
+            <h2 style="margin-top:0;font-size:1.25rem;color:#9a3412;">1. Dados obrigatórios da empresa (CNPJ)</h2>
+            <label for="nome">Nome do estabelecimento *</label>
+            <input id="nome" name="nome" required minlength="3" placeholder="Ex.: Restaurante Fogão a Lenha">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                    <label for="cad-cnpj">CNPJ obrigatório (14 dígitos) *</label>
+                    <input id="cad-cnpj" name="cnpj" inputmode="numeric" required maxlength="18" placeholder="00.000.000/0001-00">
+                </div>
+                <div>
+                    <label for="cad-razao">Razão Social (se houver)</label>
+                    <input id="cad-razao" name="razao_social" placeholder="Razão social da empresa">
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                    <label for="nicho">Segmento / Tipo de comida *</label>
+                    <select id="nicho" name="nicho" required>
+                        <option value="pensao">Pensão / comida caseira</option>
+                        <option value="marmitaria">Marmita</option>
+                        <option value="lanchonete">Lanches</option>
+                        <option value="pizzaria">Pizzaria</option>
+                        <option value="acai">Açaí</option>
+                        <option value="confeitaria">Doceria</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="whatsapp">WhatsApp da loja (com DDD) *</label>
+                    <input id="whatsapp" name="whatsapp" inputmode="tel" required placeholder="Ex.: 62999999999">
+                </div>
+            </div>
+
+            <h2 style="margin:22px 0 6px;font-size:1.25rem;color:#9a3412;">2. Endereço e localização GPS obrigatória</h2>
+            <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+                <div style="flex:1;min-width:150px;">
+                    <label for="cad-cep">CEP *</label>
+                    <input id="cad-cep" name="cep" inputmode="numeric" required maxlength="9" placeholder="00000-000">
+                </div>
+                <button type="button" id="btn-cad-gps" style="margin-top:0;background:#0f766e;min-height:52px;font-size:0.95rem;"><i class="fa-solid fa-location-crosshairs"></i> Capturar GPS da loja *</button>
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;">
+                <div>
+                    <label for="cad-rua">Rua / Avenida *</label>
+                    <input id="cad-rua" name="rua" required placeholder="Ex.: Av. T-63">
+                </div>
+                <div>
+                    <label for="cad-numero">Número *</label>
+                    <input id="cad-numero" name="numero" required placeholder="Ex.: 1200">
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 90px;gap:10px;">
+                <div>
+                    <label for="cad-bairro">Bairro *</label>
+                    <input id="cad-bairro" name="bairro" required placeholder="Ex.: Setor Bueno">
+                </div>
+                <div>
+                    <label for="cad-cidade">Cidade *</label>
+                    <input id="cad-cidade" name="cidade" required placeholder="Ex.: Goiânia">
+                </div>
+                <div>
+                    <label for="cad-estado">UF *</label>
+                    <input id="cad-estado" name="estado" required maxlength="2" style="text-transform:uppercase;" placeholder="GO">
+                </div>
+            </div>
+            <input type="hidden" id="cad-lat" value="0">
+            <input type="hidden" id="cad-lng" value="0">
+            <p id="cad-gps-status" style="font-size:0.88rem;color:#4b5563;margin:6px 0 0;">Obrigatório: capture o GPS ou informe o CEP e endereço completo válido para clientes da sua região encontrarem a empresa.</p>
+
+            <h2 style="margin:22px 0 6px;font-size:1.25rem;color:#9a3412;">3. Entrega, raio máximo e pagamentos</h2>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+                <div>
+                    <label for="cad-raio">Raio de entrega (km) *</label>
+                    <input id="cad-raio" type="number" min="1" max="300" step="1" required value="10" placeholder="Ex.: 10 ou 100">
+                </div>
+                <div>
+                    <label for="cad-tempo">Tempo médio (min) *</label>
+                    <input id="cad-tempo" type="number" min="10" max="180" required value="35" placeholder="35">
+                </div>
+                <div>
+                    <label for="cad-taxa">Taxa base (R$) *</label>
+                    <input id="cad-taxa" type="number" min="0" step="0.50" required value="0" placeholder="0 = grátis">
+                </div>
+            </div>
+            <p style="font-size:0.85rem;color:#4b5563;margin:4px 0 8px;">Se você atende entregas de longa distância (ex.: 50 km ou 100 km), informe esse limite acima — nossa IA usará exatamente o seu raio quando não houver loja do segmento perto do comprador.</p>
+            <label>Formas de pagamento aceitas (marque ao menos 1) *</label>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+                <label style="display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:500;"><input type="checkbox" id="cad-pay-pix" checked style="width:auto;min-height:auto;"> PIX</label>
+                <label style="display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:500;"><input type="checkbox" id="cad-pay-debito" checked style="width:auto;min-height:auto;"> Débito</label>
+                <label style="display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:500;"><input type="checkbox" id="cad-pay-credito" checked style="width:auto;min-height:auto;"> Crédito</label>
+                <label style="display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:500;"><input type="checkbox" id="cad-pay-dinheiro" checked style="width:auto;min-height:auto;"> Dinheiro</label>
+            </div>
+
+            <h2 style="margin:22px 0 6px;font-size:1.2rem;color:#14171f;">4. Acesso ao painel da loja</h2>
+            <label for="login">Escolha um usuário de acesso *</label>
+            <input id="login" name="login" required minlength="3" autocomplete="username" placeholder="Ex.: maria">
+            <div style="display:grid;grid-template-columns:1fr;gap:10px;">
+                <div>
+                    <label for="senha">Crie uma senha (mínimo 6 caracteres) *</label>
+                    <div style="display:flex;gap:8px;align-items:stretch;">
+                        <input id="senha" name="senha" type="password" required minlength="6" autocomplete="new-password" placeholder="Mínimo 6 caracteres" style="flex:1;">
+                        <button type="button" data-cad-ver="senha" style="margin-top:0;min-height:48px;background:#f7f6f2;color:#14171f;border:1px solid rgba(20,23,31,0.16);padding:0 14px;font-size:0.92rem;font-weight:600;"><i class="fa-regular fa-eye"></i> Ver</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="cad-senha-conf">Confirme a senha *</label>
+                    <div style="display:flex;gap:8px;align-items:stretch;">
+                        <input id="cad-senha-conf" type="password" required minlength="6" autocomplete="new-password" placeholder="Repita a senha" style="flex:1;">
+                        <button type="button" data-cad-ver="cad-senha-conf" style="margin-top:0;min-height:48px;background:#f7f6f2;color:#14171f;border:1px solid rgba(20,23,31,0.16);padding:0 14px;font-size:0.92rem;font-weight:600;"><i class="fa-regular fa-eye"></i> Ver</button>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:16px;padding:14px;background:#f7f6f2;border:1px solid rgba(20,23,31,0.09);border-radius:12px;display:grid;gap:10px;">
+                <label style="display:flex;align-items:flex-start;gap:10px;margin:0;font-weight:500;font-size:0.94rem;cursor:pointer;">
+                    <input type="checkbox" id="cad-aceite-termos" checked required style="width:20px;height:20px;min-height:auto;margin-top:2px;flex-shrink:0;accent-color:#15803d;">
+                    <span>Aceito criar minha loja no AcheIAki e declaro serem verdadeiros o CNPJ e o endereço. <a href="termos.html" target="_blank" class="link">Termos</a> · <a href="privacidade.html" target="_blank" class="link">Privacidade</a> *</span>
+                </label>
+                <input type="checkbox" id="cad-aceite-ia" checked hidden>
+            </div>
+            <input class="hp" id="website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <p id="erro" class="erro" hidden></p>
+            <button type="submit" style="width:100%;min-height:54px;font-size:1.06rem;background:#e85d04;">Concluir cadastro e criar loja <i class="fa-solid fa-arrow-right"></i></button>
+        </form>
+        <section id="pronto" class="pronto" hidden>
+            <h2>Sua loja está pronta</h2>
+            <p id="texto-pronto"></p>
+            <p><a id="link-cardapio" class="btn" href="#">Abrir meu cardápio</a></p>
+            <p><a id="link-tutorial" class="btn" href="#" style="background:#0d9488;margin-top:10px;">Ver tutorial de primeiros passos</a></p>
+            <p><a id="link-painel" class="link" href="#">Entrar no painel para cadastrar produtos e preços</a></p>
+            <p><a class="link" href="marketplace.html">Ver sua loja no Marketplace AcheIAki</a></p>
+        </section>
+    </main>
+    <script>
+        (function () {
+            const form = document.getElementById('form-cadastro');
+            const secAss = document.getElementById('secao-assistente-cadastro');
+            const formEntrar = document.getElementById('form-entrar-empresa');
+            const btnForm = document.getElementById('btn-modo-form');
+            const btnAss = document.getElementById('btn-modo-assistente');
+            const btnEntrar = document.getElementById('btn-modo-entrar');
+            const perfil = document.getElementById('pz-perfil-root');
+            function modoForm() {
+                form.hidden = false;
+                secAss.hidden = true;
+                if (formEntrar) formEntrar.hidden = true;
+                const pitch = document.getElementById('cad-pitch-vendas');
+                if (pitch) pitch.hidden = false;
+                if (perfil) perfil.hidden = false;
+                btnForm.classList.add('ativo');
+                btnAss.classList.remove('ativo');
+                if (btnEntrar) btnEntrar.classList.remove('ativo');
+            }
+            function modoAss() {
+                form.hidden = true;
+                secAss.hidden = false;
+                if (formEntrar) formEntrar.hidden = true;
+                const pitch = document.getElementById('cad-pitch-vendas');
+                if (pitch) pitch.hidden = false;
+                if (perfil) perfil.hidden = true;
+                btnAss.classList.add('ativo');
+                btnForm.classList.remove('ativo');
+                if (btnEntrar) btnEntrar.classList.remove('ativo');
+            }
+            function modoEntrar() {
+                form.hidden = true;
+                secAss.hidden = true;
+                if (formEntrar) formEntrar.hidden = false;
+                const pitch = document.getElementById('cad-pitch-vendas');
+                if (pitch) pitch.hidden = true;
+                if (perfil) perfil.hidden = true;
+                btnForm.classList.remove('ativo');
+                btnAss.classList.remove('ativo');
+                if (btnEntrar) btnEntrar.classList.add('ativo');
+            }
+            btnForm.addEventListener('click', modoForm);
+            btnAss.addEventListener('click', modoAss);
+            if (btnEntrar) btnEntrar.addEventListener('click', modoEntrar);
+
+            // Calculadora Anti-Comissão (Taxa Zero vs ~25%)
+            (function iniciarCalculadoraRoi() {
+                const inpPedidos = document.getElementById('roi-pedidos');
+                const inpTicket = document.getElementById('roi-ticket');
+                const elMes = document.getElementById('roi-perda-mes');
+                const elAno = document.getElementById('roi-economia-ano');
+                const elEq = document.getElementById('roi-ponto-equilibrio');
+                if (!inpPedidos || !inpTicket || !elMes || !elAno || !elEq) return;
+                const fmt = (v) => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                function atualizarRoi() {
+                    const ped = Math.max(1, Math.min(5000, Number(inpPedidos.value) || 0));
+                    const tick = Math.max(5, Math.min(1000, Number(inpTicket.value) || 0));
+                    const perdaMes = ped * tick * 0.25;
+                    const econAno = perdaMes * 12;
+                    const eq = Math.max(1, Math.ceil(49.9 / (tick * 0.25)));
+                    elMes.textContent = fmt(perdaMes);
+                    elAno.textContent = fmt(econAno);
+                    elEq.textContent = eq + (eq === 1 ? ' pedido' : ' pedidos');
+                }
+                inpPedidos.addEventListener('input', atualizarRoi);
+                inpTicket.addEventListener('input', atualizarRoi);
+                atualizarRoi();
+            })();
+
+            // Ver senha com 1 toque
+            document.querySelectorAll('[data-cad-ver]').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    const inp = document.getElementById(b.getAttribute('data-cad-ver'));
+                    if (!inp) return;
+                    const vis = inp.type === 'text';
+                    inp.type = vis ? 'password' : 'text';
+                    b.innerHTML = vis ? '<i class="fa-regular fa-eye"></i> Ver' : '<i class="fa-regular fa-eye-slash"></i> Ocultar';
+                });
+            });
+
+            // Abre automaticamente o modo indicado na URL (?modo=entrar ou ?modo=cadastrar)
+            const modoUrl = new URLSearchParams(window.location.search).get('modo');
+            if (modoUrl === 'entrar') modoEntrar();
+            else if (modoUrl === 'assistente') modoAss();
+            else modoForm();
+
+            if (formEntrar) {
+                formEntrar.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const u = document.getElementById('entrar-empresa-user').value.trim();
+                    const p = document.getElementById('entrar-empresa-pass').value;
+                    const errEl = document.getElementById('entrar-empresa-erro');
+                    const btnSub = document.getElementById('btn-entrar-empresa');
+                    errEl.hidden = true;
+                    btnSub.disabled = true;
+                    btnSub.textContent = 'Entrando...';
+                    try {
+                        const r = await fetch('login.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ user: u, pass: p, global_login: true })
+                        });
+                        const d = await r.json();
+                        if (!d || !d.success) {
+                            errEl.textContent = (d && d.message) || 'Usuário/empresa ou senha incorretos.';
+                            errEl.hidden = false;
+                            return;
+                        }
+                        sessionStorage.setItem('admin_logado', 'true');
+                        sessionStorage.setItem('admin_user', d.user || u);
+                        sessionStorage.setItem('admin_pass', d.token || p);
+                        sessionStorage.setItem('admin_role', d.role || 'lojista');
+                        sessionStorage.setItem('admin_nome', d.nome || d.user || u);
+                        sessionStorage.setItem('admin_funcao', d.funcao || '');
+                        sessionStorage.setItem('pedidozap_tenant_slug', d.tenant || 'default');
+                        try { sessionStorage.setItem('admin_permissoes', JSON.stringify(d.permissoes || {})); } catch (err) {}
+                        if (d.role === 'master') {
+                            sessionStorage.setItem('admin_master', '1');
+                            window.location.href = 'superadmin.html';
+                        } else {
+                            sessionStorage.removeItem('admin_master');
+                            window.location.href = d.url_admin || ('admin.html?tenant=' + encodeURIComponent(d.tenant || 'default'));
+                        }
+                    } catch (err) {
+                        errEl.textContent = 'Erro de conexão com o servidor.';
+                        errEl.hidden = false;
+                    } finally {
+                        btnSub.disabled = false;
+                        btnSub.textContent = 'Entrar no painel da loja';
+                    }
+                });
+            }
+
+            function validarCnpjMath(cnpj) {
+                const s = String(cnpj || '').replace(/\D/g, '');
+                if (s.length !== 14 || /^(\d)\1{13}$/.test(s)) return false;
+                const calc = (base, pesos) => {
+                    let soma = 0;
+                    for (let i = 0; i < pesos.length; i++) soma += Number(base[i]) * pesos[i];
+                    const r = soma % 11;
+                    return r < 2 ? 0 : 11 - r;
+                };
+                const d1 = calc(s, [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+                const d2 = calc(s, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+                return d1 === Number(s[12]) && d2 === Number(s[13]);
+            }
+
+            const cepInput = document.getElementById('cad-cep');
+            const statusGps = document.getElementById('cad-gps-status');
+            if (cepInput) {
+                cepInput.addEventListener('blur', async function () {
+                    const cep = cepInput.value.replace(/\D/g, '');
+                    if (cep.length !== 8) return;
+                    try {
+                        const r = await fetch('https://viacep.com.br/ws/' + cep + '/json/');
+                        const d = await r.json();
+                        if (d && !d.erro) {
+                            if (d.logradouro && !document.getElementById('cad-rua').value) document.getElementById('cad-rua').value = d.logradouro;
+                            if (d.bairro && !document.getElementById('cad-bairro').value) document.getElementById('cad-bairro').value = d.bairro;
+                            if (d.localidade && !document.getElementById('cad-cidade').value) document.getElementById('cad-cidade').value = d.localidade;
+                            if (d.uf && !document.getElementById('cad-estado').value) document.getElementById('cad-estado').value = String(d.uf).toUpperCase();
+                        }
+                    } catch (e) { /* segue preenchimento manual */ }
+                });
+            }
+
+            const btnGps = document.getElementById('btn-cad-gps');
+            if (btnGps) {
+                btnGps.addEventListener('click', function () {
+                    if (!navigator.geolocation) {
+                        statusGps.textContent = 'GPS indisponível neste navegador. Preencha o CEP e endereço completo para geocodificação.';
+                        return;
+                    }
+                    btnGps.disabled = true;
+                    statusGps.textContent = 'Capturando coordenadas GPS da empresa...';
+                    const aplicar = function (pos) {
+                        document.getElementById('cad-lat').value = String(pos.coords.latitude);
+                        document.getElementById('cad-lng').value = String(pos.coords.longitude);
+                        btnGps.disabled = false;
+                        btnGps.textContent = 'GPS capturado ✓';
+                        statusGps.textContent = 'Localização GPS da loja ativada (' + pos.coords.latitude.toFixed(4) + ', ' + pos.coords.longitude.toFixed(4) + ').';
+                        statusGps.style.color = '#166534';
+                    };
+                    const falhar = function () {
+                        btnGps.disabled = false;
+                        statusGps.textContent = 'Não foi possível ler o GPS. Validaremos via CEP + Endereço completo ao enviar.';
+                        statusGps.style.color = '#b45309';
+                    };
+                    navigator.geolocation.getCurrentPosition(aplicar, function (err) {
+                        if (err && err.code !== 1) {
+                            navigator.geolocation.getCurrentPosition(aplicar, falhar, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+                        } else {
+                            falhar();
+                        }
+                    }, { enableHighAccuracy: true, timeout: 8000 });
+                });
+            }
+
+            window.__pzValidarCnpjCadastro = validarCnpjMath;
+        })();
+
+        document.getElementById('form-cadastro').addEventListener('submit', function (evento) {
+            evento.preventDefault();
+            const erro = document.getElementById('erro');
+            erro.hidden = true;
+            const mostrarErro = function (msg) {
+                erro.hidden = false;
+                erro.textContent = msg;
+            };
+
+            const nomeEmp = document.getElementById('nome').value.trim();
+            const cnpjNum = document.getElementById('cad-cnpj').value.replace(/\D/g, '');
+            const zapNum = document.getElementById('whatsapp').value.replace(/\D/g, '');
+            const cepNum = document.getElementById('cad-cep').value.replace(/\D/g, '');
+            const rua = document.getElementById('cad-rua').value.trim();
+            const numero = document.getElementById('cad-numero').value.trim();
+            const bairro = document.getElementById('cad-bairro').value.trim();
+            const cidade = document.getElementById('cad-cidade').value.trim();
+            const estado = document.getElementById('cad-estado').value.trim().toUpperCase();
+            const raio = Number(document.getElementById('cad-raio').value || 0);
+            const tempo = Number(document.getElementById('cad-tempo').value || 0);
+            const taxa = Number(document.getElementById('cad-taxa').value || 0);
+            const loginVal = document.getElementById('login').value.trim();
+            const senhaVal = document.getElementById('senha').value;
+            const senhaConf = document.getElementById('cad-senha-conf').value;
+            const pag = {
+                pix: document.getElementById('cad-pay-pix').checked,
+                debito: document.getElementById('cad-pay-debito').checked,
+                credito: document.getElementById('cad-pay-credito').checked,
+                dinheiro: document.getElementById('cad-pay-dinheiro').checked
+            };
+
+            if (nomeEmp.length < 3) return mostrarErro('Informe o nome completo do estabelecimento.');
+            if (!window.__pzValidarCnpjCadastro || !window.__pzValidarCnpjCadastro(cnpjNum)) {
+                return mostrarErro('CNPJ inválido. Informe os 14 dígitos de um CNPJ válido.');
+            }
+            if (zapNum.length < 10) return mostrarErro('Informe um WhatsApp válido com DDD.');
+            if (cepNum.length !== 8 || rua.length < 3 || !numero || bairro.length < 2 || cidade.length < 2 || estado.length !== 2) {
+                return mostrarErro('Preencha todo o endereço obrigatório (CEP 8 dígitos, Rua, Número, Bairro, Cidade e UF).');
+            }
+            if (!Number.isFinite(raio) || raio < 1 || raio > 300) {
+                return mostrarErro('Informe um raio de entrega entre 1 km e 300 km.');
+            }
+            if (!Number.isFinite(tempo) || tempo < 10 || tempo > 180) {
+                return mostrarErro('Informe o tempo médio de entrega entre 10 e 180 minutos.');
+            }
+            if (!pag.pix && !pag.debito && !pag.credito && !pag.dinheiro) {
+                return mostrarErro('Marque pelo menos 1 forma de pagamento.');
+            }
+            if (loginVal.length < 3) return mostrarErro('Informe um usuário com pelo menos 3 caracteres.');
+            if (senhaVal.length < 6) return mostrarErro('A senha precisa ter pelo menos 6 caracteres.');
+            if (senhaVal !== senhaConf) return mostrarErro('As senhas digitadas não conferem.');
+            const chkTermos = document.getElementById('cad-aceite-termos');
+            if (chkTermos && !chkTermos.checked) {
+                return mostrarErro('É obrigatório aceitar os Termos de Uso e a Política de Privacidade (LGPD).');
+            }
+            const aceitaIa = document.getElementById('cad-aceite-ia') ? document.getElementById('cad-aceite-ia').checked : true;
+
+            const botao = evento.target.querySelector('button[type="submit"]');
+            botao.disabled = true;
+            botao.textContent = 'Validando e criando loja...';
+            fetch('cadastro_loja.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nome_empresa: nomeEmp,
+                    cnpj: cnpjNum,
+                    razao_social: document.getElementById('cad-razao').value.trim(),
+                    nicho: document.getElementById('nicho').value,
+                    whatsapp: zapNum,
+                    cep: cepNum,
+                    rua: rua,
+                    numero: numero,
+                    bairro: bairro,
+                    cidade: cidade,
+                    estado: estado,
+                    lat: Number((document.getElementById('cad-lat') || {}).value || 0),
+                    lng: Number((document.getElementById('cad-lng') || {}).value || 0),
+                    raio_entrega_km: raio,
+                    tempo_medio_min: tempo,
+                    taxa_entrega_base: Math.max(0, taxa),
+                    pagamentos: pag,
+                    login: loginVal,
+                    senha: senhaVal,
+                    aceitou_termos: true,
+                    ia_personalizacao: aceitaIa,
+                    website: document.getElementById('website').value,
+                    perfil: window.__pzPerfilCadastro || null
+                })
+            }).then(function (res) { return res.json(); }).then(function (data) {
+                if (!data.success) {
+                    mostrarErro(data.message || 'Não foi possível criar a loja.');
+                    botao.disabled = false;
+                    botao.innerHTML = 'Concluir cadastro e criar loja <i class="fa-solid fa-arrow-right"></i>';
+                    return;
+                }
+                evento.target.hidden = true;
+                const pronto = document.getElementById('pronto');
+                pronto.hidden = false;
+                const quando = data.vencimento ? data.vencimento.split('-').reverse().join('/') : '';
+                document.getElementById('texto-pronto').textContent = 'Teste grátis até ' + quando + '. Guarde o usuário ' + data.login + '. A senha é a que você acabou de escolher.';
+                document.getElementById('link-cardapio').href = data.url_cardapio;
+                document.getElementById('link-painel').href = data.url_painel;
+                if (data.url_tutorial) {
+                    document.getElementById('link-tutorial').href = data.url_tutorial;
+                } else if (data.url_painel) {
+                    document.getElementById('link-tutorial').href = data.url_painel.replace('admin.html', 'tutorial.html');
+                }
+            }).catch(function () {
+                mostrarErro('Sem conexão com o servidor. Tente de novo daqui a pouco.');
+                botao.disabled = false;
+                botao.innerHTML = 'Concluir cadastro e criar loja <i class="fa-solid fa-arrow-right"></i>';
+            });
+        });
+    </script>
+    <script src="js/modo-apresentacao.js"></script>
+    <script>
+        (function () {
+            const bar = document.getElementById('cad-demo-bar');
+            const btn = document.getElementById('btn-cad-demo-apresentacao');
+            if (!bar || !btn || !window.PedidoZapApresentacao || !window.PedidoZapApresentacao.ativo()) return;
+            bar.hidden = false;
+            function gerarCnpjValido() {
+                const n = Array.from({ length: 8 }, () => Math.floor(Math.random() * 9)).concat([0, 0, 0, 1]);
+                const dv = (arr, pesos) => {
+                    let s = 0;
+                    for (let i = 0; i < pesos.length; i++) s += arr[i] * pesos[i];
+                    const r = s % 11;
+                    return r < 2 ? 0 : 11 - r;
+                };
+                n.push(dv(n, [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]));
+                n.push(dv(n, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]));
+                const s = n.join('');
+                return s.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+            }
+            btn.addEventListener('click', function () {
+                const suf = String(Math.floor(1000 + Math.random() * 9000));
+                document.getElementById('nome').value = 'Restaurante Modelo ' + suf;
+                document.getElementById('cad-cnpj').value = gerarCnpjValido();
+                document.getElementById('cad-razao').value = 'Restaurante Modelo ' + suf + ' LTDA';
+                document.getElementById('whatsapp').value = '6299999' + suf;
+                document.getElementById('cad-cep').value = '74215-030';
+                document.getElementById('cad-rua').value = 'Av. T-63';
+                document.getElementById('cad-numero').value = '1200';
+                document.getElementById('cad-bairro').value = 'Setor Bueno';
+                document.getElementById('cad-cidade').value = 'Goiânia';
+                document.getElementById('cad-estado').value = 'GO';
+                document.getElementById('cad-lat').value = '-16.7069';
+                document.getElementById('cad-lng').value = '-49.2713';
+                document.getElementById('cad-raio').value = '20';
+                document.getElementById('cad-tempo').value = '35';
+                document.getElementById('cad-taxa').value = '0';
+                document.getElementById('login').value = 'demo' + suf;
+                document.getElementById('senha').value = '123456';
+                document.getElementById('cad-senha-conf').value = '123456';
+                document.getElementById('cad-pay-pix').checked = true;
+                document.getElementById('cad-pay-credito').checked = true;
+            });
+        })();
+    </script>
+    <footer style="max-width:680px;margin:0 auto 32px;padding:0 18px;font-size:0.88rem;color:#475569;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <span>AcheIAki — O Marketplace Inteligente da sua Região</span>
+        <span style="display:flex;gap:12px;">
+            <a href="termos.html" class="link">Termos de Uso</a>
+            <a href="privacidade.html" class="link">Privacidade (LGPD)</a>
+        </span>
+    </footer>
+    <script src="js/lgpd-consent.js"></script>
+    <script src="js/assistente-ia.js"></script>
+    <script src="js/perfil-qualificado.js"></script>
+</body>
+</html>

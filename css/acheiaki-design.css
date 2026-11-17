@@ -1,0 +1,136 @@
+/**
+ * AcheIAki Design System — Interface humana, tátil e legível
+ * Tipografia editorial (Plus Jakarta Sans + Inter), superfícies cálidas e hierarquia de elevação real.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+
+:root {
+    --aki-canvas: #f7f6f2;
+    --aki-surface: #ffffff;
+    --aki-subtle: #f1efe9;
+    --aki-ink: #14171f;
+    --aki-ink-2: #4b5563;
+    --aki-muted: #6b7280;
+    --aki-line: rgba(20, 23, 31, 0.09);
+    --aki-line-strong: rgba(20, 23, 31, 0.16);
+
+    /* Identidade AcheIAki + Conversão Culinária */
+    --aki-navy: #0b192c;
+    --aki-navy-2: #132845;
+    --aki-brand: #0284c7;
+    --aki-cyan: #0ea5e9;
+    --aki-accent: #e85d04;
+    --aki-accent-hover: #c2410c;
+    --aki-success: #15803d;
+    --aki-success-bg: #ecfdf5;
+    --aki-warn: #b45309;
+    --aki-warn-bg: #fffbeb;
+    --aki-danger: #b91c1c;
+    --aki-danger-bg: #fef2f2;
+
+    /* Elevação física em camadas */
+    --aki-shadow-xs: 0 1px 2px rgba(20, 23, 31, 0.05);
+    --aki-shadow-sm: 0 1px 2px rgba(20, 23, 31, 0.04), 0 6px 16px -6px rgba(20, 23, 31, 0.08);
+    --aki-shadow-md: 0 2px 6px rgba(20, 23, 31, 0.04), 0 16px 32px -12px rgba(20, 23, 31, 0.12);
+    --aki-shadow-modal: 0 24px 60px -16px rgba(11, 25, 44, 0.34);
+
+    --aki-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --aki-radius-sm: 10px;
+    --aki-radius-md: 14px;
+    --aki-radius-lg: 18px;
+}
+
+html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--aki-ink);
+    background-color: var(--aki-canvas);
+}
+
+h1, h2, h3, h4, .aki-display {
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    letter-spacing: -0.025em;
+    color: var(--aki-ink);
+}
+
+/* Números alinhados em preços, totais, tempos e distâncias */
+.mkt-prato-foot,
+.mkt-item-preco,
+.mkt-comp-preco,
+.preco,
+.fg-kpi-valor,
+.resumo-dia strong,
+.num,
+.tempo,
+table td {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Ergonomia nativa de App (touch sem atraso, sem flash cinza, sem zoom iOS) */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+summary,
+label {
+    touch-action: manipulation;
+}
+
+@media (max-width: 900px) {
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
+/* Scroll horizontal limpo sem barra visível em carrosséis de app */
+.aki-scroll-strip {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.aki-scroll-strip::-webkit-scrollbar {
+    display: none;
+}
+
+/* Foco acessível com alto contraste */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+    outline: 2.5px solid var(--aki-brand);
+    outline-offset: 2px;
+}
+
+/* Micro-interação tátil sutil e contida */
+button,
+.mkt-btn-prim,
+.mkt-btn-cta,
+.mkt-btn-pill,
+.mkt-btn-outline,
+.btn-save-file,
+.btn-pedir-agora {
+    transition: background-color 0.18s var(--aki-ease),
+                border-color 0.18s var(--aki-ease),
+                box-shadow 0.2s var(--aki-ease),
+                transform 0.14s var(--aki-ease);
+}
+
+button:active:not(:disabled),
+.mkt-btn-prim:active,
+.mkt-btn-cta:active,
+.btn-save-file:active {
+    transform: translateY(1px);
+}

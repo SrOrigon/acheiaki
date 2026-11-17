@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido manual</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/jpeg" href="assets/images/acheiaki-icon.jpg">
+    <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
+    <link rel="stylesheet" href="css/ajuda-visivel.css?v=2">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #f7f6f2; color: #14171f; font-size: 16px; }
+        .wrap { max-width: 520px; margin: 0 auto; padding: 28px 16px 56px; }
+        .card { background: #fff; border-radius: 18px; padding: 26px; box-shadow: 0 1px 2px rgba(20,23,31,.04), 0 8px 24px -8px rgba(20,23,31,.08); border: 1px solid rgba(20,23,31,.09); }
+        h1 { margin: 0 0 8px; font-size: 1.45rem; }
+        p.lead { margin: 0 0 20px; color: #4b5563; line-height: 1.5; }
+        label { display: block; font-weight: 600; font-size: 0.94rem; margin-bottom: 6px; }
+        input { width: 100%; padding: 12px 14px; border: 1px solid rgba(20,23,31,.16); border-radius: 10px; font-size: 1rem; min-height: 48px; margin-bottom: 16px; }
+        .btn { width: 100%; border: none; border-radius: 12px; padding: 14px 16px; font-size: 1rem; font-weight: 700; cursor: pointer; min-height: 52px; }
+        .btn-prim { background: #e85d04; color: #fff; }
+        .btn-prim:hover { background: #c2410c; }
+        .btn-sec { background: #f1efe9; color: #14171f; margin-top: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(20,23,31,.1); }
+        .topo { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+        .topo a { font-size: 0.94rem; color: #14171f; font-weight: 600; padding: 10px 14px; background: #fff; border-radius: 10px; border: 1px solid rgba(20,23,31,.12); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; gap: 7px; }
+    </style>
+</head>
+<body data-pagina="atendimento">
+    <div class="wrap">
+        <div class="topo">
+            <a href="admin.html" id="link-admin"><i class="fa-solid fa-store"></i> Painel</a>
+            <a href="painel.html" id="link-painel"><i class="fa-solid fa-clipboard-list"></i> Pedidos</a>
+        </div>
+        <div class="card">
+            <h1 id="titulo-atendimento">Pedido manual</h1>
+            <p class="ajuda-visivel-bloco" id="atendimento-ajuda-extra" style="margin-bottom:16px;"></p>
+            <p class="lead" id="instrucao-atendimento">Carregando...</p>
+            <form id="form-cliente">
+                <label for="cli-nome" id="label-nome">Nome do cliente</label>
+                <input type="text" id="cli-nome" required autocomplete="name">
+                <label for="cli-tel" id="label-tel">Telefone</label>
+                <input type="tel" id="cli-tel" required inputmode="numeric" autocomplete="tel">
+                <button type="submit" class="btn btn-prim" id="btn-abrir-cardapio">Abrir cardápio</button>
+            </form>
+            <a href="painel.html" class="btn btn-sec" id="link-voltar">Voltar ao painel de pedidos</a>
+        </div>
+    </div>
+    <script src="js/tenant.js"></script>
+    <script src="js/store-loader.js"></script>
+    <script>
+        PedidoZapStore.load({ fallbackStatic: true, silent: true }).then(aplicarTextos).catch(aplicarTextos);
+
+        function storageKey(n) {
+            return (typeof TENANT !== 'undefined') ? TENANT.storageKey(n) : n;
+        }
+
+        function aplicarTextos() {
+            if (!sessionStorage.getItem('admin_logado')) {
+                alert('Faça login pelo cardápio (menu do dono) para usar o pedido manual.');
+                window.location.href = (typeof TENANT !== 'undefined' && TENANT.apiUrl) ? TENANT.apiUrl('index.html') : 'index.html';
+                return;
+            }
+            const cfg = (window.APP_CONFIG || {});
+            const atd = cfg.ATENDIMENTO || {};
+            if (atd.ativo === false) {
+                document.querySelector('.card').innerHTML = '<p>O pedido manual está desligado no painel. Ative em <strong>Atendimento</strong> e salve.</p>';
+                return;
+            }
+            document.getElementById('titulo-atendimento').textContent = atd.titulo_pagina || '';
+            document.getElementById('instrucao-atendimento').textContent = atd.instrucao || '';
+            const aj = (cfg.AJUDA && cfg.AJUDA.atendimento) || {};
+            if (aj.extra) document.getElementById('atendimento-ajuda-extra').textContent = aj.extra;
+            document.getElementById('label-nome').textContent = atd.label_nome || '';
+            document.getElementById('label-tel').textContent = atd.label_telefone || '';
+            document.getElementById('btn-abrir-cardapio').textContent = atd.btn_abrir_cardapio || 'Continuar';
+            document.getElementById('link-voltar').textContent = atd.link_voltar_painel || 'Voltar';
+            if (typeof TENANT !== 'undefined' && TENANT.apiUrl) {
+                document.getElementById('link-admin').href = TENANT.apiUrl('admin.html');
+                document.getElementById('link-painel').href = TENANT.apiUrl('painel.html');
+                document.getElementById('link-voltar').href = TENANT.apiUrl('painel.html');
+            }
+        }
+
+        document.getElementById('form-cliente').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('cli-nome').value.trim();
+            let tel = document.getElementById('cli-tel').value.replace(/\D/g, '');
+            if (nome.length < 2) { alert('Informe o nome do cliente.'); return; }
+            if (tel.length < 10) { alert('Informe o telefone com DDD.'); return; }
+            sessionStorage.setItem(storageKey('atendente_cliente_nome'), nome);
+            sessionStorage.setItem(storageKey('atendente_cliente_tel'), tel);
+            sessionStorage.setItem('canal_atendente', '1');
+            const destino = (typeof TENANT !== 'undefined' && TENANT.apiUrl)
+                ? TENANT.apiUrl('index.html?canal=atendente')
+                : 'index.html?canal=atendente';
+            window.location.href = destino;
+        });
+
+        document.getElementById('cli-tel').addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g, '');
+            if (v.length > 11) v = v.slice(0, 11);
+            e.target.value = v;
+        });
+    </script>
+</body>
+</html>

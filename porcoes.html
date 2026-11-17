@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <script>var q=new URLSearchParams(location.search);q.set('cat','porcoes');location.replace('categoria.html?'+q.toString());</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>porcoes | Nome da Sua Loja</title>
+    <meta name="description" content="Cardápio digital para pedidos pelo WhatsApp.">
+    <meta name="keywords" content="">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://acheiaki.com.br/porcoes.html">
+    <link rel="icon" type="image/jpeg" href="assets/images/acheiaki-icon.jpg">
+    <meta name="theme-color" content="#f97136">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://acheiaki.com.br/porcoes.html">
+    <meta property="og:title" content="Nome da Sua Loja">
+    <meta property="og:description" content="Cardápio digital integrado ao AcheIAki.">
+    <meta property="og:image" content="https://acheiaki.com.br/assets/images/acheiaki-icon.jpg">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:site_name" content="Nome da Sua Loja">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Nome da Sua Loja">
+    <meta name="twitter:description" content="Cardápio digital integrado ao AcheIAki.">
+    <meta name="twitter:image" content="https://acheiaki.com.br/assets/images/acheiaki-icon.jpg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Poppins:wght@700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
+    <link rel="stylesheet" href="css/styles.css?v=20">
+    <link rel="stylesheet" href="css/styles_wpp.css?v=15">
+    <link rel="stylesheet" href="css/assistente-ia.css?v=2">
+    <link rel="stylesheet" href="css/localizacao-gate.css?v=2">
+    <link rel="stylesheet" href="css/lgpd-consent.css?v=2">
+
+</head>
+
+<body data-pagina="porcoes">
+    <div id="preloader">
+        <div class="loader-spinner"></div>
+        <p class="loader-text">Carregando...</p>
+    </div>
+
+    <!-- Header Completo (Igual Index) -->
+    <header class="cabecalho">
+        <div class="container-header">
+            <div class="logo-container">
+                <a href="index.html" style="text-decoration: none; display: flex; align-items: center; gap: 12px;">
+                    <img src="assets/images/placeholder-logo.svg" data-bind="logo" alt="Nome da Sua Loja Logo" class="logo" width="45" height="45">
+                    <h1 data-bind="nome">Nome da Sua Loja</h1>
+                </a>
+            </div>
+            <nav class="nav-desktop">
+                <a href="index.html#promocoes" data-cat="promocoes">Promoções</a>
+                <a href="index.html#cardapio">Cardápio</a>
+                <a href="index.html#avaliacoes">Avaliações</a>
+            </nav>
+            <div class="header-acoes">
+                <a href="marketplace.html" class="btn-pedir-agora" style="background:#0b192c;border:1px solid rgba(255,255,255,0.14);margin-right:6px;" title="AcheIAki — Todas as lojas"><i class="fa-solid fa-house"></i> Todas as lojas</a>
+                <a href="index.html#cardapio" class="btn-pedir-agora">Ver cardápio <i
+                        class="fa-solid fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <img src="assets/images/placeholder-hero.svg" alt="Capa da loja" class="hero-bg" data-bind="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-conteudo">
+            <h2 data-bind="hero-titulo">Bem-vindo à sua loja</h2>
+            <p data-bind="hero-subtitulo">Escolha seus favoritos e peça agora.</p>
+        </div>
+    </section>
+
+    <main class="container-principal">
+
+        <!-- Busca Flutuante -->
+        <section class="busca-e-filtros">
+            <div class="container-busca">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="input-busca" placeholder="Qual porção vai pedir hoje?">
+            </div>
+            <div class="filtros-categoria">
+                <a href="index.html" class="btn-filtro">🏠 Início</a>
+                <a href="index.html#promocoes" data-cat="promocoes" class="btn-filtro">🏷️ Promoções</a>
+                <a href="hamburgueres.html" data-cat="hamburgueres" class="btn-filtro">🍔 Burgers</a>
+                <a href="porcoes.html" data-cat="porcoes" class="btn-filtro ativo">🍟 Porções</a>
+                <a href="bebidas.html" data-cat="bebidas" class="btn-filtro">🥤 Bebidas</a>
+                <a href="combos.html" data-cat="combos" class="btn-filtro">📦 Combos</a>
+                <a href="acai.html" data-cat="acai" class="btn-filtro">🫐 Açaís</a>
+            </div>
+        </section>
+
+        <!-- Título da Categoria Estilizado -->
+        <div class="categoria-titulo" style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px;">
+            <div
+                style="background: #fff7ed; padding: 10px; border-radius: 50%; color: #f97136; font-size: 1.5em; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-hotdog"></i>
+            </div>
+            <h2 data-bind="hero-titulo" style="margin: 0; font-size: 2em; color: #1f2937;">Porções</h2>
+        </div>
+
+        <section id="cardapio" class="secao-cardapio" style="margin-top: 0;">
+            <div class="categoria" style="display: block;">
+                <div id="lista-porcoes" class="lista-produtos"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Carrinho Flutuante -->
+    <div id="carrinho-flutuante" class="rodape-carrinho">
+        <div class="carrinho-info"><span><i id="cart-icon" class="fa-solid fa-cart-shopping"></i> Meu
+                Carrinho</span><span id="carrinho-total">R$ 0,00</span></div><button class="botao-principal">Ver
+            Pedido</button>
+    </div>
+
+    <!-- REPEAT MODALS -->
+    <!-- (Include all modals to ensure JS works) -->
+    <div id="modal-upsell" class="modal-overlay escondido">
+        <div class="modal-conteudo modal-upsell-conteudo"><img src="assets/images/batatagrande.png"
+                style="width:120px;height:120px;object-fit:contain;background-color:#f8fafc;border-radius:50%;margin-bottom:20px;">
+            <h2>Que tal fritas?</h2>
+            <div class="modal-upsell-acoes"><button id="btn-adicionar-upsell"
+                    class="botao-principal">Adicionar</button><button id="btn-recusar-upsell"
+                    class="botao-secundario">Não</button></div>
+        </div>
+    </div>
+    <div id="modal-carrinho" class="modal-overlay escondido">
+        <div class="modal-conteudo">
+            <div class="modal-cabecalho">
+                <h2>Carrinho</h2><button id="btn-fechar-modal" class="btn-fechar">&times;</button>
+            </div>
+            <div class="aviso-demanda"
+                style="display:none;background:#fee2e2;color:#991b1b;padding:15px;margin:0 25px;border-radius:8px;font-size:0.9em;border:1px solid #fca5a5;">
+                <i class="fa-solid fa-clock"></i> Espera: <span class="tempo-espera-display">60-90 min</span>
+            </div>
+            <div id="lista-itens-carrinho"></div>
+            <div class="modal-rodape">
+                <p>Total:<span id="total-carrinho-modal">R$ 0,00</span></p><button id="btn-finalizar-modal"
+                    class="botao-principal">Continuar</button>
+            </div>
+        </div>
+    </div>
+    <div id="modal-endereco" class="modal-overlay escondido">
+        <div class="modal-conteudo">
+            <div class="modal-cabecalho">
+                <h2>Endereço de Entrega</h2>
+                <button id="btn-fechar-endereco-modal" class="btn-fechar">&times;</button>
+            </div>
+            <div class="modal-corpo-form">
+                <div class="form-grupo">
+                    <label for="input-nome">Nome Completo</label>
+                    <input type="text" id="input-nome" placeholder="Seu nome completo" required>
+                </div>
+                <div class="form-grupo">
+                    <label for="input-celular">Celular (WhatsApp)</label>
+                    <input type="tel" id="input-celular" placeholder="(XX) XXXXX-XXXX" required autocomplete="tel"
+                        inputmode="tel">
+                </div>
+                <div class="form-grupo">
+                    <label for="input-cep">CEP</label>
+                    <div class="input-com-icone">
+                        <input type="text" id="input-cep" placeholder="Apenas números" maxlength="9" required
+                            autocomplete="postal-code" inputmode="numeric">
+                        <div id="cep-spinner" class="spinner escondido"></div>
+                    </div>
+                </div>
+                <div class="form-grupo">
+                    <label for="input-rua">Rua</label>
+                    <input type="text" id="input-rua" placeholder="Sua rua" required autocomplete="address-line1">
+                </div>
+                <div class="form-grupo-horizontal">
+                    <div class="form-grupo">
+                        <label for="input-numero">Número</label>
+                        <input type="text" id="input-numero" placeholder="Nº" required inputmode="numeric">
+                    </div>
+                    <div class="form-grupo">
+                        <label for="input-complemento">Complemento</label>
+                        <input type="text" id="input-complemento" placeholder="Apto, Bloco, etc.">
+                    </div>
+                </div>
+                <div class="form-grupo">
+                    <label for="input-bairro">Bairro</label>
+                    <input type="text" id="input-bairro" placeholder="Seu bairro" required>
+                </div>
+                <div class="form-grupo">
+                    <label for="input-cidade">Cidade</label>
+                    <input type="text" id="input-cidade" placeholder="Sua cidade" required>
+                </div>
+                <div class="form-grupo">
+                    <label for="input-referencia">Ponto de Referência</label>
+                    <input type="text" id="input-referencia" placeholder="Opcional">
+                </div>
+            </div>
+            <div class="modal-rodape">
+                <button id="btn-confirmar-endereco" class="botao-principal">Confirmar Endereço</button>
+            </div>
+        </div>
+    </div>
+    <div id="modal-confirmacao" class="modal-overlay escondido">
+        <div class="modal-conteudo">
+            <div class="modal-cabecalho">
+                <h2>Confirmar</h2><button id="btn-fechar-confirmacao-modal" class="btn-fechar">&times;</button>
+            </div>
+            <div class="modal-corpo-confirmacao">
+                <div id="resumo-pedido"></div>
+                <div class="aviso-demanda"
+                    style="display:none;background:#fee2e2;color:#991b1b;padding:10px;border-radius:8px;font-size:0.9em;margin-bottom:15px;border:1px solid #fca5a5;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Espera: <span class="tempo-espera-display">60-90
+                        min</span>
+                </div>
+                <h4>Entrega</h4>
+                <div class="form-grupo-radio"><input type="radio" id="entrega-agora" name="tipo-entrega" value="agora"
+                        checked><label for="entrega-agora">Agora</label></div>
+                <div class="form-grupo-radio"><input type="radio" id="entrega-agendar" name="tipo-entrega"
+                        value="agendar"><label for="entrega-agendar">Agendar</label></div>
+                <div id="campo-horario" class="form-grupo escondido"><input type="time" id="input-horario"></div>
+
+                <h4>Observações</h4>
+                <p data-bind="aviso-observacoes" style="font-size: 0.85em; color: #dc2626; margin-top: -5px; margin-bottom: 5px;">Use este campo apenas para avisos ou remoção de ingredientes.</p>
+                <textarea id="input-observacao" placeholder="Ex: Tirar alface, cebola, ponto da carne."></textarea>
+
+                <h4>Forma de Pagamento</h4>
+                <div class="pagamento-opcoes">
+                    <label class="radio-pagamento" for="pagamento-pix">
+                        <input type="radio" id="pagamento-pix" name="forma-pagamento" value="PIX">
+                        <span><i class="fa-solid fa-qrcode"></i> PIX</span>
+                    </label>
+                    <label class="radio-pagamento" for="pagamento-debito">
+                        <input type="radio" id="pagamento-debito" name="forma-pagamento" value="Débito">
+                        <span><i class="fa-solid fa-credit-card"></i> Débito</span>
+                    </label>
+                    <label class="radio-pagamento" for="pagamento-credito">
+                        <input type="radio" id="pagamento-credito" name="forma-pagamento" value="Crédito">
+                        <span><i class="fa-solid fa-credit-card"></i> Crédito</span>
+                    </label>
+                    <label class="radio-pagamento" for="pagamento-dinheiro">
+                        <input type="radio" id="pagamento-dinheiro" name="forma-pagamento" value="Dinheiro">
+                        <span><i class="fa-solid fa-money-bill-wave"></i> Dinheiro</span>
+                    </label>
+                </div>
+
+                <div id="campo-troco" class="form-grupo escondido">
+                    <label for="input-troco">Troco para quanto?</label>
+                    <input type="text" id="input-troco" placeholder="Ex: 50" inputmode="numeric">
+                </div>
+            </div>
+            <div class="modal-rodape"><button id="btn-enviar-pedido-final" class="botao-principal">Enviar
+                    WhatsApp</button></div>
+        </div>
+    </div>
+    <div id="modal-customizacao" class="modal-overlay escondido">
+        <div class="modal-conteudo">
+            <div class="modal-cabecalho">
+                <h2 id="custom-item-nome">Customizar</h2><button id="btn-fechar-custom-modal"
+                    class="btn-fechar">&times;</button>
+            </div>
+            <div id="lista-opcionais"></div>
+            <div class="modal-rodape"><button id="btn-adicionar-customizado" class="botao-principal">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="rodape-informativo">
+        <div class="rodape-coluna">
+            <h4 data-bind="nome">Nome da Sua Loja</h4>
+            <p data-bind="endereco-1">Endereço da loja</p>
+            <p data-bind="endereco-2"></p>
+        </div>
+        <div class="rodape-coluna">
+            <h4>Horário de Funcionamento</h4>
+            <p data-bind="horario">Horário de funcionamento</p>
+            <p data-bind="horario-folga" style="color: var(--pz-primaria, #f97136); font-weight: bold;"></p>
+        </div>
+        <div class="rodape-coluna">
+            <h4>Siga-nos</h4>
+            <div class="redes-sociais">
+                <a href="#" data-rede="instagram" target="_blank" rel="noopener" aria-label="Instagram" style="display:none"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" data-rede="facebook" target="_blank" rel="noopener" aria-label="Facebook" style="display:none"><i class="fa-brands fa-facebook"></i></a>
+                <a href="#" data-rede="whatsapp" target="_blank" rel="noopener" aria-label="WhatsApp" style="display:none"><i class="fa-brands fa-whatsapp"></i></a>
+            </div>
+            <div style="margin-top: 25px; opacity: 0.7;">
+                <button id="btn-login-admin"
+                    style="background:none; border:1px solid rgba(255,255,255,0.3); padding: 8px 15px; border-radius: 20px; color: #ccc; cursor:pointer; font-size:0.85em; transition: all 0.3s;">
+                    <i class="fa-solid fa-lock"></i> Área Restrita
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal (Required for Admin Access) -->
+    <div id="modal-login" class="modal-overlay escondido">
+        <div class="modal-conteudo" style="max-width: 400px; text-align: center;">
+            <div class="modal-cabecalho">
+                <h2>Acesso Administrativo</h2>
+                <button id="btn-fechar-login" class="btn-fechar">&times;</button>
+            </div>
+            <div class="modal-corpo-form">
+                <p style="margin-bottom: 20px; color: #374151;">Usuário: <strong>Admin</strong><br>Senha: <strong>Admin</strong></p>
+                <div class="form-grupo">
+                    <label for="login-usuario">Usuário</label>
+                    <input type="text" id="login-usuario" value="Admin" autocomplete="username" autocapitalize="none">
+                </div>
+                <div class="form-grupo">
+                    <label for="login-senha">Senha</label>
+                    <input type="password" id="login-senha" placeholder="Digite sua senha">
+                </div>
+                <div id="login-erro" style="color: red; font-size: 0.9em; display: none; margin-bottom: 10px;">Usuário
+                    ou senha incorretos.</div>
+            </div>
+            <div class="modal-rodape">
+                <button id="btn-entrar-admin" class="botao-principal" style="width: 100%;">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div style="max-width:1100px;margin:24px auto 12px;padding:12px 18px;border-top:1px solid #e5e7eb;font-size:0.82rem;color:#64748b;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span>Vitrine integrante do <strong>AcheIAki</strong> — O Marketplace Inteligente da sua Região</span>
+        <span style="display:flex;gap:12px;flex-wrap:wrap;">
+            <a href="termos.html" style="color:#0284c7;text-decoration:none;font-weight:600;">Termos de Uso</a>
+            <a href="privacidade.html" style="color:#0284c7;text-decoration:none;font-weight:600;">Privacidade (LGPD)</a>
+            <a href="#" onclick="event.preventDefault();window.AcheIAkiLGPD&&window.AcheIAkiLGPD.abrirPreferencias();" style="color:#0284c7;text-decoration:none;font-weight:600;">Privacidade e IA</a>
+        </span>
+    </div>
+
+    <script>
+        (function () {
+            const v = Date.now();
+            document.write('<script src="js/tenant.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/modo-apresentacao.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/lgpd-consent.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/localizacao-gate.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/store-loader.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/celulas-sync.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/boot-vitrine.js?v=' + v + '"><\/script>');
+        })();
+    </script>
+</body>
+
+</html>

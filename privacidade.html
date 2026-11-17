@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidade e LGPD — AcheIAki</title>
+    <meta name="description" content="Política de Privacidade, coleta de dados pela IA e direitos do titular conforme a LGPD (Lei nº 13.709/2018).">
+    <link rel="icon" type="image/jpeg" href="assets/images/acheiaki-icon.jpg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
+    <link rel="stylesheet" href="css/lgpd-consent.css?v=2">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #f7f6f2; color: #14171f; line-height: 1.7; }
+        header { background: #0b192c; color: #fff; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .head-inner { max-width: 820px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 800; font-size: 1.25rem; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+        .brand img { width: 36px; height: 36px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.2); object-fit: cover; }
+        .brand span.ia { color: #38bdf8; }
+        .nav-links { display: flex; gap: 8px; flex-wrap: wrap; }
+        .nav-links a { color: #e2e8f0; text-decoration: none; font-weight: 600; font-size: 0.88rem; padding: 7px 13px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.06); }
+        .nav-links a:hover { background: rgba(255,255,255,0.14); }
+        main { max-width: 820px; margin: 28px auto 56px; padding: 0 18px; }
+        .doc-card { background: #fff; border-radius: 18px; padding: 32px 30px 38px; box-shadow: 0 1px 2px rgba(20,23,31,0.04), 0 8px 24px -8px rgba(20,23,31,0.07); border: 1px solid rgba(20,23,31,0.09); }
+        h1 { margin: 0 0 6px; color: #14171f; font-size: 1.8rem; }
+        .meta { color: #6b7280; font-size: 0.9rem; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid rgba(20,23,31,0.08); }
+        h2 { color: #14171f; font-size: 1.18rem; margin: 26px 0 8px; border-left: 3px solid #0284c7; padding-left: 12px; }
+        p, li { color: #374151; font-size: 0.98rem; }
+        ul { padding-left: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 14px 0 20px; font-size: 0.92rem; }
+        th, td { text-align: left; padding: 10px 12px; border: 1px solid rgba(20,23,31,0.1); vertical-align: top; }
+        th { background: #f7f6f2; color: #14171f; }
+        .painel-lgpd { background: #f7f6f2; border: 1px solid rgba(20,23,31,0.1); border-radius: 14px; padding: 16px 18px; margin: 18px 0; }
+        .btn-lgpd { border: none; background: #0b192c; color: #fff; padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.92rem; }
+        footer { text-align: center; color: #6b7280; font-size: 0.88rem; margin-top: 24px; }
+        footer a { color: #0284c7; font-weight: 600; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="head-inner">
+            <a href="marketplace.html" class="brand">
+                <img src="assets/images/acheiaki-icon.jpg" alt="AcheIAki">
+                <span>Ache<span class="ia">IA</span>ki</span>
+            </a>
+            <nav class="nav-links">
+                <a href="marketplace.html">Marketplace</a>
+                <a href="termos.html">Termos de Uso</a>
+                <a href="cadastro.html">Cadastrar Empresa</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <article class="doc-card">
+            <h1>Política de Privacidade, Cookies e Uso de IA — LGPD</h1>
+            <div class="meta">
+                Versão: <strong>2026-11</strong> · Em total conformidade com a <strong>Lei Geral de Proteção de Dados (Lei nº 13.709/2018)</strong> e o <strong>Marco Civil da Internet (Lei nº 12.965/2014)</strong>.
+            </div>
+
+            <div class="painel-lgpd">
+                <strong><i class="fa-solid fa-shield-halved"></i> Controle imediato da sua privacidade e da coleta pela IA:</strong>
+                <p style="margin:6px 0 12px;">Você decide se permite ou não que o algoritmo inteligente do AcheIAki colete seus sinais de navegação para personalizar preços e ofertas na sua região.</p>
+                <button type="button" class="btn-lgpd" onclick="window.AcheIAkiLGPD && window.AcheIAkiLGPD.abrirPreferencias()">
+                    <i class="fa-solid fa-sliders"></i> Gerenciar permissões de dados e IA
+                </button>
+            </div>
+
+            <h2>1. Quem Somos (Controlador e Operador)</h2>
+            <p>O <strong>AcheIAki</strong> atua como <strong>Controlador</strong> dos dados cadastrais e de navegação no Marketplace AcheIAki. Quando um estabelecimento utiliza o painel administrativo para gerenciar seus pedidos e clientes, o estabelecimento atua como Controlador da operação local e o AcheIAki como Operador tecnológico, nos termos da LGPD.</p>
+
+            <h2>2. Quais Dados Coletamos e Bases Legais (Art. 7º da LGPD)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Categoria</th>
+                        <th>Dados tratados</th>
+                        <th>Finalidade e Base Legal (LGPD)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Compradores</strong></td>
+                        <td>E-mail, WhatsApp, nome (opcional), CPF (opcional), endereços de entrega e histórico de pedidos.</td>
+                        <td>Execução do pedido, entrega e acompanhamento em tempo real (Art. 7º, V — execução de contrato).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Empresas Parceiras</strong></td>
+                        <td>CNPJ, razão social, nome fantasia, endereço, coordenadas GPS, WhatsApp e dados do cardápio/gestão.</td>
+                        <td>Validação empresarial, exibição no Marketplace regional e gestão comercial (Art. 7º, V e II).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>IA e Algoritmo Regional</strong></td>
+                        <td>Identificador anônimo de sessão (<code>visitor_id</code>), categorias clicadas, termos buscados, tempo de visualização, turno do dia e região/cidade.</td>
+                        <td><strong>Consentimento explícito (Art. 7º, I):</strong> só é ativado mediante sua permissão expressa no aviso de privacidade ou cadastro, para ranquear melhores preços e ofertas próximas.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Segurança e Logs</strong></td>
+                        <td>Registros de tentativas de login e carimbos de aceite legal.</td>
+                        <td>Proteção contra fraudes, força bruta e cumprimento do Marco Civil da Internet (Art. 7º, II e IX).</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>3. Transparência sobre a Inteligência Artificial do AcheIAki</h2>
+            <ul>
+                <li><strong>Sem venda de dados:</strong> o AcheIAki jamais vende, aluga ou comercializa dados pessoais ou perfis comportamentais com corretores de dados ou redes de anúncios de terceiros.</li>
+                <li><strong>Decisões e recomendações:</strong> o algoritmo combina proximidade geográfica, comparativo de preços e histórico de interesse (quando autorizado) para destacar lojas e pratos com melhor custo-benefício na sua região.</li>
+                <li><strong>Recusa ou revogação fácil:</strong> se você escolher <em>"Apenas essenciais (sem IA)"</em> ou revogar depois, o sistema bloqueia o envio de sinais comportamentais e remove o perfil anônimo associado ao seu navegador.</li>
+            </ul>
+
+            <h2>4. Compartilhamento de Dados</h2>
+            <p>Seus dados de pedido (nome, WhatsApp e endereço de entrega) são compartilhados exclusivamente com o <strong>estabelecimento escolhido por você</strong> para preparo e entrega. Quando utilizados serviços técnicos de hospedagem em nuvem (Railway / banco de dados SQL) ou preenchimento opcional de CEP (ViaCEP) / login Google OAuth, o tratamento restringe-se à execução técnica do serviço.</p>
+
+            <h2>5. Segurança e Retenção</h2>
+            <ul>
+                <li>Senhas armazenadas exclusivamente com hash criptográfico forte (<code>bcrypt / PASSWORD_DEFAULT</code>);</li>
+                <li>Tokens de sessão assinados com <code>HMAC-SHA256</code> e expiração controlada;</li>
+                <li>Isolamento multi-tenant entre lojas e bloqueio de acesso direto a arquivos internos;</li>
+                <li>Retenção apenas pelo tempo necessário à prestação do serviço e obrigações legais/fiscais aplicáveis (ex.: Art. 15 do Marco Civil da Internet).</li>
+            </ul>
+
+            <h2>6. Seus Direitos como Titular (Art. 18 da LGPD)</h2>
+            <p>A qualquer momento, você pode exercer gratuitamente seus direitos de confirmação de tratamento, acesso, correção, anonimização, portabilidade, revogação de consentimento e eliminação:</p>
+            <ul>
+                <li><strong>Autoatendimento no Marketplace:</strong> na aba <em>Minha Conta &amp; Endereços</em> em <a href="marketplace.html">marketplace.html</a>, há botões diretos para <strong>Baixar meus dados (JSON)</strong>, <strong>Ligar/Desligar coleta da IA</strong> e <strong>Excluir minha conta</strong>.</li>
+                <li><strong>Canal do Encarregado (DPO):</strong> para solicitações formais ou dúvidas sobre privacidade, escreva para <strong>privacidade@acheiaki.com.br</strong> ou utilize o suporte oficial informado no painel.</li>
+            </ul>
+        </article>
+        <footer>
+            AcheIAki — O Marketplace Inteligente da sua Região · <a href="termos.html">Termos de Uso</a> · <a href="marketplace.html">Voltar ao Marketplace</a>
+        </footer>
+    </main>
+    <script src="js/lgpd-consent.js"></script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+/* Botões grandes + explicação ao lado — leitura fácil */
+.ferramentas-grade {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 16px 0 20px;
+}
+
+.ferramenta-linha {
+    display: grid;
+    grid-template-columns: minmax(160px, 260px) 1fr;
+    gap: 14px;
+    align-items: stretch;
+    background: #fff;
+    border: 1px solid rgba(20, 23, 31, 0.09);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 1px 2px rgba(20, 23, 31, 0.04);
+}
+
+.ferramenta-linha .btn-ferramenta {
+    width: 100%;
+    min-height: 52px;
+    font-size: 0.98rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 11px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #fff;
+    padding: 12px 14px;
+    text-align: center;
+    line-height: 1.25;
+}
+
+.ferramenta-explica {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+
+.ferramenta-explica strong {
+    font-size: 1rem;
+    color: #14171f;
+}
+
+.ferramenta-explica span {
+    font-size: 0.94rem;
+    color: #4b5563;
+    line-height: 1.45;
+}
+
+.painel-titulo-pagina {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+    color: #14171f;
+}
+
+.painel-intro-grande {
+    background: #ffffff;
+    border: 1px solid rgba(20, 23, 31, 0.1);
+    border-left: 3px solid #e85d04;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #374151;
+    margin: 0 0 10px;
+}
+
+.coluna-dica {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: #4b5563;
+    padding: 0 12px 10px;
+    line-height: 1.35;
+    border-bottom: 1px solid #d1d5db;
+}
+
+@media (max-width: 720px) {
+    .ferramenta-linha {
+        grid-template-columns: 1fr;
+    }
+    .ferramenta-linha .btn-ferramenta {
+        min-height: 58px;
+    }
+}
+
+body[data-pagina="cozinha"] .ferramenta-linha {
+    background: #1e293b;
+    border-color: #475569;
+}
+
+body[data-pagina="cozinha"] .ferramenta-explica strong { color: #f8fafc; }
+body[data-pagina="cozinha"] .ferramenta-explica span { color: #cbd5e1; }
+
+.ajuda-visivel-bloco {
+    background: #fff7ed;
+    border: 2px solid #fdba74;
+    border-radius: 16px;
+    padding: 16px 18px;
+    font-size: 1.12rem;
+    line-height: 1.5;
+    color: #7c2d12;
+    margin: 0 0 16px;
+}
+
+body[data-pagina="atendimento"] .wrap { max-width: 560px; }
+body[data-pagina="atendimento"] {
+    font-size: 20px;
+}
+
+body[data-pagina="motoboy"] .container {
+    max-width: 480px;
+    font-size: 20px;
+}
+
+body[data-pagina="motoboy"] input,
+body[data-pagina="motoboy"] select {
+    font-size: 1.15rem !important;
+    min-height: 56px;
+}
+
+.ajuda-id-manual {
+    background: #f3f4f6;
+    border: 2px solid #9ca3af;
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 12px;
+    text-align: left;
+}
+
+.ajuda-id-manual label {
+    font-weight: 800;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.ajuda-cliente {
+    background: linear-gradient(180deg, #fff7ed 0%, #fff 100%);
+    border: 2px solid #fdba74;
+    border-radius: 18px;
+    padding: 20px 18px;
+    margin: 0 0 24px;
+}
+
+.ajuda-cliente h2 {
+    margin: 0 0 10px;
+    font-size: 1.45rem;
+    color: #c2410c;
+}
+
+.ajuda-cliente .intro {
+    margin: 0 0 16px;
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: #7c2d12;
+}
+
+.ajuda-passos-cliente {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ajuda-passos-cliente li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: start;
+    background: #fff;
+    border: 2px solid #fed7aa;
+    border-radius: 14px;
+    padding: 14px 16px;
+}
+
+.ajuda-passos-cliente .num {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f97316;
+    color: #fff;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.ajuda-passos-cliente strong {
+    display: block;
+    font-size: 1.12rem;
+    margin-bottom: 4px;
+    color: #111827;
+}
+
+.ajuda-passos-cliente span {
+    font-size: 1.05rem;
+    line-height: 1.45;
+    color: #4b5563;
+}
+
+.ajuda-modal-cliente {
+    background: #eff6ff;
+    border: 2px solid #93c5fd;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 1.05rem;
+    line-height: 1.45;
+    color: #1e3a8a;
+    margin: 0 0 12px;
+}
+
+.ajuda-carrinho-barra {
+    display: block;
+    width: 100%;
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fef3c7;
+    padding: 4px 8px 0;
+    line-height: 1.3;
+}
+
+.cozinha-fichas-titulo {
+    padding: 0 16px;
+    margin: 8px 0 4px;
+    font-size: 1.15rem;
+    color: #fdba74;
+    font-weight: 800;
+}
+
+.ferramenta-linha .btn-ref {
+    pointer-events: none;
+    opacity: 0.95;
+}

@@ -1,0 +1,86 @@
+/* --- Banner WhatsApp Ofertas --- */
+.banner-wpp-ofertas {
+    background: #065f46;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 20px 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    color: white;
+    margin-bottom: 28px;
+    box-shadow: 0 8px 22px -10px rgba(6, 95, 70, 0.38);
+    position: relative;
+    overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    .banner-wpp-ofertas {
+        flex-direction: row;
+        justify-content: space-between;
+        text-align: left;
+    }
+}
+
+.texto-wpp h3 {
+    color: white;
+    margin: 0 0 5px 0;
+    font-size: 1.4em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+@media (min-width: 768px) {
+    .texto-wpp h3 {
+        justify-content: flex-start;
+    }
+}
+
+.texto-wpp p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 1em;
+}
+
+.btn-wpp-pulsante {
+    background-color: #ffffff;
+    color: #065f46;
+    text-decoration: none;
+    padding: 11px 22px;
+    border-radius: 999px;
+    font-weight: 700;
+    margin-top: 15px;
+    transition: transform 0.16s ease, background-color 0.16s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+@media (min-width: 768px) {
+    .btn-wpp-pulsante {
+        margin-top: 0;
+    }
+}
+
+.btn-wpp-pulsante:hover {
+    transform: translateY(-1px);
+    background-color: #ecfdf5;
+}
+
+@keyframes pulse-white {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+}

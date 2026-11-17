@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var path = window.location.pathname || '';
+            var ehLojaUrl = /\/loja\/[a-z0-9_-]+/i.test(path);
+            if (!ehLojaUrl && !params.get('tenant') && !params.get('loja') && !params.get('canal')) {
+                window.location.replace('marketplace.html' + window.location.search + window.location.hash);
+            }
+        })();
+    </script>
+    <title>Nome da Sua Loja</title>
+    <meta name="description" content="Cardápio digital para pedidos pelo WhatsApp.">
+    <meta name="keywords" content="">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Nome da Sua Loja">
+    <meta name="geo.region" content="BR">
+    <meta name="geo.placename" content="">
+    <link rel="canonical" href="https://acheiaki.com.br/">
+
+    <!-- Open Graph / Facebook -->
+    <meta name="theme-color" content="#f97136">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://acheiaki.com.br/">
+    <meta property="og:title" content="Nome da Sua Loja">
+    <meta property="og:description" content="Cardápio digital para pedidos pelo WhatsApp.">
+    <meta property="og:image" content="https://acheiaki.com.br/assets/images/acheiaki-icon.jpg">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:site_name" content="Nome da Sua Loja">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://acheiaki.com.br/">
+    <meta name="twitter:title" content="Nome da Sua Loja">
+    <meta name="twitter:description" content="Cardápio digital para pedidos pelo WhatsApp.">
+    <meta name="twitter:image" content="https://acheiaki.com.br/assets/images/acheiaki-icon.jpg">
+
+    <!-- JSON-LD Structured Data: Restaurant + Full Menu -->
+    <!-- Resource Hints -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://viacep.com.br">
+    <link rel="dns-prefetch" href="https://viacep.com.br">
+
+    <link rel="icon" type="image/jpeg" href="assets/images/acheiaki-icon.jpg">
+    <link rel="preload" href="assets/images/hero-bg.png" as="image">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Poppins:wght@700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style id="pz-anti-flash">
+        html:not([data-pz-ready]) body&gt;
+        header,
+        html:not([data-pz-ready]) body&gt;
+        main,
+        html:not([data-pz-ready]) body&gt;
+        footer,
+        html:not([data-pz-ready]) body&gt;
+
+        .hero {
+            visibility: hidden
+        }
+    </style>
+    <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
+    <link rel="stylesheet" href="css/styles.css?v=20">
+    <link rel="stylesheet" href="css/styles_wpp.css?v=15">
+    <link rel="stylesheet" href="css/ajuda-visivel.css?v=2">
+    <link rel="stylesheet" href="css/assistente-ia.css?v=2">
+    <link rel="stylesheet" href="css/localizacao-gate.css?v=2">
+    <link rel="stylesheet" href="css/lgpd-consent.css?v=2">
+</head>
+
+<body data-pagina="home">
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="loader-spinner"></div>
+        <p class="loader-text">Carregando delícias...</p>
+    </div>
+
+    <!-- Aviso de Alta Demanda removido da topbar -->
+
+    <header class="cabecalho">
+        <div class="container-header">
+            <a href="index.html" class="logo-container">
+                <img src="assets/images/placeholder-logo.svg" data-bind="logo" alt="Nome da Sua Loja Logo" class="logo"
+                    width="45" height="45">
+                <h1 data-bind="nome">Nome da Sua Loja</h1>
+            </a>
+            <nav class="nav-desktop">
+                <a href="#promocoes" data-cat="promocoes">Promoções</a>
+                <a href="#cardapio">Cardápio</a>
+                <a href="#avaliacoes">Avaliações</a>
+            </nav>
+            <div class="header-acoes">
+                <a href="marketplace.html" class="btn-pedir-agora"
+                    style="background:#0b192c;border:1px solid rgba(255,255,255,0.14);margin-right:6px;"
+                    title="Voltar para todas as lojas do AcheIAki"><i class="fa-solid fa-house"></i> Todas as lojas</a>
+                <a href="#cardapio" class="btn-pedir-agora">Ver cardápio <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </header>
+    <section class="hero">
+        <img src="assets/images/placeholder-hero.svg" alt="Capa da loja" class="hero-bg" fetchpriority="high"
+            data-bind="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-conteudo">
+            <h2 data-bind="hero-titulo">Bem-vindo à sua loja</h2>
+            <p data-bind="hero-subtitulo">Escolha seus favoritos e peça agora.</p>
+        </div>
+    </section>
+
+    <main class="container-principal">
+
+        <section class="ajuda-cliente" id="secao-ajuda-cliente" aria-label="Como pedir">
+            <h2 id="ajuda-cardapio-titulo">Como pedir — é fácil</h2>
+            <p class="intro" id="ajuda-cardapio-intro">Siga os passos abaixo para fazer seu pedido.</p>
+            <ol class="ajuda-passos-cliente" id="lista-ajuda-cardapio-passos"></ol>
+        </section>
+
+        <!-- Barra de Pesquisa e Filtros -->
+        <section class="busca-e-filtros">
+            <!-- Categorias -->
+            <div class="filtros-categoria">
+                <a href="#promocoes" data-cat="promocoes" class="btn-filtro">🏷️ Promoções</a>
+                <a href="hamburgueres.html" data-cat="hamburgueres" class="btn-filtro">🍔 Burgers</a>
+                <a href="porcoes.html" data-cat="porcoes" class="btn-filtro">🍟 Porções</a>
+                <a href="bebidas.html" data-cat="bebidas" class="btn-filtro">🥤 Bebidas</a>
+                <a href="combos.html" data-cat="combos" class="btn-filtro">📦 Combos</a>
+                <a href="acai.html" data-cat="acai" class="btn-filtro">🫐 Açaís</a>
+            </div>
+        </section>
+
+        <section id="promocoes" class="secao-cardapio">
+            <h2><i class="fa-solid fa-tags"></i> <span data-bind="secao-ofertas">Ofertas do Dia</span></h2>
+
+            <!-- Banner CTA WhatsApp -->
+            <div class="banner-wpp-ofertas">
+                <div class="texto-wpp">
+                    <h3><i class="fa-brands fa-whatsapp"></i> <span data-bind="banner-titulo">Quer ofertas
+                            exclusivas?</span></h3>
+                    <p data-bind="banner-mensagem">Olá! Vi as ofertas no site e quero saber os descontos de hoje.</p>
+                </div>
+                <a href="#" id="btn-wpp-oferta" class="btn-wpp-pulsante"><span data-bind="banner-botao">Pedir no
+                        Zap</span> <i class="fa-solid fa-paper-plane"></i>
+                </a>
+            </div>
+            <div id="lista-promocoes" class="lista-produtos-promocao"></div>
+        </section>
+        <section id="mais-pedidos" class="secao-cardapio">
+            <h2><i class="fa-solid fa-star"></i> <span data-bind="secao-destaques">Destaques</span></h2>
+            <div id="lista-mais-pedidos" class="lista-produtos-destaque"></div>
+        </section>
+
+        <section id="cardapio" class="secao-cardapio">
+            <h2><i class="fa-solid fa-utensils"></i> <span data-bind="secao-cardapio">Explore nosso Cardápio</span></h2>
+            <div class="menu-grid">
+                <a href="#promocoes" data-cat="promocoes" class="card-categoria">
+                    <div class="card-cat-img" data-bind="cat-cor" style="background: #dc2626;">
+                        <i class="fa-solid fa-tags" data-bind="cat-icone"></i>
+                    </div>
+                    <h3 data-bind="cat-nome">Promoções</h3>
+                    <p data-bind="cat-sub">Melhores ofertas</p>
+                </a>
+                <a href="hamburgueres.html" data-cat="hamburgueres" class="card-categoria">
+                    <div class="card-cat-img" data-bind="cat-cor"
+                        style="background: linear-gradient(135deg, #f97136 0%, #ed4e08 100%);">
+                        <i data-bind="cat-icone" class="fa-solid fa-burger"></i>
+                    </div>
+                    <h3 data-bind="cat-nome">Hambúrgueres</h3>
+                    <p data-bind="cat-sub">Artesanais e suculentos</p>
+                </a>
+                <a href="porcoes.html" data-cat="porcoes" class="card-categoria">
+                    <div class="card-cat-img" data-bind="cat-cor"
+                        style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
+                        <i data-bind="cat-icone" class="fa-solid fa-hotdog"></i>
+                    </div>
+                    <h3 data-bind="cat-nome">Porções</h3>
+                    <p data-bind="cat-sub">Para compartilhar</p>
+                </a>
+                <a href="bebidas.html" data-cat="bebidas" class="card-categoria">
+                    <div class="card-cat-img" data-bind="cat-cor"
+                        style="background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);">
+                        <i data-bind="cat-icone" class="fa-solid fa-martini-glass-citrus"></i>
+                    </div>
+                    <h3 data-bind="cat-nome">Bebidas</h3>
+                    <p data-bind="cat-sub">Geladas e refrescantes</p>
+                </a>
+                <a href="combos.html" data-cat="combos" class="card-categoria">
+                    <div class="card-cat-img" data-bind="cat-cor"
+                        style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);">
+                        <i data-bind="cat-icone" class="fa-solid fa-box-open"></i>
+                    </div>
+                    <h3 data-bind="cat-nome">Combos</h3>
+                    <p data-bind="cat-sub">Ofertas exclusivas</p>
+                </a>
+                <a href="acai.html" data-cat="acai" class="card-categoria">
+                    <div class="card-cat-img" data-bind="cat-cor"
+                        style="background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);">
+                        <i data-bind="cat-icone" class="fa-solid fa-ice-cream"></i>
+                    </div>
+                    <h3 data-bind="cat-nome">Açaís</h3>
+                    <p data-bind="cat-sub">Do seu jeito</p>
+                </a>
+            </div>
+        </section>
+
+        <section id="avaliacoes" class="secao-avaliacoes">
+            <h2><i class="fa-solid fa-comments"></i> <span data-bind="secao-avaliacoes">O que nossos clientes
+                    dizem</span></h2>
+            <div class="container-avaliacoes" id="lista-avaliacoes"></div>
+        </section>
+
+    </main>
+
+    <div id="carrinho-flutuante" class="rodape-carrinho">
+        <span class="ajuda-carrinho-barra" id="ajuda-carrinho-flutuante">Seu pedido fica nesta faixa. Toque em Ver
+            pedido para continuar.</span>
+        <div class="carrinho-info"><span><i id="cart-icon" class="fa-solid fa-cart-shopping"></i> Meu
+                Carrinho</span><span id="carrinho-total">R$ 0,00</span></div><button class="botao-principal">Ver
+            Pedido</button>
+    </div>
+    <footer class="rodape-informativo">
+        <div class="rodape-coluna">
+            <h4 data-bind="nome">Nome da Sua Loja</h4>
+            <p data-bind="rodape-frase"></p>
+            <p data-bind="endereco-1">Endereço da loja</p>
+            <p data-bind="endereco-2"></p>
+            <p data-bind="rodape-telefone"></p>
+        </div>
+        <div class="rodape-coluna">
+            <h4 data-bind="rodape-titulo-horario">Horário</h4>
+            <p data-bind="horario">Horário de funcionamento</p>
+            <p data-bind="horario-folga" style="color: #fdba74; font-weight: bold;"></p>
+        </div>
+        <div class="rodape-coluna">
+            <h4 data-bind="rodape-titulo-contato">Fale com a gente</h4>
+            <div class="redes-sociais">
+                <a href="#" data-rede="instagram" target="_blank" rel="noopener" style="display:none"><i
+                        class="fa-brands fa-instagram"></i> Instagram</a>
+                <a href="#" data-rede="facebook" target="_blank" rel="noopener" style="display:none"><i
+                        class="fa-brands fa-facebook"></i> Facebook</a>
+                <a href="#" data-rede="whatsapp" target="_blank" rel="noopener" style="display:none"><i
+                        class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+            </div>
+            <div style="margin-top: 25px; opacity: 0.7;">
+                <button id="btn-login-admin"
+                    style="background:none; border:1px solid rgba(255,255,255,0.3); padding: 8px 15px; border-radius: 20px; color: #ccc; cursor:pointer; font-size:0.85em; transition: all 0.3s;">
+                    <i class="fa-solid fa-lock"></i> Sou o dono da loja
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <div id="modal-customizacao" class="modal-overlay escondido">
+        <div class="modal-conteudo">
+            <div class="modal-cabecalho">
+                <h2 id="custom-item-nome">Monte do seu jeito</h2>
+                <button id="btn-fechar-custom-modal" class="btn-fechar">&times;</button>
+            </div>
+            <div id="lista-opcionais"></div>
+            <div class="modal-rodape">
+                <button id="btn-adicionar-customizado" class="botao-principal">Adicionar ao Carrinho</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-carrinho" class="modal-overlay escondido">
+        <div class="modal-conteudo">
+            <div class="modal-cabecalho">
+                <h2>Meu Carrinho</h2>
+                <button id="btn-fechar-modal" class="btn-fechar">&times;</button>
+            </div>
+            <p class="ajuda-modal-cliente" id="ajuda-modal-carrinho" style="margin:12px 25px 0;"></p>
+            <!-- Aviso Demanda Carrinho -->
+            <div class="aviso-demanda"
+                style="display: none; background: #fee2e2; color: #991b1b; padding: 15px; margin: 0 25px; border-radius: 8px; font-size: 0.9em; border: 1px solid #fca5a5;">
+                <i class="fa-solid fa-clock"></i> <strong>Alta Demanda:</strong> Tempo de espera estimado em <span
+                    class="tempo-espera-display">60-90 min</span>.
+            </div>
+            <div id="lista-itens-carrinho"></div>
+            <div class="modal-rodape">
+                <p>Total: <span id="total-carrinho-modal">R$ 0,00</span></p>
+                <button id="btn-finalizar-modal" class="botao-principal">Continuar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-endereco" class="modal-overlay escondido">
+        <div class="modal-conteudo">
+            <div class="modal-cabecalho">
+                <h2>Endereço de Entrega</h2>
+                <button id="btn-fechar-endereco-modal" class="btn-fechar">&times;</button>
+            </div>
+            <div class="modal-corpo-form">
+                <p class="ajuda-modal-cliente" id="ajuda-modal-endereco"></p>
+                <div class="form-grupo"><label for="input-nome">Nome Completo</label><input type="text" id="input-nome"
+                        placeholder="Seu nome" required></div>
+                <div class="form-grupo"><label for="input-celular">Celular (WhatsApp)</label><input type="tel"
+                        id="input-celular" placeholder="(XX) XXXXX-XXXX" required autocomplete="tel" inputmode="tel">
+                </div>
+                <div class="form-grupo">
+                    <label for="input-cep">CEP</label>
+                    <div class="input-com-icone"><input type="text" id="input-cep" placeholder="Apenas números"
+                            maxlength="9" required autocomplete="postal-code" inputmode="numeric">
+                        <div id="cep-spinner" class="spinner escondido"></div>
+                    </div>
+                </div>
+                <div class="form-grupo"><label for="input-rua">Rua</label><input type="text" id="input-rua"
+                        placeholder="Sua rua" required autocomplete="address-line1"></div>
+                <div class="form-grupo-horizontal">
+                    <div class="form-grupo"><label for="input-numero">Número</label><input type="text" id="input-numero"
+                            placeholder="Nº" required inputmode="numeric"></div>
+                    <div class="form-grupo"><label for="input-complemento">Complemento</label><input type="text"
+                            id="input-complemento" placeholder="Apto, Bloco, etc."></div>
+                </div>
+                <div class="form-grupo"><label for="input-bairro">Bairro</label><input type="text" id="input-bairro"
+                        placeholder="Seu bairro" required></div>
+                <div class="form-grupo"><label for="input-cidade">Cidade</label><input type="text" id="input-cidade"
+                        placeholder="Sua cidade" required></div>
+                <div class="form-grupo"><label for="input-referencia">Ponto de Referência</label><input type="text"
+                        id="input-referencia" placeholder="Opcional"></div>
+            </div>
+            <div class="modal-rodape" style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button type="button" id="btn-demo-endereco" hidden
+                    style="flex:1;min-width:160px;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer;">Preencher
+                    endereço de teste</button>
+                <button id="btn-confirmar-endereco" class="botao-principal" style="flex:1;min-width:160px;">Confirmar
+                    Endereço</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-confirmacao" class="modal-overlay escondido">
+        <div class="modal-conteudo">
+            <div class="modal-cabecalho">
+                <h2>Quase lá! Confirme seu pedido.</h2>
+                <button id="btn-fechar-confirmacao-modal" class="btn-fechar">&times;</button>
+            </div>
+            <div class="modal-corpo-confirmacao">
+                <p class="ajuda-modal-cliente" id="ajuda-checkout-final"></p>
+                <h4>Resumo do Pedido</h4>
+                <div id="resumo-pedido"></div>
+                <div class="aviso-demanda"
+                    style="display: none; background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 8px; font-size: 0.9em; margin-bottom: 15px; border: 1px solid #fca5a5;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> <strong>Atenção:</strong> Devido à alta demanda, o
+                    tempo de espera é de <span class="tempo-espera-display">60-90 min</span>.
+                </div>
+                <p class="ajuda-modal-cliente" id="ajuda-checkout-frete"></p>
+                <h4>Como você prefere receber?</h4>
+                <div class="form-grupo-radio"><input type="radio" id="entrega-agora" name="tipo-entrega" value="agora"
+                        checked><label for="entrega-agora">Receber o mais rápido possível</label></div>
+                <div class="form-grupo-radio"><input type="radio" id="entrega-agendar" name="tipo-entrega"
+                        value="agendar"><label for="entrega-agendar">Agendar um horário para a entrega</label></div>
+                <div id="campo-horario" class="form-grupo escondido">
+                    <label for="input-horario">Horário da Entrega</label>
+                    <input type="time" id="input-horario">
+                    <p data-bind="aviso-agendamento"
+                        style="font-size: 0.85em; color: var(--pz-primaria, #f97136); margin-top: 5px;">Agendamentos
+                        disponíveis apenas no horário de funcionamento.</p>
+                </div>
+
+                <h4>Observações</h4>
+                <p data-bind="aviso-observacoes"
+                    style="font-size: 0.85em; color: #dc2626; margin-top: -5px; margin-bottom: 5px;">Use este campo
+                    apenas para avisos ou remoção de ingredientes.</p>
+                <textarea id="input-observacao" placeholder="Ex: Tirar alface, cebola, ponto da carne."></textarea>
+
+                <h4>Cupom de Desconto</h4>
+                <div style="display:flex;gap:8px;margin-bottom:6px;">
+                    <input type="text" id="input-cupom" placeholder="Ex.: FIDELIDADE10"
+                        style="flex:1;padding:10px;border:1px solid #d1d5db;border-radius:8px;text-transform:uppercase;">
+                    <button type="button" id="btn-aplicar-cupom" class="botao-secundario"
+                        style="padding:10px 14px;border-radius:8px;font-weight:700;">Aplicar</button>
+                </div>
+                <p id="cupom-feedback" style="font-size:0.86em;margin:0 0 12px;color:#0f766e;"></p>
+
+                <h4>Forma de Pagamento</h4>
+                <div class="pagamento-opcoes">
+                    <label class="radio-pagamento" for="pagamento-pix">
+                        <input type="radio" id="pagamento-pix" name="forma-pagamento" value="PIX">
+                        <span><i class="fa-solid fa-qrcode"></i> PIX</span>
+                    </label>
+                    <label class="radio-pagamento" for="pagamento-debito">
+                        <input type="radio" id="pagamento-debito" name="forma-pagamento" value="Débito">
+                        <span><i class="fa-solid fa-credit-card"></i> Débito</span>
+                    </label>
+                    <label class="radio-pagamento" for="pagamento-credito">
+                        <input type="radio" id="pagamento-credito" name="forma-pagamento" value="Crédito">
+                        <span><i class="fa-solid fa-credit-card"></i> Crédito</span>
+                    </label>
+                    <label class="radio-pagamento" for="pagamento-dinheiro">
+                        <input type="radio" id="pagamento-dinheiro" name="forma-pagamento" value="Dinheiro">
+                        <span><i class="fa-solid fa-money-bill-wave"></i> Dinheiro</span>
+                    </label>
+                </div>
+
+                <div id="campo-troco" class="form-grupo escondido">
+                    <label for="input-troco">Troco para quanto?</label>
+                    <input type="text" id="input-troco" placeholder="Ex: 50" inputmode="numeric">
+                </div>
+            </div>
+            <div class="modal-rodape"><button id="btn-enviar-pedido-final" class="botao-principal">Enviar Pedido via
+                    WhatsApp</button></div>
+        </div>
+    </div>
+
+    <div id="modal-upsell" class="modal-overlay escondido">
+        <div class="modal-conteudo modal-upsell-conteudo">
+            <img src="assets/images/placeholder-logo.svg" data-bind="upsell-imagem" alt="Sugestão"
+                style="width: 120px; height: 120px; object-fit: contain; background-color: #f8fafc; border-radius: 50%; margin-bottom: 20px;">
+            <h2 data-bind="upsell-titulo">Que tal adicionar mais um item?</h2>
+            <p data-bind="upsell-subtitulo">Complete seu pedido com uma sugestão da casa.</p>
+            <div class="modal-upsell-acoes">
+                <button id="btn-adicionar-upsell" class="botao-principal">Sim, adicionar!</button>
+                <button id="btn-recusar-upsell" class="botao-secundario">Agora não</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-login" class="modal-overlay escondido">
+        <div class="modal-conteudo" style="max-width: 400px; text-align: center;">
+            <div class="modal-cabecalho">
+                <h2 id="login-titulo-modal">Entrar no painel da loja</h2>
+                <button type="button" id="btn-fechar-login" class="btn-fechar" aria-label="Fechar">&times;</button>
+            </div>
+            <form id="form-login-admin" novalidate>
+                <div class="modal-corpo-form">
+                    <p id="login-dica-modal"
+                        style="margin-bottom: 20px; color: #374151; font-size: 1.05rem; line-height: 1.5;">Digite o
+                        usuário e a senha que você criou no cadastro.</p>
+                    <div class="form-grupo">
+                        <label for="login-usuario">Usuário</label>
+                        <input type="text" id="login-usuario" placeholder="Seu usuário" autocomplete="username"
+                            autocapitalize="none" autocorrect="off" spellcheck="false">
+                    </div>
+                    <div class="form-grupo">
+                        <label for="login-senha">Senha</label>
+                        <input type="password" id="login-senha" placeholder="Sua senha" autocomplete="current-password"
+                            autocapitalize="none" autocorrect="off" spellcheck="false">
+                    </div>
+                    <div id="login-erro" style="color: red; font-size: 0.9em; display: none; margin-bottom: 10px;">
+                        Usuário
+                        ou senha incorretos.</div>
+                </div>
+                <div class="modal-rodape">
+                    <button type="submit" id="btn-entrar-admin" class="botao-principal"
+                        style="width: 100%; min-height: 52px; font-size: 1.1rem;">Entrar no painel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div
+        style="max-width:1100px;margin:24px auto 12px;padding:12px 18px;border-top:1px solid #e5e7eb;font-size:0.82rem;color:#64748b;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span>Vitrine integrante do <strong>AcheIAki</strong> — O Marketplace Inteligente da sua Região</span>
+        <span style="display:flex;gap:12px;flex-wrap:wrap;">
+            <a href="termos.html" style="color:#0284c7;text-decoration:none;font-weight:600;">Termos de Uso</a>
+            <a href="privacidade.html" style="color:#0284c7;text-decoration:none;font-weight:600;">Privacidade
+                (LGPD)</a>
+            <a href="#" onclick="event.preventDefault();window.AcheIAkiLGPD&&window.AcheIAkiLGPD.abrirPreferencias();"
+                style="color:#0284c7;text-decoration:none;font-weight:600;">Privacidade e IA</a>
+        </span>
+    </div>
+
+    <!-- Tenant + API pública do cardápio -->
+    <script>
+        (function () {
+            const v = Date.now();
+            document.write('<script src="js/tenant.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/modo-apresentacao.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/lgpd-consent.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/localizacao-gate.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/store-loader.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/celulas-sync.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/boot-vitrine.js?v=' + v + '"><\/script>');
+        })();
+    </script>
+</body>
+
+</html>

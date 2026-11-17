@@ -1,0 +1,5 @@
+{
+    "google_maps_api_key": "SUA_CHAVE_GOOGLE_CLOUD",
+    "google_maps_habilitado": true,
+    "cnpj_habilitado": true
+}

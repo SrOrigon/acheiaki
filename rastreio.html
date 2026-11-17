@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b192c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Rastreie seu Pedido</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="description" content="Cardápio digital para pedidos pelo WhatsApp.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://acheiaki.com.br/rastreio.html">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/jpeg" href="assets/images/acheiaki-icon.jpg">
+    <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
+    <style>
+        :root {
+            --primary: #e85d04;
+            --bg: #f7f6f2;
+            --success: #15803d;
+            --inactive: #d1d5db;
+            --text: #14171f;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .overlay {
+            position: absolute;
+            top: max(14px, env(safe-area-inset-top));
+            left: 14px;
+            right: 14px;
+            bottom: max(14px, env(safe-area-inset-bottom));
+            z-index: 1000;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .aki-rastreio-dock {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: auto;
+            pointer-events: none;
+        }
+        @media (min-width: 769px) {
+            .aki-rastreio-dock { margin-top: 0; }
+        }
+        @media (max-width: 768px) {
+            .status-tracker { padding: 14px 16px; border-radius: 16px; }
+            .card { padding: 14px 16px; border-radius: 18px; }
+        }
+
+        .card {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            pointer-events: auto;
+            max-width: 450px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-tracker {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            pointer-events: auto;
+            max-width: 450px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--inactive);
+            z-index: 0;
+        }
+
+        .step-progress {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            height: 3px;
+            background: var(--primary);
+            z-index: 1;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .step {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            width: 60px;
+        }
+
+        .step-icon {
+            width: 32px;
+            height: 32px;
+            background: white;
+            border: 3px solid var(--inactive);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: var(--inactive);
+            transition: all 0.3s;
+        }
+
+        .step.active .step-icon {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .step.completed .step-icon {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--inactive);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .step.active .step-label { color: var(--text); }
+        .step.completed .step-label { color: var(--success); }
+
+        .status-icon {
+            background: var(--primary);
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249, 113, 54, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(249, 113, 54, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249, 113, 54, 0); }
+        }
+
+        .info h2 { margin: 0; font-size: 1.1rem; color: #1f2937; }
+        .info p { margin: 5px 0 0; font-size: 0.9rem; color: #6b7280; }
+
+        .loading-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            transition: opacity 0.5s;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f4f6;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .error-msg {
+            display: none;
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body data-pagina="rastreio">
+    <div id="loading" class="loading-screen">
+        <div class="spinner"></div>
+        <p>Buscando entregador...</p>
+    </div>
+
+    <div class="overlay">
+        <div class="status-tracker">
+            <div class="steps">
+                <div class="step-progress" id="step-progress"></div>
+                <div class="step" id="step-novo">
+                    <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+                    <div class="step-label">Confirmado</div>
+                </div>
+                <div class="step" id="step-preparo">
+                    <div class="step-icon"><i class="fa-solid fa-fire"></i></div>
+                    <div class="step-label">Preparando</div>
+                </div>
+                <div class="step" id="step-em-rota">
+                    <div class="step-icon"><i class="fa-solid fa-motorcycle"></i></div>
+                    <div class="step-label">Saindo</div>
+                </div>
+                <div class="step" id="step-concluido">
+                    <div class="step-icon"><i class="fa-solid fa-house-chimney"></i></div>
+                    <div class="step-label">Entregue</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="aki-rastreio-dock">
+        <div class="card">
+            <div class="status-icon" id="status-icon"><i class="fa-solid fa-motorcycle"></i></div>
+            <div class="info">
+                <h2 id="order-title">Pedido #---</h2>
+                <p id="status-text">Localizando entregador...</p>
+            </div>
+        </div>
+        <div id="rastreio-nav" style="display:flex; gap:10px; flex-wrap:wrap; max-width:450px; margin-left:auto; margin-right:auto; width:100%; pointer-events:auto;">
+            <a id="rastreio-link-loja" href="index.html" style="flex:1; min-width:130px; text-align:center; padding:11px 12px; border-radius:12px; background:#ffffff; border:1px solid rgba(20,23,31,0.12); color:#14171f; font-weight:600; font-size:0.88rem; text-decoration:none; box-shadow:0 4px 12px rgba(20,23,31,0.08);"><i class="fa-solid fa-store"></i> Voltar à loja</a>
+            <a href="marketplace.html?tab=pedidos" style="flex:1; min-width:130px; text-align:center; padding:11px 12px; border-radius:12px; background:#0b192c; border:1px solid rgba(255,255,255,0.12); color:#ffffff; font-weight:600; font-size:0.88rem; text-decoration:none; box-shadow:0 4px 12px rgba(11,25,44,0.18);"><i class="fa-solid fa-bag-shopping" style="color:#38bdf8;"></i> AcheIAki · Meus pedidos</a>
+        </div>
+        </div>
+        <div id="error-container" class="error-msg">
+            O rastreio ainda não está disponível para este pedido ou o ID é inválido.
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/tenant.js"></script>
+    <script src="js/store-loader.js"></script>
+    <script src="js/celulas-sync.js"></script>
+    <script src="js/rastreio.js?v=1.0.2"></script>
+</body>
+</html>
