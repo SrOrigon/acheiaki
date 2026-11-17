@@ -83,30 +83,52 @@ if (preg_match('#^/assets/lojas/([a-zA-Z0-9_-]+)/([a-zA-Z0-9._-]+\.(?:jpg|jpeg|p
     }
 }
 
+// Helper de entrega de ativos estáticos com ETag + Cache-Control (reduz banda/egress no Railway)
+$akiServeStaticAsset = static function (string $filePath) {
+    $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+    $mimes = [
+        'css' => 'text/css; charset=utf-8',
+        'js' => 'application/javascript; charset=utf-8',
+        'png' => 'image/png',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'webp' => 'image/webp',
+        'gif' => 'image/gif',
+        'svg' => 'image/svg+xml',
+        'ico' => 'image/x-icon',
+        'woff2' => 'font/woff2',
+        'woff' => 'font/woff',
+        'json' => 'application/json; charset=utf-8',
+    ];
+    if (!isset($mimes[$ext])) {
+        return false;
+    }
+    $mtime = @filemtime($filePath) ?: 0;
+    $size = @filesize($filePath) ?: 0;
+    $etag = '"' . sha1($filePath . '|' . $mtime . '|' . $size) . '"';
+    $isMedia = in_array($ext, ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'ico', 'woff2', 'woff'], true);
+    $maxAge = $isMedia ? 2592000 : (!empty($_GET['v']) ? 86400 : 3600);
+    header('Content-Type: ' . $mimes[$ext]);
+    header('ETag: ' . $etag);
+    header('Cache-Control: public, max-age=' . $maxAge);
+    if (trim((string) ($_SERVER['HTTP_IF_NONE_MATCH'] ?? '')) === $etag) {
+        http_response_code(304);
+        return true;
+    }
+    readfile($filePath);
+    return true;
+};
+
 // Multi-tenant: /loja/{slug}/(css|js|assets)/...
 if (preg_match('#^/loja/([a-zA-Z0-9_-]+)/(css|js|assets)/(.*)$#i', $decodedPath, $m)) {
     $rel = '/' . $m[2] . '/' . $m[3];
     $alvo = realpath(__DIR__ . $rel);
     $raiz = realpath(__DIR__);
     if ($alvo && $raiz && strpos($alvo, $raiz) === 0 && is_file($alvo)) {
-        $ext = strtolower(pathinfo($alvo, PATHINFO_EXTENSION));
-        $mimes = [
-            'css' => 'text/css; charset=utf-8',
-            'js' => 'application/javascript; charset=utf-8',
-            'png' => 'image/png',
-            'jpg' => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'webp' => 'image/webp',
-            'gif' => 'image/gif',
-            'svg' => 'image/svg+xml',
-            'woff2' => 'font/woff2',
-            'json' => 'application/json; charset=utf-8',
-        ];
-        if (isset($mimes[$ext])) {
-            header('Content-Type: ' . $mimes[$ext]);
+        if ($akiServeStaticAsset($alvo)) {
+            return true;
         }
-        readfile($alvo);
-        return true;
+        return false;
     }
     if (preg_match('#^/assets/lojas/([a-zA-Z0-9_-]+)/([a-zA-Z0-9._-]+)$#i', $rel, $mSql)) {
         $_GET['t'] = $mSql[1];
@@ -148,6 +170,9 @@ if (preg_match('#^/loja/([a-zA-Z0-9_-]+)(?:/([A-Za-z0-9_-]+\.html)?)?$#i', $deco
 $target = realpath(__DIR__ . $decodedPath);
 $root = realpath(__DIR__);
 if ($target && $root && strpos($target, $root) === 0 && is_file($target)) {
+    if ($akiServeStaticAsset($target)) {
+        return true;
+    }
     return false; // deixa o servidor PHP nativo servir normalmente
 }
 

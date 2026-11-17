@@ -52,6 +52,48 @@ if (strlen($bytes) > 6 * 1024 * 1024) {
     exit;
 }
 
+// Compacta e redimensiona via GD antes de gravar no PostgreSQL (economiza disco e rede)
+if ($ext !== 'gif' && function_exists('imagecreatefromstring') && function_exists('imagesx')) {
+    $img = @imagecreatefromstring($bytes);
+    if ($img !== false) {
+        $w = imagesx($img);
+        $h = imagesy($img);
+        $maxDim = 960;
+        $alvo = $img;
+        if ($w > $maxDim || $h > $maxDim) {
+            $escala = min($maxDim / $w, $maxDim / $h);
+            $nw = max(1, (int) round($w * $escala));
+            $nh = max(1, (int) round($h * $escala));
+            $canvas = imagecreatetruecolor($nw, $nh);
+            if ($canvas !== false) {
+                imagealphablending($canvas, false);
+                imagesavealpha($canvas, true);
+                imagecopyresampled($canvas, $img, 0, 0, 0, 0, $nw, $nh, $w, $h);
+                imagedestroy($img);
+                $alvo = $canvas;
+            }
+        }
+        ob_start();
+        $okComp = false;
+        $novoExt = $ext;
+        if (function_exists('imagewebp')) {
+            imagealphablending($alvo, true);
+            imagesavealpha($alvo, true);
+            $okComp = @imagewebp($alvo, null, 80);
+            $novoExt = 'webp';
+        } elseif (function_exists('imagejpeg')) {
+            $okComp = @imagejpeg($alvo, null, 82);
+            $novoExt = 'jpg';
+        }
+        $compBytes = ob_get_clean();
+        imagedestroy($alvo);
+        if ($okComp && is_string($compBytes) && strlen($compBytes) > 32 && strlen($compBytes) < strlen($bytes)) {
+            $bytes = $compBytes;
+            $ext = $novoExt;
+        }
+    }
+}
+
 $tenant = preg_replace('/[^a-z0-9_-]/i', '', (string) Database::getTenant()) ?: 'default';
 $dir = __DIR__ . '/assets/lojas/' . $tenant;
 if (!is_dir($dir)) {
