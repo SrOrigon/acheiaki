@@ -62,6 +62,18 @@ if ($dbOk) {
     }
 }
 
+$workerHbFile = __DIR__ . '/data/cache/worker_heartbeat.json';
+$workerHbRaw = is_file($workerHbFile) ? @json_decode((string) @file_get_contents($workerHbFile), true) : null;
+$workerTs = is_array($workerHbRaw) ? (int) ($workerHbRaw['ts'] ?? 0) : 0;
+$workerAge = $workerTs > 0 ? max(0, time() - $workerTs) : null;
+$workerInfo = [
+    'ativo' => $workerAge !== null && $workerAge <= 30,
+    'pid' => is_array($workerHbRaw) ? (int) ($workerHbRaw['pid'] ?? 0) : 0,
+    'ultimo_batimento_seg' => $workerAge,
+    'jobs_ciclo' => is_array($workerHbRaw) ? (int) ($workerHbRaw['jobs'] ?? 0) : 0,
+    'mem_mb' => is_array($workerHbRaw) ? (float) ($workerHbRaw['mem_mb'] ?? 0) : 0,
+];
+
 echo json_encode([
     'status' => $critical ? 'critical' : ($warnings ? 'degraded' : 'ok'),
     'ready_for_traffic' => $ready,
@@ -75,6 +87,7 @@ echo json_encode([
     'brand_icon_present' => $iconOk,
     'cache' => pz_cache_backend_info(),
     'queue' => pz_queue_stats(),
+    'worker' => $workerInfo,
     'media' => pz_media_cdn_publico(),
     'realtime' => pz_realtime_ws_publico(),
     'warnings' => $warnings,
