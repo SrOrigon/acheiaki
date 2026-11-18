@@ -25,7 +25,8 @@ RUN mkdir -p /app/data /app/data/tenants /app/data/logs /app/data/cache /app/dat
     && php /app/scripts/compress_assets.php
 
 ENV PHP_CLI_SERVER_WORKERS=8
+ENV PZ_WORKER_DAEMON=1
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8080} router.php"]
+CMD ["sh", "-c", "(while true; do PZ_WORKER_DAEMON=1 php /app/worker.php >> /app/data/logs/worker.log 2>&1; sleep 2; done) & exec php -S 0.0.0.0:${PORT:-8080} router.php"]

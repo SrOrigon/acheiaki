@@ -52,15 +52,15 @@ if (preg_match('/^Bearer\s+(.+)$/i', $authHeader, $m)) {
     $tokenInformado = trim((string) $_GET['api_key']);
 }
 
-if (empty($pdvCfg['habilitado'])) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Conector PDV não habilitado nesta loja. Ative em Admin -> Integrações PDV & Fiscal.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
 if ($tokenInformado === '' || $pdvCfg['api_key'] === '' || !hash_equals($pdvCfg['api_key'], $tokenInformado)) {
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'API Key do PDV ausente ou inválida.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (empty($pdvCfg['habilitado'])) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Conector PDV não habilitado nesta loja. Ative em Admin -> Integrações PDV & Fiscal.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

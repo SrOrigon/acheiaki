@@ -72,6 +72,23 @@ if ($decodedPath === '/marketplace.html' || $decodedPath === '/cadastro.html') {
     return true;
 }
 
+// Fallback dinâmico caso .webp pré-comprimido ainda não exista em disco local (converte o .png/.jpg original)
+if (preg_match('#^(?:/loja/[a-zA-Z0-9_-]+)?/assets/images/([a-zA-Z0-9._-]+)\.webp$#i', $decodedPath, $mWebp)) {
+    $webpDisk = __DIR__ . '/assets/images/' . $mWebp[1] . '.webp';
+    if (!is_file($webpDisk)) {
+        foreach (['png', 'jpg', 'jpeg'] as $extCand) {
+            $origDisk = __DIR__ . '/assets/images/' . $mWebp[1] . '.' . $extCand;
+            if (is_file($origDisk)) {
+                $_GET['t'] = 'assets';
+                $_GET['f'] = $mWebp[1] . '.' . $extCand;
+                $_GET['fmt'] = 'webp';
+                require __DIR__ . '/media.php';
+                return true;
+            }
+        }
+    }
+}
+
 // Otimização automática para WebP/AVIF e CDN (Cloudflare R2 / S3) nas imagens pesadas de assets/images e assets/lojas
 if (preg_match('#^(?:/loja/[a-zA-Z0-9_-]+)?/assets/images/([a-zA-Z0-9._-]+)\.(?:png|jpg|jpeg)$#i', $decodedPath, $mAsset)) {
     $baseAssetName = $mAsset[1];

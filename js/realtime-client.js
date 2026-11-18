@@ -106,6 +106,37 @@
         });
     }
 
+    function montarAuthQuery(tenant) {
+        const qs = new URLSearchParams(global.location.search || '');
+        const partes = [];
+        try {
+            const adminUser = sessionStorage.getItem('admin_user') || '';
+            const adminPass = sessionStorage.getItem('admin_pass') || '';
+            if (adminUser && adminPass) {
+                partes.push('user=' + encodeURIComponent(adminUser));
+                partes.push('pass=' + encodeURIComponent(adminPass));
+            }
+        } catch (e) {}
+
+        let chaveK = qs.get('k') || '';
+        if (!chaveK) {
+            try {
+                const kCoz = (global.TENANT && global.TENANT.storageKey) ? global.TENANT.storageKey('cozinha_k') : 'cozinha_k';
+                const kEnt = (global.TENANT && global.TENANT.storageKey) ? global.TENANT.storageKey('entregador_chave') : 'entregador_chave';
+                chaveK = sessionStorage.getItem(kCoz) || localStorage.getItem(kEnt) || '';
+            } catch (e) {}
+        }
+        if (chaveK) partes.push('k=' + encodeURIComponent(chaveK));
+
+        const pedId = qs.get('id') || localStorage.getItem('ultimoPedidoId') || '';
+        const pedCod = qs.get('c') || localStorage.getItem('ultimoPedidoCodigo') || '';
+        if (pedId && pedCod) {
+            partes.push('order_id=' + encodeURIComponent(pedId));
+            partes.push('c=' + encodeURIComponent(pedCod));
+        }
+        return partes.length ? ('&' + partes.join('&')) : '';
+    }
+
     function conectarSSE(tenant) {
         state.tenant = tenant || detectarTenant();
         if (typeof global.EventSource === 'undefined') return false;
@@ -113,7 +144,7 @@
             try { state.es.close(); } catch (e) {}
         }
 
-        const url = baseUrl('realtime_events.php?tenant=' + encodeURIComponent(state.tenant) + '&since=' + encodeURIComponent(String(state.lastSeq)));
+        const url = baseUrl('realtime_events.php?tenant=' + encodeURIComponent(state.tenant) + '&since=' + encodeURIComponent(String(state.lastSeq)) + montarAuthQuery(state.tenant));
         const es = new global.EventSource(url);
         state.es = es;
 
@@ -154,6 +185,8 @@
             role: cfg.role || 'cliente',
             telefone: cfg.telefone || '',
             pedido_id: cfg.pedidoId || '',
+            c: cfg.codigo || (new URLSearchParams(global.location.search || '').get('c') || localStorage.getItem('ultimoPedidoCodigo') || ''),
+            k: cfg.k || (new URLSearchParams(global.location.search || '').get('k') || ''),
             device_id: (localStorage.getItem('aki_device_id') || (() => {
                 const id = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
                 try { localStorage.setItem('aki_device_id', id); } catch (e) {}

@@ -1,16 +1,37 @@
 <?php
 /**
- * API Fiscal (DANFE NFC-e/SAT simplificada e consulta por pedido).
+ * API Fiscal (DANFE NFC-e/SAT simplificada e consulta por pedido) — Isolada por Tenant e Autenticada.
  */
 require_once __DIR__ . '/tenant_init.php';
+require_once __DIR__ . '/auth_lib.php';
+require_once __DIR__ . '/pedido_acesso.php';
 require_once __DIR__ . '/fiscal_lib.php';
 
 $acao = strtolower(trim((string) ($_GET['action'] ?? 'danfe')));
 pedidozap_bootstrap_tenant();
 $tenant = Database::getTenant();
 $orderId = trim((string) ($_GET['order_id'] ?? $_GET['id'] ?? ''));
+$codigoPedido = trim((string) ($_GET['c'] ?? ''));
+$user = (string) ($_GET['user'] ?? '');
+$pass = (string) ($_GET['pass'] ?? '');
+$adminOk = ($user !== '' || $pass !== '') ? (pedidozap_autorizado($user, $pass) !== false) : pz_admin_ok();
 
 if ($acao === 'danfe') {
+    if ($orderId === '') {
+        http_response_code(400);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'Informe o número do pedido.';
+        exit;
+    }
+
+    $pedido = Database::findOrder($orderId);
+    if (!$pedido || !$adminOk && !pz_pode_ver_pedido($pedido, $codigoPedido, '')) {
+        http_response_code(401);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'Acesso não autorizado a este documento fiscal.';
+        exit;
+    }
+
     $notas = pz_fiscal_listar_notas($tenant, 200);
     $nota = null;
     foreach ($notas as $n) {
@@ -57,4 +78,10 @@ if ($acao === 'danfe') {
 }
 
 header('Content-Type: application/json; charset=utf-8');
-echo json_encode(['success' => true, 'notas' => pz_fiscal_listar_notas($tenant, 20)], JSON_UNESCAPED_UNICODE);
+if (!$adminOk) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Autenticação da loja obrigatória para consultar notas fiscais.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+echo json_encode(['success' => true, 'tenant' => $tenant, 'notas' => pz_fiscal_listar_notas($tenant, 20)], JSON_UNESCAPED_UNICODE);

@@ -119,6 +119,9 @@ function pz_queue_push($type, array $payload = [], $tenant = 'default', $delaySe
 
 function pz_queue_register_shutdown_drain()
 {
+    if (getenv('PZ_WORKER_DAEMON') === '1' || ($_ENV['PZ_WORKER_DAEMON'] ?? '') === '1') {
+        return;
+    }
     $GLOBALS['PZ_QUEUE_PENDING_DRAIN'] = true;
     if ($GLOBALS['PZ_QUEUE_SHUTDOWN_REGISTERED']) {
         return;

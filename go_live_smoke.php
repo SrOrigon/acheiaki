@@ -10,6 +10,11 @@ require_once __DIR__ . '/db_pdo.php';
 require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/saas_lib.php';
 require_once __DIR__ . '/integracoes_lib.php';
+require_once __DIR__ . '/cache_lib.php';
+require_once __DIR__ . '/queue_lib.php';
+require_once __DIR__ . '/realtime_lib.php';
+require_once __DIR__ . '/fiscal_lib.php';
+require_once __DIR__ . '/territorio_lib.php';
 
 if (php_sapi_name() !== 'cli') {
     http_response_code(403);
@@ -125,6 +130,17 @@ $arquivosCriticos = [
     'health.php',
     'router.php',
     'save_order.php',
+    'update_order_status.php',
+    'marcar_comanda_impressa.php',
+    'get_cozinha_pedidos.php',
+    'get_order_status.php',
+    'get_active_orders.php',
+    'pdv_api.php',
+    'fiscal_api.php',
+    'push_api.php',
+    'realtime_events.php',
+    'worker.php',
+    'scripts/compress_assets.php',
     'marketplace_api.php',
     'agente_api.php',
     'login.php',
@@ -134,9 +150,87 @@ foreach ($arquivosCriticos as $arq) {
     $registrar('arquivo_' . $arq, 'Arquivo ' . $arq, is_file(__DIR__ . '/' . $arq));
 }
 
+// Simulação E2E transacional completa em tenant temporário isolado (__smoke_e2e)
+$tenantTeste = '__smoke_e2e_' . substr(bin2hex(random_bytes(3)), 0, 6);
+$tenantAnt = Database::getTenant();
+try {
+    Database::setTenant($tenantTeste);
+    Database::write('config.json', ['NOME_LOJA' => 'Smoke Test Kitchen', 'CNPJ' => '11222333000181']);
+    Database::write('cardapio.json', ['hamburgueres' => [['id' => 'smoke_1', 'nome' => 'Smoke Burger', 'preco' => 30.00, 'ativo' => true]]]);
+
+    $tok = 'chk_smoke_' . bin2hex(random_bytes(4));
+    $ordId = (string) random_int(800000, 899999);
+    $ord = [
+        'id' => $ordId,
+        'codigo' => bin2hex(random_bytes(8)),
+        'tenant' => $tenantTeste,
+        'cliente' => 'Cliente Smoke',
+        'celular' => '11999999999',
+        'itens' => [['idProduto' => 'smoke_1', 'nome' => 'Smoke Burger', 'quantidade' => 1, 'precoTotal' => 30.00]],
+        'subtotal' => 30.00,
+        'total' => 30.00,
+        'status' => 'novo',
+        'created_at' => date('c'),
+    ];
+    $r1 = Database::saveOrderAtomic($ord, $tok);
+    $r2 = Database::saveOrderAtomic($ord, $tok);
+    $registrar('e2e_idempotencia', 'E2E Pedido atômico + idempotência checkout_token', !empty($r1['success']) && empty($r1['deduplicated']) && !empty($r2['deduplicated']));
+
+    $t1 = Database::transitionOrderStatus($ordId, 'preparo', ['role' => 'painel']);
+    $comandaId = (string) ($t1['order']['comanda_id'] ?? '');
+    $t2 = Database::transitionOrderStatus($ordId, 'em-rota', ['role' => 'cozinha']);
+    $t3 = Database::transitionOrderStatus($ordId, 'concluido', ['role' => 'motoboy']);
+    $tRetro = Database::transitionOrderStatus($ordId, 'preparo', ['role' => 'cozinha', 'forcar_rollback' => true]);
+    $oFinal = Database::findOrder($ordId);
+    $stOk = !empty($t1['ok']) && !empty($t2['ok']) && !empty($t3['ok']) && empty($tRetro['ok'])
+        && !empty($oFinal['aceito_em']) && !empty($oFinal['pronto_em']) && !empty($oFinal['saiu_entrega_em']) && !empty($oFinal['entregue_em']);
+    $registrar('e2e_maquina_estados', 'E2E Máquina de estados + trava retrocesso + timestamps', $stOk);
+
+    // Isolamento cross-tenant + emissão NFC-e + avaliação
+    Database::setTenant($tenantTeste . '_outro');
+    $vazouOrder = Database::findOrder($ordId) !== null;
+    Database::setTenant($tenantTeste);
+    $nf = pz_fiscal_emitir_pedido($tenantTeste, $ordId, true);
+    $av = pz_territorio_registrar_avaliacao($tenantTeste, ['pedido_id' => $ordId, 'nota' => 5, 'cliente_nome' => 'Cliente Smoke', 'comentario' => 'Teste E2E perfeito']);
+    $registrar('e2e_fiscal_avaliacao_isolamento', 'E2E NFC-e + Avaliação + Isolamento cross-tenant', !$vazouOrder && !empty($nf['success']) && !empty($av['success']) && $comandaId !== '');
+} catch (Throwable $eE2e) {
+    $registrar('e2e_excecao', 'E2E Ciclo completo', false, $eE2e->getMessage());
+} finally {
+    // Limpa vestígios do tenant de teste
+    $dirSmoke = __DIR__ . '/data/tenants/' . $tenantTeste;
+    if (is_dir($dirSmoke)) {
+        foreach (@glob($dirSmoke . '/*') ?: [] as $fDel) {
+            @unlink($fDel);
+        }
+        @rmdir($dirSmoke);
+    }
+    $pdoClean = function_exists('pz_pdo') ? pz_pdo(false) : null;
+    if ($pdoClean instanceof PDO) {
+        try {
+            $pdoClean->prepare('DELETE FROM pz_kv_store WHERE tenant_slug = ?')->execute([$tenantTeste]);
+            $pdoClean->prepare('DELETE FROM pz_orders_tx WHERE tenant_slug = ?')->execute([$tenantTeste]);
+            $pdoClean->prepare('DELETE FROM pz_avaliacoes WHERE tenant_slug = ?')->execute([$tenantTeste]);
+        } catch (Throwable $e) {
+            // ignora se tabela não existir
+        }
+    }
+    Database::setTenant($tenantAnt);
+}
+
 if ($baseUrl !== '') {
-    $healthUrl = $baseUrl . '/health.php';
     $ctx = stream_context_create(['http' => ['timeout' => 15, 'ignore_errors' => true]]);
+    $httpCodeOf = static function (string $url, string $method = 'GET', ?string $body = null) use ($ctx): int {
+        $opts = ['http' => ['method' => $method, 'timeout' => 12, 'ignore_errors' => true]];
+        if ($body !== null) {
+            $opts['http']['header'] = "Content-Type: application/json\r\n";
+            $opts['http']['content'] = $body;
+        }
+        @file_get_contents($url, false, stream_context_create($opts));
+        $statusLine = $http_response_header[0] ?? '';
+        return preg_match('/\s(\d{3})\s/', $statusLine, $m) ? (int) $m[1] : 0;
+    };
+
+    $healthUrl = $baseUrl . '/health.php';
     $raw = @file_get_contents($healthUrl, false, $ctx);
     $health = is_string($raw) ? json_decode($raw, true) : null;
     $registrar(
@@ -157,6 +251,18 @@ if ($baseUrl !== '') {
         is_array($mkt) ? ('Lojas: ' . (int) ($mkt['total'] ?? count($mkt['lojas'] ?? []))) : 'Falha na API pública.',
         'Teste no navegador: ' . $mktUrl
     );
+
+    $cFiscal = $httpCodeOf($baseUrl . '/fiscal_api.php?tenant=default');
+    $cPdv = $httpCodeOf($baseUrl . '/pdv_api.php?action=orders_polling&tenant=default');
+    $cPush = $httpCodeOf($baseUrl . '/push_api.php?action=subscribe&tenant=default', 'POST', '{"role":"painel","fcm_token":"fake"}');
+    $rtRaw = @file_get_contents($baseUrl . '/realtime_events.php?tenant=default&mode=json', false, stream_context_create(['http' => ['timeout' => 12, 'ignore_errors' => true]]));
+    $rtJson = is_string($rtRaw) ? json_decode($rtRaw, true) : null;
+    $rtSafe = is_array($rtJson) && ($rtJson['scope'] ?? '') === 'public';
+
+    $registrar('sec_fiscal_401', 'Segurança fiscal_api bloqueia sem auth', $cFiscal === 401, 'HTTP ' . $cFiscal);
+    $registrar('sec_pdv_401', 'Segurança pdv_api bloqueia sem API Key', $cPdv === 401, 'HTTP ' . $cPdv);
+    $registrar('sec_push_401', 'Segurança push_api bloqueia role operacional sem auth', $cPush === 401, 'HTTP ' . $cPush);
+    $registrar('sec_realtime_scope', 'Segurança realtime_events isola PII sem auth', $rtSafe, is_array($rtJson) ? ('scope=' . ($rtJson['scope'] ?? '')) : 'sem json');
 }
 
 $somenteUsuario = [

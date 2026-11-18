@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Motor Territorial, Disputa de Território, Avaliações e Dicas de Melhoria Contínua.
  * Funciona 100% no servidor sem custo de IA externa (comparativos anônimos + métricas reais).
@@ -13,10 +14,27 @@ function pz_territorio_norm($txt)
 {
     $s = mb_strtolower(trim((string) $txt), 'UTF-8');
     $mapa = [
-        'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a',
-        'é' => 'e', 'è' => 'e', 'ê' => 'e', 'í' => 'i', 'ì' => 'i', 'î' => 'i',
-        'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o',
-        'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u', 'ç' => 'c',
+        'á' => 'a',
+        'à' => 'a',
+        'â' => 'a',
+        'ã' => 'a',
+        'ä' => 'a',
+        'é' => 'e',
+        'è' => 'e',
+        'ê' => 'e',
+        'í' => 'i',
+        'ì' => 'i',
+        'î' => 'i',
+        'ó' => 'o',
+        'ò' => 'o',
+        'ô' => 'o',
+        'õ' => 'o',
+        'ö' => 'o',
+        'ú' => 'u',
+        'ù' => 'u',
+        'û' => 'u',
+        'ü' => 'u',
+        'ç' => 'c',
     ];
     return strtr($s, $mapa);
 }
@@ -615,8 +633,12 @@ function pz_territorio_analisar_loja($slug)
         }
     }
 
-    $precos = array_values(array_filter(array_column($pares, 'preco_medio'), function ($v) { return $v > 0; }));
-    $tempos = array_values(array_filter(array_column($pares, 'tempo_medio_min'), function ($v) { return $v > 0; }));
+    $precos = array_values(array_filter(array_column($pares, 'preco_medio'), function ($v) {
+        return $v > 0;
+    }));
+    $tempos = array_values(array_filter(array_column($pares, 'tempo_medio_min'), function ($v) {
+        return $v > 0;
+    }));
     $fretes = array_column($pares, 'taxa_entrega_base');
     $scores = array_column($pares, 'score_territorio');
 
@@ -627,8 +649,12 @@ function pz_territorio_analisar_loja($slug)
 
     // Gera dicas acionáveis específicas para esta loja e seus produtos
     $dicas = [];
-    $semFoto = array_values(array_filter($atual['itens'], function ($i) { return !$i['tem_foto']; }));
-    $semDesc = array_values(array_filter($atual['itens'], function ($i) { return !$i['tem_desc']; }));
+    $semFoto = array_values(array_filter($atual['itens'], function ($i) {
+        return !$i['tem_foto'];
+    }));
+    $semDesc = array_values(array_filter($atual['itens'], function ($i) {
+        return !$i['tem_desc'];
+    }));
 
     if ($atual['qtd_itens'] === 0) {
         $dicas[] = [

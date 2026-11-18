@@ -3,6 +3,8 @@
  * API Pública de Inscrição em Push Notifications (Web Push & Nativo Capacitor FCM/APNs).
  */
 require_once __DIR__ . '/tenant_init.php';
+require_once __DIR__ . '/auth_lib.php';
+require_once __DIR__ . '/pedido_acesso.php';
 require_once __DIR__ . '/push_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -37,6 +39,26 @@ if ($acao === 'config' || $acao === 'vapid_public') {
 }
 
 if ($acao === 'subscribe') {
+    $roleReq = strtolower(trim((string) ($body['role'] ?? 'cliente')));
+    if (in_array($roleReq, ['painel', 'cozinha', 'motoboy'], true)) {
+        $u = (string) ($body['auth']['user'] ?? $_GET['user'] ?? '');
+        $p = (string) ($body['auth']['pass'] ?? $_GET['pass'] ?? '');
+        $k = (string) ($body['k'] ?? $_GET['k'] ?? '');
+        $okStaff = ($p !== '' && pedidozap_autorizado($u, $p) !== false) || pz_cozinha_ok($k) || pz_entregador_ok($k);
+        if (!$okStaff) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Autorização da loja obrigatória para alertas operacionais.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+    } elseif (!empty($body['pedido_id'])) {
+        $pedSub = Database::findOrder((string) $body['pedido_id']);
+        $codSub = (string) ($body['c'] ?? $_GET['c'] ?? '');
+        if ($pedSub && !pz_pode_ver_pedido($pedSub, $codSub, '')) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Código de pedido inválido para inscrição Push.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+    }
     $res = pz_push_registrar_dispositivo($tenant, $body);
     if (empty($res['success'])) {
         http_response_code(400);

@@ -922,7 +922,7 @@ function iniciarVitrine() {
             }
             if (window.PedidoZapOfflineCache) {
                 const s = (typeof TENANT !== 'undefined' && TENANT.slug) ? TENANT.slug : 'default';
-                window.PedidoZapOfflineCache.limparPedidoPendente(s).catch(() => {});
+                window.PedidoZapOfflineCache.limparPedidoPendente(s).catch(() => { });
             }
             if (window.PedidoZapCelulas) {
                 window.PedidoZapCelulas.emitir('pedido_criado', resumoCelulaPedido);
@@ -943,7 +943,7 @@ function iniciarVitrine() {
                         pedidoData: pedidoData,
                         mensagem: mensagem,
                         rastreioRelativo: rastreioRelativo
-                    }).catch(() => {});
+                    }).catch(() => { });
                 }
                 salvarCarrinho();
                 if (modalConfirmacao) modalConfirmacao.classList.add('escondido');
@@ -1038,17 +1038,17 @@ function iniciarVitrine() {
     // --- EVENT LISTENERS ---
 
     if (btnAdicionarUpsell && btnRecusarUpsell && modalUpsell) {
-    btnAdicionarUpsell.addEventListener('click', () => {
-        const sugerido = (config.UPSELL && config.UPSELL.produto_id)
-            ? encontrarProdutoPorId(config.UPSELL.produto_id)
-            : null;
-        if (sugerido) adicionarAoCarrinho(sugerido);
-        modalUpsell.classList.add('escondido');
-    });
+        btnAdicionarUpsell.addEventListener('click', () => {
+            const sugerido = (config.UPSELL && config.UPSELL.produto_id)
+                ? encontrarProdutoPorId(config.UPSELL.produto_id)
+                : null;
+            if (sugerido) adicionarAoCarrinho(sugerido);
+            modalUpsell.classList.add('escondido');
+        });
 
-    btnRecusarUpsell.addEventListener('click', () => {
-        modalUpsell.classList.add('escondido');
-    });
+        btnRecusarUpsell.addEventListener('click', () => {
+            modalUpsell.classList.add('escondido');
+        });
     }
 
     if (containerPrincipal) containerPrincipal.addEventListener('click', (e) => {
@@ -1129,7 +1129,7 @@ function iniciarVitrine() {
                             fill('input-cidade', rapido.cidade);
                             fill('input-referencia', rapido.referencia);
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                     try {
                         const compRaw = localStorage.getItem('pz_comprador_info');
                         if (compRaw) {
@@ -1370,7 +1370,7 @@ function iniciarVitrine() {
 
         const regras = config.HORARIOS;
         if (!regras) return true;
-        
+
         // Verifica se hoje está na lista de dias fechados
         if (regras.FECHADO && Array.isArray(regras.FECHADO) && regras.FECHADO.map(Number).includes(diaSemana)) {
             return false;
@@ -1443,7 +1443,7 @@ function iniciarVitrine() {
         }
     }
 
-  if (btnEnviarPedidoFinal && textoBotaoConfirmar()) {
+    if (btnEnviarPedidoFinal && textoBotaoConfirmar()) {
         btnEnviarPedidoFinal.textContent = textoBotaoConfirmar();
     }
 
@@ -1632,7 +1632,7 @@ function iniciarVitrine() {
         const atualizarSecao = (elementoLista, itens, nomeFiltro) => {
             if (!elementoLista) return;
             const container = elementoLista.closest('.categoria');
-            
+
             if (itens.length > 0) {
                 if (container) container.style.display = 'block';
                 // Otimização: Gera todo o HTML em memória antes de injetar no DOM
@@ -1919,7 +1919,7 @@ function iniciarVitrine() {
                 enderecoCliente = Object.assign({}, enderecoCliente, rapido);
                 calcularFreteAtual();
             }
-        } catch (e) {}
+        } catch (e) { }
         atualizarBannerFreteAntes();
 
         if (cepBtn && cepInput) {
@@ -1994,7 +1994,7 @@ function iniciarVitrine() {
                         }
                         showToast('WhatsApp reconhecido! Dados preenchidos automaticamente.', 'sucesso');
                     }
-                } catch (e) {}
+                } catch (e) { }
             });
         }
 
@@ -2019,7 +2019,7 @@ function iniciarVitrine() {
                     }
                 });
             }
-        } catch (e) {}
+        } catch (e) { }
     })();
 
     if (window.PedidoZapOfflineCache && typeof window.PedidoZapOfflineCache.lerCarrinho === 'function') {
@@ -2032,7 +2032,7 @@ function iniciarVitrine() {
                 if (snap.modoRecebimento) modoRecebimento = snap.modoRecebimento;
                 atualizarCarrinho();
             }
-        }).catch(() => {});
+        }).catch(() => { });
 
         const tentarReenviarPendente = () => {
             if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
@@ -2051,8 +2051,8 @@ function iniciarVitrine() {
                         atualizarCarrinho();
                         showToast('Conexão voltou! Seu pedido salvo offline foi enviado para a loja.', 'sucesso');
                     }
-                }).catch(() => {});
-            }).catch(() => {});
+                }).catch(() => { });
+            }).catch(() => { });
         };
         tentarReenviarPendente();
         window.addEventListener('online', tentarReenviarPendente);
