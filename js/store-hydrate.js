@@ -335,11 +335,14 @@
         if (secao) secao.style.display = '';
 
         const itensFonte = vitrineRepState.avaliacoes.length ? vitrineRepState.avaliacoes : vitrineRepState.legacy;
-        const total = vitrineRepState.resumo && vitrineRepState.resumo.total
+        const total = vitrineRepState.resumo && vitrineRepState.resumo.total != null
             ? Number(vitrineRepState.resumo.total)
             : itensFonte.length;
-        const media = vitrineRepState.resumo && vitrineRepState.resumo.media
-            ? Number(vitrineRepState.resumo.media)
+        const mediaBruta = vitrineRepState.resumo
+            ? (vitrineRepState.resumo.nota_media != null ? vitrineRepState.resumo.nota_media : vitrineRepState.resumo.media)
+            : null;
+        const media = mediaBruta != null
+            ? Number(mediaBruta)
             : (itensFonte.length
                 ? itensFonte.reduce((acc, it) => acc + Number(it.nota || 5), 0) / itensFonte.length
                 : 0);
@@ -420,12 +423,13 @@
 
         lista.innerHTML = filtradas.map((item) => {
             const foto = item.foto || PLACEHOLDER;
-            const nome = item.autor || item.nome || 'Cliente';
+            const nome = item.cliente_nome || item.autor || item.nome || 'Cliente';
             const nota = Number(item.nota || 5);
             const dataFmt = item.criado_em ? String(item.criado_em).slice(0, 10).split('-').reverse().join('/') : '';
-            const verif = item.compra_verificada ? '<span class="pz-vrep-verif">✓ Compra verificada</span>' : '';
-            const tagsItem = Array.isArray(item.tags) && item.tags.length
-                ? '<div class="pz-vrep-tags" style="margin:6px 0;">' + item.tags.map((tg) => '<span class="pz-vrep-tag">' + escapeHtml(tg) + '</span>').join('') + '</div>'
+            const verif = (item.verificada || item.compra_verificada) ? '<span class="pz-vrep-verif">✓ Compra verificada</span>' : '';
+            const listaTags = Array.isArray(item.melhorias_tags) ? item.melhorias_tags : (Array.isArray(item.tags) ? item.tags : []);
+            const tagsItem = listaTags.length
+                ? '<div class="pz-vrep-tags" style="margin:6px 0;">' + listaTags.map((tg) => '<span class="pz-vrep-tag">' + escapeHtml(tg) + '</span>').join('') + '</div>'
                 : '';
             const respLoja = String(item.resposta_loja || '').trim()
                 ? '<div class="pz-vrep-reply"><strong>Resposta do estabelecimento</strong><p style="margin:4px 0 0;">' + escapeHtml(item.resposta_loja) + '</p></div>'
@@ -462,7 +466,7 @@
         try {
             const res = await fetch(apiMarketplaceBase() + '?action=avaliacoes_loja&tenant=' + encodeURIComponent(tenant));
             const data = await res.json();
-            if (data && data.ok) {
+            if (data && (data.success || data.ok)) {
                 vitrineRepState.resumo = data.resumo || null;
                 vitrineRepState.avaliacoes = Array.isArray(data.avaliacoes) ? data.avaliacoes : [];
                 try {
@@ -572,23 +576,24 @@
                             nota_comida: comida,
                             nota_entrega: entrega,
                             nota_custo: custo,
-                            tags: tags,
-                            autor: autor.trim(),
+                            melhorias_tags: tags,
+                            cliente_nome: autor.trim(),
                             comentario: comentario.trim(),
                             origem: 'vitrine_publica',
                         }),
                     });
                     const data = await res.json();
-                    if (!res.ok || !data || !data.ok) {
-                        throw new Error((data && data.erro) || 'Não foi possível enviar a avaliação.');
+                    if (!res.ok || !data || (!data.success && !data.ok)) {
+                        throw new Error((data && (data.message || data.erro)) || 'Não foi possível enviar a avaliação.');
                     }
                     if (data.resumo) vitrineRepState.resumo = data.resumo;
                     if (data.avaliacao) {
                         vitrineRepState.avaliacoes = [data.avaliacao].concat(vitrineRepState.avaliacoes);
                     }
                     renderizarVitrineAvaliacoes();
-                    if (global.PedidoZapCelulas && typeof global.PedidoZapCelulas.emit === 'function') {
-                        global.PedidoZapCelulas.emit('avaliacao_publicada', {
+                    carregarAvaliacoesPublicasVitrine(vitrineRepState.tenant);
+                    if (global.PedidoZapCelulas && typeof global.PedidoZapCelulas.emitir === 'function') {
+                        global.PedidoZapCelulas.emitir('avaliacao_publicada', {
                             tenant: vitrineRepState.tenant,
                             nota: vitrineRepState.nota,
                         });
@@ -602,7 +607,6 @@
                     }
                     setTimeout(() => {
                         fechar();
-                        carregarAvaliacoesPublicasVitrine(vitrineRepState.tenant);
                     }, 900);
                 } catch (err) {
                     if (statusEl) {
@@ -621,13 +625,13 @@
             ? config.AVALIACOES.filter((a) => a && (a.texto || a.nome || a.comentario))
             : [];
         vitrineRepState.legacy = itens.map((it) => ({
-            autor: it.nome || it.autor || 'Cliente',
+            cliente_nome: it.nome || it.cliente_nome || it.autor || 'Cliente',
             nota: Number(it.nota || 5),
             comentario: it.texto || it.comentario || '',
             foto: it.foto || PLACEHOLDER,
             criado_em: it.criado_em || '',
-            compra_verificada: Boolean(it.compra_verificada),
-            tags: Array.isArray(it.tags) ? it.tags : [],
+            verificada: Boolean(it.verificada || it.compra_verificada),
+            melhorias_tags: Array.isArray(it.melhorias_tags) ? it.melhorias_tags : (Array.isArray(it.tags) ? it.tags : []),
             resposta_loja: it.resposta_loja || '',
         }));
 
@@ -637,10 +641,11 @@
         vincularModalAvaliacaoVitrine();
         carregarAvaliacoesPublicasVitrine(tenant);
 
-        if (!vitrineRepState.cellBound && global.PedidoZapCelulas && typeof global.PedidoZapCelulas.on === 'function') {
+        if (!vitrineRepState.cellBound && global.PedidoZapCelulas && typeof global.PedidoZapCelulas.escutar === 'function') {
             vitrineRepState.cellBound = true;
-            global.PedidoZapCelulas.on('avaliacao_publicada', (payload) => {
-                if (!payload || !payload.tenant || payload.tenant === vitrineRepState.tenant) {
+            global.PedidoZapCelulas.escutar((ev) => {
+                if (!ev || ev.tipo !== 'avaliacao_publicada') return;
+                if (!ev.payload || !ev.payload.tenant || ev.payload.tenant === vitrineRepState.tenant) {
                     carregarAvaliacoesPublicasVitrine(vitrineRepState.tenant);
                 }
             });

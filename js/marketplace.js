@@ -1057,6 +1057,7 @@
         const modal = $('mkt-modal-loja');
         const box = $('mkt-loja-conteudo');
         if (!modal || !box) return;
+        STATE.lojaAtualSlug = slug;
         modal.hidden = false;
         box.innerHTML = '<div class="mkt-empty">Carregando página completa criada pela empresa...</div>';
 
@@ -2008,8 +2009,12 @@
                 if (!ev || !ev.tipo) return;
                 if (ev.tipo === 'pedido_criado' || ev.tipo === 'pedido_status' || ev.tipo === 'pedido_gps') {
                     buscarPedidos(true);
-                } else if (ev.tipo === 'loja_atualizada') {
+                } else if (ev.tipo === 'loja_atualizada' || ev.tipo === 'avaliacao_publicada') {
                     carregarMarketplace();
+                    if (ev.tipo === 'avaliacao_publicada' && $('mkt-modal-loja') && !$('mkt-modal-loja').hidden) {
+                        const slugRefresh = STATE.lojaAtualSlug || (ev.payload && ev.payload.tenant) || '';
+                        if (slugRefresh) abrirPaginaEmpresa(slugRefresh, true);
+                    }
                 } else if (ev.tipo === 'comprador_atualizado') {
                     carregarPerfil().then(() => {
                         atualizarPillLocal();
