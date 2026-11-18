@@ -364,10 +364,27 @@ function iniciar() {
     document.getElementById('btn-som-cozinha')?.addEventListener('click', alternarSom);
     document.getElementById('btn-auto-imprimir')?.addEventListener('click', alternarAutoImprimir);
     document.getElementById('btn-atualizar')?.addEventListener('click', carregarPedidos);
+    const btnTurnoCoz = document.getElementById('btn-iniciar-turno-cozinha');
+    if (btnTurnoCoz) {
+        btnTurnoCoz.addEventListener('click', () => {
+            prepararAudio();
+            localStorage.setItem(storageCozinha('cozinha_som'), '1');
+            atualizarControles();
+            tocarNovaComanda();
+            btnTurnoCoz.style.background = '#15803d';
+            btnTurnoCoz.innerHTML = '<i class="fa-solid fa-check-double"></i> Turno da Cozinha Ativo — Som Liberado!';
+        });
+    }
 
     document.addEventListener('click', prepararAudio, { once: true });
     carregarPedidos();
-    setInterval(carregarPedidos, 4000);
+    let tickCozinha = 0;
+    setInterval(() => {
+        tickCozinha++;
+        const sseOk = window.AcheIAkiRealtime && window.AcheIAkiRealtime.estaConectado && window.AcheIAkiRealtime.estaConectado();
+        if (sseOk && tickCozinha % 3 !== 0) return; // SSE entrega instantaneamente; backup leve a cada ~21s
+        carregarPedidos();
+    }, 7000);
     if (window.PedidoZapCelulas && window.PedidoZapCelulas.escutar) {
         window.PedidoZapCelulas.escutar((ev) => {
             if (!ev || !ev.tipo) return;

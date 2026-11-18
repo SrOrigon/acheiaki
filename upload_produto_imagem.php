@@ -59,7 +59,7 @@ if ($ext !== 'gif' && function_exists('imagecreatefromstring') && function_exist
     if ($img !== false) {
         $w = imagesx($img);
         $h = imagesy($img);
-        $maxDim = 720;
+        $maxDim = 640;
         $alvo = $img;
         if ($w > $maxDim || $h > $maxDim) {
             $escala = min($maxDim / $w, $maxDim / $h);
@@ -73,23 +73,36 @@ if ($ext !== 'gif' && function_exists('imagecreatefromstring') && function_exist
                 imagedestroy($img);
                 $alvo = $canvas;
             }
-        }
-        ob_start();
-        $okComp = false;
-        $novoExt = $ext;
-        if (function_exists('imagewebp')) {
+        } else {
+            imagepalettetotruecolor($alvo);
             imagealphablending($alvo, true);
             imagesavealpha($alvo, true);
-            $okComp = @imagewebp($alvo, null, 78);
-            $novoExt = 'webp';
-        } elseif (function_exists('imagejpeg')) {
-            $okComp = @imagejpeg($alvo, null, 80);
-            $novoExt = 'jpg';
         }
-        $compBytes = ob_get_clean();
+
+        $melhorBytes = null;
+        $novoExt = $ext;
+        $qualidades = [76, 66, 56, 48];
+        foreach ($qualidades as $qComp) {
+            ob_start();
+            $okComp = false;
+            if (function_exists('imagewebp')) {
+                $okComp = @imagewebp($alvo, null, $qComp);
+                $novoExt = 'webp';
+            } elseif (function_exists('imagejpeg')) {
+                $okComp = @imagejpeg($alvo, null, $qComp);
+                $novoExt = 'jpg';
+            }
+            $compBytes = ob_get_clean();
+            if ($okComp && is_string($compBytes) && strlen($compBytes) > 32) {
+                $melhorBytes = $compBytes;
+                if (strlen($compBytes) <= 100 * 1024) {
+                    break;
+                }
+            }
+        }
         imagedestroy($alvo);
-        if ($okComp && is_string($compBytes) && strlen($compBytes) > 32 && strlen($compBytes) < strlen($bytes)) {
-            $bytes = $compBytes;
+        if (is_string($melhorBytes) && strlen($melhorBytes) > 32 && (strlen($melhorBytes) < strlen($bytes) || $novoExt === 'webp')) {
+            $bytes = $melhorBytes;
             $ext = $novoExt;
         }
     }

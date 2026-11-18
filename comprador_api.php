@@ -558,6 +558,55 @@ if ($acao === 'cadastrar') {
     exit;
 }
 
+if ($acao === 'vincular_rapido') {
+    $tel = pz_comprador_normalizar_tel($body['telefone'] ?? ($_GET['telefone'] ?? ''));
+    $tenantSlug = preg_replace('/[^a-z0-9_-]/i', '', (string) ($body['tenant'] ?? ($_GET['tenant'] ?? 'default'))) ?: 'default';
+    if (strlen($tel) < 10) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Informe um WhatsApp válido com DDD.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $perfil = null;
+    foreach (Database::read('compradores_mkt.json') as $c) {
+        if (is_array($c) && pz_comprador_normalizar_tel($c['telefone'] ?? '') === $tel) {
+            $ends = is_array($c['enderecos'] ?? null) ? $c['enderecos'] : [];
+            $perfil = [
+                'nome' => (string) ($c['nome'] ?? ''),
+                'telefone' => $tel,
+                'endereco' => $ends[0] ?? null,
+            ];
+            break;
+        }
+    }
+
+    if (!$perfil) {
+        $antT = Database::getTenant();
+        Database::setTenant($tenantSlug);
+        $clientesLoja = Database::read('clientes.json');
+        Database::setTenant($antT);
+        if (is_array($clientesLoja)) {
+            foreach ($clientesLoja as $cl) {
+                if (is_array($cl) && substr(pz_comprador_normalizar_tel($cl['celular'] ?? $cl['telefone'] ?? ''), -8) === substr($tel, -8)) {
+                    $perfil = [
+                        'nome' => (string) ($cl['nome'] ?? ''),
+                        'telefone' => $tel,
+                        'endereco' => is_array($cl['endereco'] ?? null) ? $cl['endereco'] : null,
+                    ];
+                    break;
+                }
+            }
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'encontrado' => $perfil !== null,
+        'perfil' => $perfil,
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if ($acao === 'login') {
     $ident = trim((string) ($body['telefone'] ?? $body['email'] ?? ''));
     $tel = pz_comprador_normalizar_tel($ident);

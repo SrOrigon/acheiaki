@@ -130,6 +130,29 @@
 
     <main class="container-principal">
 
+        <div id="pz-loja-pausada-banner" style="display:none;background:#fef2f2;border:2px solid #ef4444;color:#991b1b;padding:12px 16px;border-radius:14px;margin-bottom:14px;font-weight:700;text-align:center;"></div>
+
+        <section id="pz-frete-antes-carrinho" style="background:#ffffff;border:1px solid rgba(20,23,31,0.1);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 8px rgba(15,23,42,0.04);">
+            <div id="pz-frete-antes-info" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:0.9rem;color:#1e293b;">
+                <span><i class="fa-regular fa-clock" style="color:#e85d04;"></i> Tempo estimado: <strong id="pz-tempo-vitrine">--</strong></span>
+                <span>•</span>
+                <span><i class="fa-solid fa-motorcycle" style="color:#0d9488;"></i> Entrega: <strong id="pz-frete-vitrine">Consulte seu CEP</strong></span>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;">
+                <input type="text" id="pz-cep-vitrine" inputmode="numeric" maxlength="9" placeholder="CEP para calcular frete" style="padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;width:158px;">
+                <button type="button" id="pz-btn-cep-vitrine" style="border:none;background:#0b192c;color:#fff;padding:8px 12px;border-radius:8px;font-weight:700;font-size:0.84rem;cursor:pointer;">Calcular</button>
+            </div>
+        </section>
+
+        <section id="pz-banner-repetir-pedido" style="display:none;background:linear-gradient(135deg,#0b192c 0%,#162b46 100%);color:#ffffff;border-radius:16px;padding:14px 16px;margin-bottom:16px;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 8px 22px rgba(11,25,44,0.18);">
+            <div style="min-width:200px;flex:1;">
+                <div style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.04em;color:#fdba74;font-weight:800;"><i class="fa-solid fa-bolt"></i> Pedido em 1 clique</div>
+                <strong id="pz-rep-titulo" style="display:block;font-size:1.02rem;margin:2px 0;">Pedir novamente seu último combo</strong>
+                <small id="pz-rep-resumo" style="color:#cbd5e1;font-size:0.86rem;"></small>
+            </div>
+            <button type="button" id="pz-btn-repetir-pedido" style="border:none;background:#e85d04;color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;font-size:0.95rem;cursor:pointer;white-space:nowrap;box-shadow:0 4px 14px rgba(232,93,4,0.35);">Repetir agora →</button>
+        </section>
+
         <section class="ajuda-cliente" id="secao-ajuda-cliente" aria-label="Como pedir">
             <h2 id="ajuda-cardapio-titulo">Como pedir — é fácil</h2>
             <p class="intro" id="ajuda-cardapio-intro">Siga os passos abaixo para fazer seu pedido.</p>
@@ -357,6 +380,10 @@
             </div>
             <div class="modal-corpo-form">
                 <p class="ajuda-modal-cliente" id="ajuda-modal-endereco"></p>
+                <div id="pz-checkout-rapido-pill" style="display:none;background:#ecfdf5;border:1px solid #10b981;color:#065f46;padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:0.86rem;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                    <span id="pz-checkout-rapido-txt">⚡ Seus dados de entrega já estão salvos.</span>
+                    <button type="button" id="pz-btn-checkout-rapido" style="border:none;background:#059669;color:#fff;padding:7px 12px;border-radius:8px;font-weight:800;cursor:pointer;font-size:0.82rem;">Usar em 1 clique →</button>
+                </div>
                 <div class="form-grupo"><label for="input-nome">Nome Completo</label><input type="text" id="input-nome"
                         placeholder="Seu nome" required></div>
                 <div class="form-grupo"><label for="input-celular">Celular (WhatsApp)</label><input type="tel"

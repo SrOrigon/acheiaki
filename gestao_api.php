@@ -582,6 +582,66 @@ switch ($action) {
         echo json_encode(['success' => true, 'resultado' => $lote, 'queue' => pz_queue_stats()], JSON_UNESCAPED_UNICODE);
         break;
 
+    case 'pausar_loja':
+        pz_exigir_perm($sessao, ['pedidos', 'config']);
+        $slugAtual = Database::getTenant();
+        $minutos = isset($req['minutos']) ? (int) $req['minutos'] : 30;
+        $pausar = !isset($req['pausar']) || !empty($req['pausar']);
+        $ate = $pausar ? (time() + max(5, min(240, $minutos)) * 60) : 0;
+        Database::mutate('config.json', function (&$c) use ($ate) {
+            if (!is_array($c)) {
+                $c = [];
+            }
+            $c['PAUSADA_ATE'] = $ate;
+            $c['VERSION'] = time();
+            return true;
+        });
+        pz_realtime_publicar($slugAtual, 'cardapio_atualizado', ['pausada_ate' => $ate]);
+        pz_registrar_auditoria('operacao', $ate > 0 ? 'loja_pausada' : 'loja_reaberta', $ate > 0 ? ('Pausada por ' . $minutos . ' min') : 'Reaberta manualmente', $ator);
+        echo json_encode(['success' => true, 'pausada_ate' => $ate, 'pausada' => $ate > time()], JSON_UNESCAPED_UNICODE);
+        break;
+
+    case 'produto_esgotado_rapido':
+        pz_exigir_perm($sessao, ['pedidos', 'config']);
+        $slugAtual = Database::getTenant();
+        $prodId = (string) ($req['id'] ?? '');
+        $esgotado = !empty($req['esgotado']);
+        if ($prodId === '') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Informe o ID do produto.'], JSON_UNESCAPED_UNICODE);
+            break;
+        }
+        $achou = false;
+        Database::mutate('cardapio.json', function (&$cat) use ($prodId, $esgotado, &$achou) {
+            if (!is_array($cat)) {
+                return false;
+            }
+            foreach ($cat as $g => $lista) {
+                if (!is_array($lista)) {
+                    continue;
+                }
+                foreach ($lista as $i => $it) {
+                    if (is_array($it) && (string) ($it['id'] ?? '') === $prodId) {
+                        $cat[$g][$i]['esgotado'] = $esgotado;
+                        $achou = true;
+                    }
+                }
+            }
+            return $achou;
+        });
+        if ($achou) {
+            Database::mutate('config.json', function (&$c) {
+                if (!is_array($c)) {
+                    $c = [];
+                }
+                $c['VERSION'] = time();
+                return true;
+            });
+            pz_realtime_publicar($slugAtual, 'cardapio_atualizado', ['id' => $prodId, 'esgotado' => $esgotado]);
+        }
+        echo json_encode(['success' => $achou, 'id' => $prodId, 'esgotado' => $esgotado], JSON_UNESCAPED_UNICODE);
+        break;
+
     default:
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Ação inválida: ' . $action], JSON_UNESCAPED_UNICODE);

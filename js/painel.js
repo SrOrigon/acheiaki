@@ -21,6 +21,8 @@ let idsConhecidos = null;
 let audioCtx = null;
 let tituloOriginal = document.title;
 let piscaTitulo = null;
+let timerAlarmeContinuo = null;
+let turnoAtivo = false;
 
 function esc(valor) {
     return String(valor == null ? '' : valor).replace(/[&<>"']/g, (c) => ({
@@ -99,6 +101,75 @@ function avisarPedidosNovos(novos) {
         document.title = alterna ? tituloOriginal : '(' + novos.length + ') Pedido novo!';
         alterna = !alterna;
     }, 1000);
+}
+
+function atualizarAlarmeContinuo() {
+    const pendentesNovos = pedidos.filter((p) => (p.status || 'novo') === 'novo');
+    const banner = document.getElementById('painel-alarme-banner');
+    if (banner) {
+        banner.hidden = pendentesNovos.length === 0;
+        if (pendentesNovos.length > 0) {
+            banner.textContent = '🔔 ' + pendentesNovos.length + ' pedido(s) novo(s) aguardando aceite! Clique em "Aceitar" para desligar o alarme.';
+        }
+    }
+    if (pendentesNovos.length > 0 && somAtivo()) {
+        if (!timerAlarmeContinuo) {
+            timerAlarmeContinuo = setInterval(() => {
+                const aindaNovos = pedidos.some((p) => (p.status || 'novo') === 'novo');
+                if (!aindaNovos || !somAtivo()) {
+                    clearInterval(timerAlarmeContinuo);
+                    timerAlarmeContinuo = null;
+                    return;
+                }
+                tocarAlerta();
+            }, 4500);
+        }
+    } else if (timerAlarmeContinuo) {
+        clearInterval(timerAlarmeContinuo);
+        timerAlarmeContinuo = null;
+    }
+}
+
+function montarLinkZapStatus(pedido, novoStatus) {
+    const tel = String(pedido.celular || '').replace(/\D/g, '');
+    if (tel.length < 10) return '';
+    const telWa = tel.startsWith('55') ? tel : ('55' + tel);
+    const nomeLoja = (window.APP_CONFIG && window.APP_CONFIG.NOME_LOJA) || 'Nossa Loja';
+    const cod = pedido.codigo ? ('&c=' + encodeURIComponent(pedido.codigo)) : '';
+    const rel = (typeof TENANT !== 'undefined' && TENANT.apiUrl)
+        ? TENANT.apiUrl('rastreio.html?id=' + encodeURIComponent(pedido.id) + cod)
+        : ('rastreio.html?id=' + encodeURIComponent(pedido.id) + cod);
+    let abs = rel;
+    try { abs = new URL(rel, window.location.href).href; } catch (e) {}
+
+    const msgs = {
+        'preparo': `Olá ${pedido.cliente || ''}! Seu pedido #${pedido.id} na *${nomeLoja}* foi aceito e está sendo preparado! 🔥\nAcompanhe ao vivo: ${abs}`,
+        'em-rota': `🛵 *Pedido #${pedido.id} saiu para entrega!* (${nomeLoja})\nVeja onde o entregador está em tempo real:\n${abs}`,
+        'concluido': `✅ Pedido #${pedido.id} entregue! Obrigado por pedir direto com a *${nomeLoja}*.\nSe puder, deixe suas estrelas aqui: ${abs}`
+    };
+    const txt = msgs[novoStatus] || (`Atualização do pedido #${pedido.id} (${nomeLoja}): ${abs}`);
+    return 'https://wa.me/' + telWa + '?text=' + encodeURIComponent(txt);
+}
+
+function mostrarAtalhoZapStatus(pedido, novoStatus) {
+    const chk = document.getElementById('chk-zap-auto-status');
+    if (chk && !chk.checked) return;
+    const url = montarLinkZapStatus(pedido, novoStatus);
+    if (!url) return;
+    let bar = document.getElementById('painel-zap-toast');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'painel-zap-toast';
+        bar.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:99999;background:#0b192c;color:#fff;padding:12px 16px;border-radius:14px;display:flex;align-items:center;gap:12px;box-shadow:0 16px 32px rgba(0,0,0,0.3);border:2px solid #25D366;flex-wrap:wrap;max-width:92vw;';
+        document.body.appendChild(bar);
+    }
+    const rotulo = novoStatus === 'em-rota' ? 'Saiu p/ entrega' : (novoStatus === 'preparo' ? 'Aceito/Preparo' : 'Entregue');
+    bar.innerHTML = '<span><strong>Pedido #' + esc(pedido.id) + '</strong> (' + esc(rotulo) + ')</span>'
+        + '<a href="' + esc(url) + '" target="_blank" rel="noopener" style="background:#25D366;color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:800;"><i class="fa-brands fa-whatsapp"></i> Enviar status agora</a>'
+        + '<button type="button" onclick="this.parentElement.style.display=\'none\'" style="background:transparent;border:none;color:#94a3b8;font-size:1.1rem;cursor:pointer;">&times;</button>';
+    bar.style.display = 'flex';
+    clearTimeout(bar._t);
+    bar._t = setTimeout(() => { bar.style.display = 'none'; }, 12000);
 }
 
 document.addEventListener('visibilitychange', () => {
@@ -487,12 +558,13 @@ function renderizarPainel() {
                 ${pedido.frete != null ? `<span style="display:block;font-size:0.75em;color:#6b7280;">Entrega ${Number(pedido.frete).toFixed(2).replace('.', ',')}</span>` : ''}
                 <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                     <button type="button" class="btn-imprimir" data-id="${idSeguro}" title="Imprimir comanda"><i class="fa-solid fa-print"></i></button>
+                    <button type="button" class="btn-rawbt" data-id="${idSeguro}" title="Imprimir via RawBT (Android Bluetooth 58mm/80mm)" style="background:#0f172a;color:#fff;border:none;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:0.78em;font-weight:700;">BT</button>
                     ${(!travada && status !== 'arquivado') ? `<button type="button" class="btn-cancelar-pedido" data-id="${idSeguro}" title="Cancelar pedido e estornar estoque/financeiro" style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;padding:5px 8px;border-radius:4px;cursor:pointer;font-size:0.82em;"><i class="fa-solid fa-ban"></i></button>` : ''}
                     ${status === 'em-rota' ? `
                         <a href="${rastreioLink}" target="_blank" class="btn-track" title="Ver no Mapa" style="background: #8b5cf6; color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.85em; text-decoration: none;"><i class="fa-solid fa-location-dot"></i></a>
                     ` : ''}
                     <a href="${motoboyLink}" target="_blank" title="Área do Entregador" style="background: #1f2937; color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.85em; text-decoration: none;"><i class="fa-solid fa-motorcycle"></i></a>
-                    <a href="https://wa.me/55${(pedido.celular || '').replace(/\D/g, '')}" target="_blank" class="btn-wpp" title="Chamar no WhatsApp">WhatsApp</a>
+                    <a href="${esc(montarLinkZapStatus(pedido, status) || ('https://wa.me/55' + (pedido.celular || '').replace(/\D/g, '')))}" target="_blank" class="btn-wpp" title="Notificar status no WhatsApp">WhatsApp</a>
                 </div>
             </div>
         `;
@@ -512,6 +584,7 @@ function renderizarPainel() {
     });
 
     renderizarResumoDia();
+    atualizarAlarmeContinuo();
 
     document.querySelectorAll('.btn-imprimir').forEach((btn) => {
         btn.addEventListener('click', (e) => {
@@ -520,6 +593,18 @@ function renderizarPainel() {
             if (!ped) return;
             const modo = (ped.status || 'novo') === 'preparo' ? 'cozinha' : 'completa';
             imprimirComanda(ped, modo, true);
+        });
+    });
+
+    document.querySelectorAll('.btn-rawbt').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const ped = pedidos.find((p) => String(p.id) === String(btn.dataset.id));
+            if (!ped || !window.ComandaPedidoZap || !window.ComandaPedidoZap.imprimirRawBT) return;
+            window.ComandaPedidoZap.imprimirRawBT(ped, {
+                nomeLoja: (window.APP_CONFIG && window.APP_CONFIG.NOME_LOJA) || '',
+                comanda: window.APP_CONFIG && window.APP_CONFIG.COMANDA
+            });
         });
     });
 
@@ -791,6 +876,9 @@ function atualizarStatusBackend(id, status, statusAnteriorParaRollback, rastreio
                     if (data.entregador_nome != null) ped.entregador_nome = data.entregador_nome;
                     renderizarPainel();
                     if (status === 'preparo') tentarImprimirComandaPreparo(ped, data.comanda_id);
+                    if (['preparo', 'em-rota', 'concluido'].includes(ped.status)) {
+                        mostrarAtalhoZapStatus(ped, ped.status);
+                    }
                     if (window.PedidoZapCelulas && window.PedidoZapCelulas.emitir) {
                         window.PedidoZapCelulas.emitir('pedido_status', {
                             tenant: (typeof TENANT !== 'undefined') ? TENANT.slug : 'default',
@@ -889,7 +977,78 @@ window.addEventListener('pz:agente-mutacao', () => {
     if (sessionStorage.getItem('admin_logado')) carregarPedidos();
 });
 if (sessionStorage.getItem('admin_logado')) {
-    setInterval(carregarPedidos, 10000);
+    let tickPainel = 0;
+    setInterval(() => {
+        if (document.hidden) return;
+        tickPainel++;
+        const sseOk = window.AcheIAkiRealtime && window.AcheIAkiRealtime.estaConectado && window.AcheIAkiRealtime.estaConectado();
+        if (sseOk && tickPainel % 2 !== 0) return; // com SSE ativo reduz pela metade
+        carregarPedidos();
+    }, 10000);
+
+    const btnTurno = document.getElementById('btn-iniciar-turno');
+    if (btnTurno) {
+        btnTurno.addEventListener('click', () => {
+            localStorage.setItem('painel_som', '1');
+            prepararAudio();
+            tocarAlerta();
+            atualizarBotaoSom();
+            turnoAtivo = true;
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+            btnTurno.style.background = '#15803d';
+            btnTurno.innerHTML = '<i class="fa-solid fa-check-double"></i> Turno Ativo — Alarme Contínuo Liberado';
+            atualizarAlarmeContinuo();
+        });
+    }
+
+    const btnPausar = document.getElementById('btn-pausar-loja');
+    const atualizarBtnPausa = () => {
+        if (!btnPausar) return;
+        const ate = Number((window.APP_CONFIG && window.APP_CONFIG.PAUSADA_ATE) || 0) * 1000;
+        if (ate > Date.now()) {
+            const h = new Date(ate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            btnPausar.style.background = '#16a34a';
+            btnPausar.style.borderColor = '#15803d';
+            btnPausar.style.color = '#fff';
+            btnPausar.innerHTML = '<i class="fa-solid fa-play"></i> Pausada até ' + h + ' · Reabrir agora';
+        } else {
+            btnPausar.style.background = '#fef2f2';
+            btnPausar.style.borderColor = '#dc2626';
+            btnPausar.style.color = '#991b1b';
+            btnPausar.innerHTML = '<i class="fa-solid fa-pause"></i> Pausar loja 30 min';
+        }
+    };
+    document.addEventListener('pedidozap-store', atualizarBtnPausa);
+    atualizarBtnPausa();
+
+    if (btnPausar) {
+        btnPausar.addEventListener('click', async () => {
+            const ate = Number((window.APP_CONFIG && window.APP_CONFIG.PAUSADA_ATE) || 0) * 1000;
+            const querPausar = ate <= Date.now();
+            const user = sessionStorage.getItem('admin_user') || '';
+            const pass = sessionStorage.getItem('admin_pass') || '';
+            btnPausar.disabled = true;
+            try {
+                const r = await fetch(apiUrl('gestao_api.php?action=pausar_loja'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ auth: { user, pass }, pausar: querPausar, minutos: 30 })
+                });
+                const d = await r.json();
+                if (d && d.success) {
+                    if (!window.APP_CONFIG) window.APP_CONFIG = {};
+                    window.APP_CONFIG.PAUSADA_ATE = d.pausada_ate || 0;
+                    atualizarBtnPausa();
+                }
+            } catch (e) {
+                alert('Erro ao alterar pausa da loja.');
+            } finally {
+                btnPausar.disabled = false;
+            }
+        });
+    }
     if (window.PedidoZapCelulas && window.PedidoZapCelulas.escutar) {
         window.PedidoZapCelulas.escutar((ev) => {
             if (!ev || !ev.tipo) return;

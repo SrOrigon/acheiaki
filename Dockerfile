@@ -21,7 +21,8 @@ WORKDIR /app
 COPY . /app
 
 RUN mkdir -p /app/data /app/data/tenants /app/data/logs /app/data/cache /app/data/cache/kv /app/data/cache/media /app/data/queue /app/assets/lojas \
-    && chmod -R 775 /app/data /app/assets/lojas
+    && chmod -R 775 /app/data /app/assets/lojas \
+    && php /app/scripts/compress_assets.php
 
 ENV PHP_CLI_SERVER_WORKERS=8
 

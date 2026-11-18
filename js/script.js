@@ -833,6 +833,27 @@ function iniciarVitrine() {
         localStorage.setItem('ultimoPedidoId', pedidoData.id);
         localStorage.setItem('ultimoPedidoCodigo', codigoRastreio);
 
+        try {
+            const slugUlt = (typeof TENANT !== 'undefined' && TENANT.slug) ? TENANT.slug : 'default';
+            localStorage.setItem('pz_ultimo_pedido_' + slugUlt, JSON.stringify({
+                id: pedidoData.id,
+                total: totalGeral,
+                itens: carrinho.map((it) => Object.assign({}, it)),
+                criadoEm: Date.now()
+            }));
+            localStorage.setItem('pz_checkout_perfil_rapido', JSON.stringify({
+                nome: enderecoCliente.nome || '',
+                celular: enderecoCliente.celular || '',
+                cep: enderecoCliente.cep || '',
+                rua: enderecoCliente.rua || '',
+                numero: enderecoCliente.numero || '',
+                complemento: enderecoCliente.complemento || '',
+                bairro: enderecoCliente.bairro || '',
+                cidade: enderecoCliente.cidade || '',
+                referencia: enderecoCliente.referencia || ''
+            }));
+        } catch (e) { /* quota */ }
+
         const resumoCelulaPedido = {
             id: pedidoData.id,
             codigo: codigoRastreio,
@@ -1057,26 +1078,55 @@ function iniciarVitrine() {
                 const retiradaRad = document.querySelector('input[name="modo-recebimento-endereco"][value="retirada"]');
                 if (retiradaRad && (atendimentoCfg.modo_padrao || 'retirada') === 'retirada') retiradaRad.checked = true;
             } else {
-                try {
-                    const compRaw = localStorage.getItem('pz_comprador_info');
-                    if (compRaw) {
-                        const comp = JSON.parse(compRaw);
-                        const ends = Array.isArray(comp.enderecos) ? comp.enderecos : [];
-                        const endAtivo = ends[0] || {};
-                        const fill = (id, val) => {
-                            const el = document.getElementById(id);
-                            if (el && !el.value.trim() && val) el.value = String(val).trim();
-                        };
-                        fill('input-nome', comp.nome);
-                        fill('input-celular', comp.telefone);
-                        fill('input-cep', endAtivo.cep);
-                        fill('input-rua', endAtivo.rua);
-                        fill('input-numero', endAtivo.numero);
-                        fill('input-complemento', endAtivo.complemento);
-                        fill('input-bairro', endAtivo.bairro);
-                        fill('input-cidade', endAtivo.cidade);
+                const preencherCamposRapido = () => {
+                    const fill = (id, val) => {
+                        const el = document.getElementById(id);
+                        if (el && !el.value.trim() && val) el.value = String(val).trim();
+                    };
+                    try {
+                        const rapido = JSON.parse(localStorage.getItem('pz_checkout_perfil_rapido') || 'null');
+                        if (rapido) {
+                            fill('input-nome', rapido.nome);
+                            fill('input-celular', rapido.celular);
+                            fill('input-cep', rapido.cep);
+                            fill('input-rua', rapido.rua);
+                            fill('input-numero', rapido.numero);
+                            fill('input-complemento', rapido.complemento);
+                            fill('input-bairro', rapido.bairro);
+                            fill('input-cidade', rapido.cidade);
+                            fill('input-referencia', rapido.referencia);
+                        }
+                    } catch (e) {}
+                    try {
+                        const compRaw = localStorage.getItem('pz_comprador_info');
+                        if (compRaw) {
+                            const comp = JSON.parse(compRaw);
+                            const ends = Array.isArray(comp.enderecos) ? comp.enderecos : [];
+                            const endAtivo = ends[0] || {};
+                            fill('input-nome', comp.nome);
+                            fill('input-celular', comp.telefone);
+                            fill('input-cep', endAtivo.cep);
+                            fill('input-rua', endAtivo.rua);
+                            fill('input-numero', endAtivo.numero);
+                            fill('input-complemento', endAtivo.complemento);
+                            fill('input-bairro', endAtivo.bairro);
+                            fill('input-cidade', endAtivo.cidade);
+                        }
+                    } catch (e) { /* ignora erro de localStorage */ }
+                    const pill = document.getElementById('pz-checkout-rapido-pill');
+                    const nVal = (document.getElementById('input-nome') || {}).value || '';
+                    const rVal = (document.getElementById('input-rua') || {}).value || '';
+                    const tVal = (document.getElementById('input-celular') || {}).value || '';
+                    if (pill) {
+                        const pronto = nVal.trim().length >= 3 && tVal.replace(/\D/g, '').length >= 10 && rVal.trim().length >= 2;
+                        pill.style.display = pronto ? 'flex' : 'none';
+                        const txtPill = document.getElementById('pz-checkout-rapido-txt');
+                        if (txtPill && pronto) {
+                            txtPill.textContent = '⚡ Entrega p/ ' + nVal.split(' ')[0] + ' (' + rVal + ') salva!';
+                        }
                     }
-                } catch (e) { /* ignora erro de localStorage */ }
+                };
+                preencherCamposRapido();
             }
             modalCarrinho.classList.add('escondido');
             modalEndereco.classList.remove('escondido');
@@ -1278,6 +1328,9 @@ function iniciarVitrine() {
     // --- BLOQUEIO DINÂMICO DE HORÁRIO ---
 
     function isLojaAberta() {
+        if (config && Number(config.PAUSADA_ATE || 0) * 1000 > Date.now()) {
+            return false;
+        }
         const agora = new Date();
         const diaSemana = agora.getDay(); // 0 = Dom, 1 = Seg ... 6 = Sab
 
@@ -1799,6 +1852,141 @@ function iniciarVitrine() {
     garantirBlocosFrete();
     if (window.PedidoZapHydrate) PedidoZapHydrate.apply(config, cardapio);
     renderizarPromocoes(); renderizarDestaques(); renderizarCardapio(); atualizarCarrinho();
+
+    (function iniciarExperienciaSemAtrito() {
+        const pausaBanner = document.getElementById('pz-loja-pausada-banner');
+        const pausaAteMs = Number((config && config.PAUSADA_ATE) || 0) * 1000;
+        if (pausaBanner && pausaAteMs > Date.now()) {
+            const hVolta = new Date(pausaAteMs).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            pausaBanner.textContent = '⏸️ Esta loja pausou novos pedidos temporariamente (alta demanda) e volta por volta das ' + hVolta + '.';
+            pausaBanner.style.display = 'block';
+        }
+
+        const tempoEl = document.getElementById('pz-tempo-vitrine');
+        const freteEl = document.getElementById('pz-frete-vitrine');
+        const cepInput = document.getElementById('pz-cep-vitrine');
+        const cepBtn = document.getElementById('pz-btn-cep-vitrine');
+        if (tempoEl) {
+            tempoEl.textContent = (config && config.TEMPO_ESPERA) ? config.TEMPO_ESPERA : '30–45 min';
+        }
+        const atualizarBannerFreteAntes = () => {
+            if (!freteEl) return;
+            const info = calcularFreteAtual();
+            if (info && info.rotulo) {
+                freteEl.textContent = Number(info.valor || 0) === 0
+                    ? 'Grátis' + (info.detalhe ? ' (' + info.detalhe + ')' : '')
+                    : formatarMoeda(info.valor) + (info.detalhe ? ' · ' + info.detalhe : '');
+            }
+        };
+        try {
+            const rapido = JSON.parse(localStorage.getItem('pz_checkout_perfil_rapido') || 'null');
+            if (rapido && rapido.cep && cepInput && !cepInput.value) cepInput.value = rapido.cep;
+            if (rapido && rapido.cidade) {
+                enderecoCliente = Object.assign({}, enderecoCliente, rapido);
+                calcularFreteAtual();
+            }
+        } catch (e) {}
+        atualizarBannerFreteAntes();
+
+        if (cepBtn && cepInput) {
+            cepBtn.addEventListener('click', async () => {
+                const cepLimpo = cepInput.value.replace(/\D/g, '');
+                if (cepLimpo.length !== 8) {
+                    showToast('Digite um CEP com 8 números para calcular entrega.', 'info');
+                    return;
+                }
+                cepBtn.disabled = true;
+                try {
+                    const rCep = await fetch('https://viacep.com.br/ws/' + cepLimpo + '/json/');
+                    const dCep = await rCep.json();
+                    if (!dCep || dCep.erro) {
+                        showToast('CEP não encontrado.', 'erro');
+                        return;
+                    }
+                    enderecoCliente.cep = cepLimpo;
+                    enderecoCliente.rua = dCep.logradouro || '';
+                    enderecoCliente.bairro = dCep.bairro || '';
+                    enderecoCliente.cidade = dCep.localidade || '';
+                    const modoF = (config.FRETE && config.FRETE.modo) || 'gratis';
+                    if (modoF === 'distancia' && window.PedidoZapFrete && config.ENDERECO && config.ENDERECO.lat != null) {
+                        const dest = await window.PedidoZapFrete.geocode([dCep.logradouro, dCep.bairro, dCep.localidade, cepLimpo, 'Brasil'].filter(Boolean).join(', '));
+                        enderecoCliente.distanciaKm = window.PedidoZapFrete.haversineKm(Number(config.ENDERECO.lat), Number(config.ENDERECO.lng), dest.lat, dest.lng);
+                    }
+                    calcularFreteAtual();
+                    atualizarBannerFreteAntes();
+                    const elCepModal = document.getElementById('input-cep');
+                    if (elCepModal && !elCepModal.value) elCepModal.value = cepLimpo;
+                    showToast('Taxa de entrega calculada!', 'sucesso');
+                } catch (err) {
+                    showToast('Não foi possível calcular o frete deste CEP agora.', 'erro');
+                } finally {
+                    cepBtn.disabled = false;
+                }
+            });
+        }
+
+        const btnRapidoModal = document.getElementById('pz-btn-checkout-rapido');
+        if (btnRapidoModal && btnConfirmarEndereco) {
+            btnRapidoModal.addEventListener('click', () => btnConfirmarEndereco.click());
+        }
+
+        const celModal = document.getElementById('input-celular');
+        if (celModal) {
+            celModal.addEventListener('blur', async () => {
+                const digits = celModal.value.replace(/\D/g, '');
+                if (digits.length < 10 || canalAtendente) return;
+                const ruaEl = document.getElementById('input-rua');
+                if (ruaEl && ruaEl.value.trim().length >= 3) return;
+                try {
+                    const resp = await apiFetch('comprador_api.php?action=vincular_rapido', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            telefone: digits,
+                            tenant: (typeof TENANT !== 'undefined' && TENANT.slug) ? TENANT.slug : 'default'
+                        })
+                    });
+                    const d = await resp.json();
+                    if (d && d.success && d.encontrado && d.perfil) {
+                        const fill = (id, v) => { const e = document.getElementById(id); if (e && !e.value.trim() && v) e.value = v; };
+                        fill('input-nome', d.perfil.nome);
+                        if (d.perfil.endereco) {
+                            fill('input-cep', d.perfil.endereco.cep);
+                            fill('input-rua', d.perfil.endereco.rua);
+                            fill('input-numero', d.perfil.endereco.numero);
+                            fill('input-complemento', d.perfil.endereco.complemento);
+                            fill('input-bairro', d.perfil.endereco.bairro);
+                            fill('input-cidade', d.perfil.endereco.cidade);
+                        }
+                        showToast('WhatsApp reconhecido! Dados preenchidos automaticamente.', 'sucesso');
+                    }
+                } catch (e) {}
+            });
+        }
+
+        const slugRep = (typeof TENANT !== 'undefined' && TENANT.slug) ? TENANT.slug : 'default';
+        const bannerRep = document.getElementById('pz-banner-repetir-pedido');
+        const btnRep = document.getElementById('pz-btn-repetir-pedido');
+        try {
+            const ult = JSON.parse(localStorage.getItem('pz_ultimo_pedido_' + slugRep) || 'null');
+            if (bannerRep && btnRep && ult && Array.isArray(ult.itens) && ult.itens.length > 0) {
+                const tit = document.getElementById('pz-rep-titulo');
+                const resEl = document.getElementById('pz-rep-resumo');
+                if (tit) tit.textContent = 'Pedir novamente seu último combo — ' + formatarMoeda(ult.total || 0);
+                if (resEl) resEl.textContent = ult.itens.map((i) => (i.quantidade || 1) + '× ' + (i.nome || 'Item')).join(' · ');
+                bannerRep.style.display = 'flex';
+                btnRep.addEventListener('click', () => {
+                    carrinho = ult.itens.map((i, idx) => Object.assign({}, i, { id: Date.now() + idx }));
+                    atualizarCarrinho();
+                    if (btnFinalizarModal) {
+                        btnFinalizarModal.click();
+                    } else if (modalCarrinho) {
+                        modalCarrinho.classList.remove('escondido');
+                    }
+                });
+            }
+        } catch (e) {}
+    })();
 
     if (window.PedidoZapOfflineCache && typeof window.PedidoZapOfflineCache.lerCarrinho === 'function') {
         window.PedidoZapOfflineCache.lerCarrinho(cartStorageKey).then((snap) => {

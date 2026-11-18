@@ -107,6 +107,10 @@ class Database
     public static function write($filename, $data)
     {
         pz_cache_del('kv:' . self::$tenant . ':' . $filename);
+        if (in_array($filename, ['config.json', 'cardapio.json', 'avaliacoes.json'], true)) {
+            pz_cache_del('pub_store_json_' . self::$tenant);
+            pz_cache_del('mkt_lojas_all');
+        }
         $sqlOk = pz_db_kv_write(self::$tenant, $filename, $data);
         if ($sqlOk !== null) {
             if (function_exists('pz_db_should_mirror_json_files') && pz_db_should_mirror_json_files()) {
@@ -146,6 +150,10 @@ class Database
     public static function mutate($filename, callable $mutator)
     {
         pz_cache_del('kv:' . self::$tenant . ':' . $filename);
+        if (in_array($filename, ['config.json', 'cardapio.json', 'avaliacoes.json'], true)) {
+            pz_cache_del('pub_store_json_' . self::$tenant);
+            pz_cache_del('mkt_lojas_all');
+        }
         $pdo = pz_pdo();
         if ($pdo) {
             $sqlCheck = pz_db_kv_read(self::$tenant, $filename);

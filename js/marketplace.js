@@ -717,8 +717,13 @@
             ? '<span class="mkt-cnpj-badge" title="CNPJ validado"><i class="fa-solid fa-circle-check"></i> CNPJ</span>'
             : '';
 
-        const freteTxt = Number(loja.taxa_entrega_base || 0) === 0 ? 'Frete grátis' : 'Frete ' + brl(loja.taxa_entrega_base);
+        const freteTxt = Number(loja.taxa_entrega_base || 0) === 0
+            ? 'Frete grátis'
+            : ('Frete ' + brl(loja.taxa_entrega_base) + (loja.frete && loja.frete.modo === 'distancia' && loja.distancia_km == null ? ' (informe CEP)' : ''));
         const distTxt = loja.distancia_km != null ? ' · ' + loja.distancia_km + ' km' : '';
+        const pausaBadge = (loja.pausada_ate && Number(loja.pausada_ate) * 1000 > Date.now())
+            ? 'Pausada (alta demanda)'
+            : (loja.aberto ? 'Aberta agora' : 'Fechada');
         const avalRec = (Array.isArray(loja.avaliacoes_recentes) && loja.avaliacoes_recentes.find((a) => a && a.comentario)) || null;
         const quoteHtml = avalRec
             ? '<div class="mkt-card-quote">“' + esc(String(avalRec.comentario).slice(0, 92)) + (String(avalRec.comentario).length > 92 ? '…' : '') + '” — <strong>' + esc(avalRec.cliente_nome || 'Cliente') + '</strong></div>'
@@ -728,7 +733,7 @@
             + '<div class="mkt-card-capa" style="' + bgStyle + '">'
             + capaImg
             + '<div class="mkt-card-capa-badges">'
-            + '<span class="mkt-status ' + (loja.aberto ? 'on' : 'off') + '">' + (loja.aberto ? 'Aberta agora' : 'Fechada') + '</span>'
+            + '<span class="mkt-status ' + (loja.aberto ? 'on' : 'off') + '">' + esc(pausaBadge) + '</span>'
             + '<button type="button" class="mkt-fav-btn ' + (ehFav ? 'ativo' : '') + '" data-fav="' + esc(loja.slug) + '" title="Salvar nos favoritos">'
             + '<i class="' + (ehFav ? 'fa-solid' : 'fa-regular') + ' fa-heart"></i></button>'
             + '</div></div>'

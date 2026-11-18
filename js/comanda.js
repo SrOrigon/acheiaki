@@ -177,14 +177,98 @@
         return String(pedido.comanda_impressa_id || '') !== String(id);
     }
 
+    function gerarEscPosTexto(pedido, opcoes) {
+        const opts = opcoes || {};
+        const t = textos(opts);
+        const largura = Math.min(Math.max(Number(t.largura_mm) || 80, 58), 80);
+        const cols = largura <= 58 ? 32 : 48;
+        const sep = '-'.repeat(cols);
+        const nomeLoja = String(opts.nomeLoja || (global.APP_CONFIG && global.APP_CONFIG.NOME_LOJA) || 'LOJA').toUpperCase();
+        const end = pedido.endereco || {};
+        const linhas = [
+            sep,
+            nomeLoja,
+            (t.rotulo_pedido || 'Pedido') + ' #' + String(pedido.id || '') + ' (' + dataPedido(pedido) + ')',
+            sep,
+            'Cliente: ' + String(pedido.cliente || ''),
+            pedido.celular ? ('Tel: ' + String(pedido.celular)) : '',
+            end.rua ? (String(end.rua) + ', ' + String(end.numero || '') + ' - ' + String(end.bairro || '')) : '',
+            sep,
+            (t.rotulo_itens || 'ITENS') + ':',
+        ];
+        (pedido.itens || []).forEach((it) => {
+            const qtd = it.quantidade || 1;
+            const tam = it.tamanho ? ' (' + it.tamanho + ')' : '';
+            linhas.push(qtd + 'x ' + String(it.nome || 'Item').toUpperCase() + tam);
+            (it.opcionais || []).forEach((op) => {
+                linhas.push('  + ' + String(op.nome || '').toUpperCase());
+            });
+        });
+        linhas.push(sep);
+        if (pedido.observacao) {
+            linhas.push('OBS: ' + String(pedido.observacao));
+            linhas.push(sep);
+        }
+        linhas.push('TOTAL: ' + moeda(pedido.total) + ' (' + String(pedido.pagamento || '') + ')');
+        linhas.push(String(t.rodape_completa || 'Obrigado pela preferencia!'));
+        linhas.push('');
+        linhas.push('');
+        linhas.push('');
+        return linhas.filter((l, idx) => l !== '' || idx >= linhas.length - 3).join('\n');
+    }
+
+    function imprimirRawBT(pedido, opcoes) {
+        if (!pedido) return false;
+        const texto = gerarEscPosTexto(pedido, opcoes);
+        try {
+            const b64 = global.btoa(unescape(encodeURIComponent(texto)));
+            global.location.href = 'rawbt:base64,' + b64;
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function imprimirViaIframeSilencioso(html) {
+        try {
+            let iframe = document.getElementById('pz-print-frame');
+            if (!iframe) {
+                iframe = document.createElement('iframe');
+                iframe.id = 'pz-print-frame';
+                iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+                document.body.appendChild(iframe);
+            }
+            const doc = iframe.contentWindow ? iframe.contentWindow.document : iframe.contentDocument;
+            if (!doc) return false;
+            doc.open();
+            doc.write(html);
+            doc.close();
+            setTimeout(() => {
+                try {
+                    if (iframe.contentWindow) {
+                        iframe.contentWindow.focus();
+                        iframe.contentWindow.print();
+                    }
+                } catch (err) {}
+            }, 220);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
     function imprimir(pedido, opcoes) {
         if (!pedido) return false;
         const opts = Object.assign({}, opcoes || {});
         if (!precisaImprimir(pedido, opts.forcar)) return false;
 
         const html = montarHtml(pedido, opts);
+        if (opts.silencioso || opts.iframe) {
+            if (imprimirViaIframeSilencioso(html)) return true;
+        }
         const janela = global.open('', '_blank', 'width=400,height=720');
         if (!janela) {
+            if (imprimirViaIframeSilencioso(html)) return true;
             const t = textos(opts);
             alert(t.erro_popup || DEFAULTS.erro_popup);
             return false;
@@ -200,6 +284,8 @@
         moeda,
         textos,
         montarHtml,
+        gerarEscPosTexto,
+        imprimirRawBT,
         imprimir,
         idComandaEfetivo,
         precisaImprimir

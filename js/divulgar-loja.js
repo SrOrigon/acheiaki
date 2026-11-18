@@ -147,6 +147,21 @@
                 const texto = 'Peça direto sem taxa de app:\n' + u;
                 copiarTexto(texto, 'Texto da Bio do Instagram / Link do Cardápio (Google Maps) copiado!');
             });
+            if (btnBio.parentElement && !document.getElementById('aki-div-btn-autozap')) {
+                const btnAutoZap = document.createElement('button');
+                btnAutoZap.type = 'button';
+                btnAutoZap.id = 'aki-div-btn-autozap';
+                btnAutoZap.className = btnBio.className || 'aki-bento-btn';
+                btnAutoZap.style.cssText = 'background:#0d9488;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;';
+                btnAutoZap.innerHTML = '<i class="fa-solid fa-robot"></i> Auto-resposta WhatsApp Business';
+                btnAutoZap.addEventListener('click', function () {
+                    const nome = obterNomeLoja();
+                    const u = obterUrlLoja();
+                    const autoMsg = 'Olá! Seja bem-vindo(a) à ' + nome + '.\nPara fazer seu pedido rapidinho (com preço direto da loja e entrega calculada na hora), toque no link do nosso cardápio digital:\n👉 ' + u;
+                    copiarTexto(autoMsg, 'Mensagem automática para WhatsApp Business copiada! Cole em Configurações -> Saudação do WhatsApp.');
+                });
+                btnBio.parentElement.appendChild(btnAutoZap);
+            }
         }
 
         const btnPanfleto = document.getElementById('aki-div-btn-panfleto');

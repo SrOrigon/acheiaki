@@ -50,8 +50,14 @@ function pz_territorio_foto_real($url)
     return true;
 }
 
-function pz_territorio_coletar_lojas()
+function pz_territorio_coletar_lojas($useCache = true)
 {
+    if ($useCache && function_exists('pz_cache_get')) {
+        $cached = pz_cache_get('mkt_lojas_all', null);
+        if (is_array($cached) && !empty($cached)) {
+            return $cached;
+        }
+    }
     $anterior = Database::getTenant();
     $registro = pedidozap_ler_registro();
     $slugs = array_keys($registro);
@@ -337,7 +343,8 @@ function pz_territorio_coletar_lojas()
             'taxa_entrega_base' => round($taxaBase, 2),
             'tempo_medio_min' => $tempoReal,
             'tempo_espera_txt' => (string) ($cfg['TEMPO_ESPERA'] ?? ($tempoReal . ' min')),
-            'aberto' => $aberto,
+            'aberto' => $aberto && ((int) ($cfg['PAUSADA_ATE'] ?? 0) <= time()),
+            'pausada_ate' => (int) ($cfg['PAUSADA_ATE'] ?? 0),
             'cor_primaria' => $cor,
             'cor_secundaria' => $corSec,
             'cor_fundo' => $corFundo,
@@ -386,6 +393,9 @@ function pz_territorio_coletar_lojas()
 
     Database::setTenant($anterior);
     pz_territorio_comparativo_segmentos($lojas);
+    if (function_exists('pz_cache_set') && !empty($lojas)) {
+        pz_cache_set('mkt_lojas_all', $lojas, 25);
+    }
     return $lojas;
 }
 

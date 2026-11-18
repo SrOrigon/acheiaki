@@ -593,7 +593,7 @@ async function iniciarAdmin() {
                 <label style="font-size:0.8em;">Peso (g) <input type="number" value="${item.peso || 0}" style="width:80px;" onchange="window.atualizarItem('${category}', ${index}, 'peso', this.value)"></label>
                 <label style="font-size:0.8em;"><input type="checkbox" ${item.destaque ? 'checked' : ''} onchange="window.atualizarItem('${category}', ${index}, 'destaque', this.checked)"> Destaque</label>
                 <label style="font-size:0.8em;"><input type="checkbox" ${item.ativo !== false ? 'checked' : ''} onchange="window.atualizarItem('${category}', ${index}, 'ativo', this.checked)"> Ativo</label>
-                <label style="font-size:0.8em;"><input type="checkbox" ${item.esgotado ? 'checked' : ''} onchange="window.atualizarItem('${category}', ${index}, 'esgotado', this.checked)"> Esgotado hoje</label>
+                <label style="font-size:0.82em;background:${item.esgotado ? '#fee2e2' : '#f1f5f9'};color:${item.esgotado ? '#991b1b' : '#334155'};padding:4px 9px;border-radius:999px;font-weight:700;cursor:pointer;"><input type="checkbox" ${item.esgotado ? 'checked' : ''} onchange="window.atualizarItem('${category}', ${index}, 'esgotado', this.checked); window.__pzToggleEsgotadoServidor && window.__pzToggleEsgotadoServidor('${String(item.id || '')}', this.checked);"> ${item.esgotado ? 'ESGOTADO HOJE' : 'Marcar Esgotado'}</label>
             </div>`;
 
         // Botão de excluir para todos
@@ -931,6 +931,28 @@ async function iniciarAdmin() {
         tenant: tenantAtual
     };
     window.__pzRenderEditor = renderizarEditor;
+    window.__pzToggleEsgotadoServidor = async function (prodId, esgotado) {
+        if (!prodId || !credenciaisAtuais.user || !credenciaisAtuais.pass) return;
+        try {
+            const url = (typeof TENANT !== 'undefined' && TENANT.apiUrl)
+                ? TENANT.apiUrl('gestao_api.php?action=produto_esgotado_rapido')
+                : 'gestao_api.php?action=produto_esgotado_rapido';
+            const r = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    auth: { user: credenciaisAtuais.user, pass: credenciaisAtuais.pass },
+                    id: prodId,
+                    esgotado: Boolean(esgotado)
+                })
+            });
+            const d = await r.json();
+            if (d && d.success) {
+                showToast(esgotado ? 'Item marcado como ESGOTADO hoje no cardápio!' : 'Item reativado no cardápio!', 'success');
+                renderizarEditor();
+            }
+        } catch (e) { /* usuário ainda pode salvar completo */ }
+    };
     ligarWhiteLabel();
     const btnNovaCat = document.getElementById('btn-nova-categoria');
     if (btnNovaCat) btnNovaCat.addEventListener('click', () => {

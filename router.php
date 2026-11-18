@@ -73,19 +73,37 @@ if ($decodedPath === '/marketplace.html' || $decodedPath === '/cadastro.html') {
 }
 
 // Otimização automática para WebP/AVIF e CDN (Cloudflare R2 / S3) nas imagens pesadas de assets/images e assets/lojas
-if (preg_match('#^(?:/loja/[a-zA-Z0-9_-]+)?/assets/images/([a-zA-Z0-9._-]+\.(?:png|jpg|jpeg))$#i', $decodedPath, $mAsset)) {
-    $diskAsset = __DIR__ . '/assets/images/' . $mAsset[1];
+if (preg_match('#^(?:/loja/[a-zA-Z0-9_-]+)?/assets/images/([a-zA-Z0-9._-]+)\.(?:png|jpg|jpeg)$#i', $decodedPath, $mAsset)) {
+    $baseAssetName = $mAsset[1];
+    $origName = basename($decodedPath);
+    $diskAsset = __DIR__ . '/assets/images/' . $origName;
     if (is_file($diskAsset)) {
         require_once __DIR__ . '/media_cdn_lib.php';
-        $cdnUrl = pz_media_cdn_url('assets/images/' . $mAsset[1]);
-        if ($cdnUrl !== ('assets/images/' . $mAsset[1])) {
+        $cdnUrl = pz_media_cdn_url('assets/images/' . $origName);
+        if ($cdnUrl !== ('assets/images/' . $origName)) {
             header('Location: ' . $cdnUrl, true, 302);
             return true;
         }
         $acceptHeader = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
+        $querWebp = (strpos($acceptHeader, 'image/webp') !== false || ($_GET['fmt'] ?? '') === 'webp') && empty($_GET['w']);
+        $preWebp = __DIR__ . '/assets/images/' . $baseAssetName . '.webp';
+        if ($querWebp && is_file($preWebp) && is_readable($preWebp)) {
+            $etag = '"' . sha1($preWebp . '|' . (@filemtime($preWebp) ?: 0) . '|' . (@filesize($preWebp) ?: 0)) . '"';
+            header('Content-Type: image/webp');
+            header('Vary: Accept');
+            header('Cache-Control: public, max-age=2592000, immutable');
+            header('X-Media-Optimized: precompressed-webp');
+            header('ETag: ' . $etag);
+            if (trim((string) ($_SERVER['HTTP_IF_NONE_MATCH'] ?? '')) === $etag) {
+                http_response_code(304);
+                return true;
+            }
+            readfile($preWebp);
+            return true;
+        }
         if (strpos($acceptHeader, 'image/webp') !== false || strpos($acceptHeader, 'image/avif') !== false || !empty($_GET['w']) || !empty($_GET['fmt'])) {
             $_GET['t'] = 'assets';
-            $_GET['f'] = $mAsset[1];
+            $_GET['f'] = $origName;
             require __DIR__ . '/media.php';
             return true;
         }

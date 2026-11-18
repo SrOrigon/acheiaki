@@ -98,7 +98,7 @@ function startTracking() {
             return; // SSE conectado entrega atualização instantânea sem polling redundante
         }
         fetchLocation();
-    }, 6000);
+    }, 12000);
     const navBox = document.getElementById('rastreio-nav');
     if (navBox && window.AcheIAkiRealtime && 'Notification' in window && Notification.permission !== 'granted') {
         const btnPush = document.createElement('button');
