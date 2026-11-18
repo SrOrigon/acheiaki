@@ -1,4 +1,5 @@
 let watchId = null;
+let bgGeoHandle = null;
 const btnToggle = document.getElementById('toggle-tracking');
 const statusDisplay = document.getElementById('status-display');
 const orderInput = document.getElementById('order-id');
@@ -266,14 +267,14 @@ if (btnPedirLocal) btnPedirLocal.addEventListener('click', pedirLocalizacao);
 prepararTela();
 
 btnToggle.addEventListener('click', () => {
-    if (watchId === null) {
+    if (watchId === null && bgGeoHandle === null) {
         startTracking();
     } else {
         stopTracking();
     }
 });
 
-function startTracking() {
+async function startTracking() {
     const orderId = orderInput.value;
     if (!ehCelular()) {
         mostrarAjuda('Abra esta tela no celular de quem entrega. O computador não liga a localização.', [], false);
@@ -284,47 +285,59 @@ function startTracking() {
         return;
     }
 
-    if (!navigator.geolocation) {
-        explicarFalha({ code: 2 });
-        return;
-    }
+    const onPos = (position) => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        localLigada = true;
+        esconderAjuda();
+        updateBackend(orderId, latitude, longitude);
+        if (coordsDisplay) {
+            coordsDisplay.hidden = false;
+            coordsDisplay.innerText = position.nativeBackground
+                ? 'GPS nativo ativo em segundo plano.'
+                : 'O cliente está vendo você no mapa.';
+        }
+    };
 
-    watchId = navigator.geolocation.watchPosition(
-        (position) => {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            localLigada = true;
-            esconderAjuda();
-            updateBackend(orderId, latitude, longitude);
-            if (coordsDisplay) {
-                coordsDisplay.hidden = false;
-                coordsDisplay.innerText = 'O cliente está vendo você no mapa.';
-            }
-        },
-        (error) => {
-            if (error && error.code === 3) {
-                marcarStatus('Ainda procurando você', 'status-pc');
-                return;
-            }
-            explicarFalha(error);
-            stopTracking(true);
-        },
-        {
+    const onErr = (error) => {
+        if (error && error.code === 3) {
+            marcarStatus('Ainda procurando você', 'status-pc');
+            return;
+        }
+        explicarFalha(error);
+        stopTracking(true);
+    };
+
+    if (window.AcheIAkiNativo && typeof window.AcheIAkiNativo.iniciarGpsBackground === 'function') {
+        bgGeoHandle = await window.AcheIAkiNativo.iniciarGpsBackground(onPos, onErr);
+        if (!bgGeoHandle) return;
+        watchId = bgGeoHandle.id != null ? bgGeoHandle.id : 1;
+        window.AcheIAkiNativo.inicializarPushNativo((typeof TENANT !== 'undefined' && TENANT.slug) ? TENANT.slug : 'default', 'motoboy');
+    } else {
+        if (!navigator.geolocation) {
+            explicarFalha({ code: 2 });
+            return;
+        }
+        watchId = navigator.geolocation.watchPosition(onPos, onErr, {
             enableHighAccuracy: true,
             maximumAge: 10000,
             timeout: 20000
-        }
-    );
+        });
+    }
 
     btnToggle.innerText = 'Terminar entrega';
     btnToggle.classList.add('active');
-    marcarStatus('Cliente está vendo você no mapa', 'status-on');
+    marcarStatus(bgGeoHandle && bgGeoHandle.mode === 'capacitor-bg' ? 'GPS Nativo Ativo (2º plano)' : 'Cliente está vendo você no mapa', 'status-on');
     orderInput.disabled = true;
     if (selectPedido) selectPedido.disabled = true;
 }
 
 function stopTracking(porErro) {
-    if (watchId !== null) {
+    if (bgGeoHandle && window.AcheIAkiNativo && typeof window.AcheIAkiNativo.pararGpsBackground === 'function') {
+        window.AcheIAkiNativo.pararGpsBackground(bgGeoHandle);
+        bgGeoHandle = null;
+        watchId = null;
+    } else if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
     }
@@ -366,8 +379,20 @@ function updateBackend(id, lat, lng) {
             });
         }
     })
-    .catch(err => console.error("Erro de conexão:", err));
+    .catch(err => {
+        console.error("Erro de conexão GPS:", err);
+        if (window.AcheIAkiNativo && window.AcheIAkiNativo.enfileirarPontoOffline) {
+            window.AcheIAkiNativo.enfileirarPontoOffline({ id: String(id), lat, lng });
+        }
+    });
 }
+
+window.addEventListener('online', () => {
+    const idAtual = orderInput && orderInput.value ? orderInput.value.trim() : '';
+    if (idAtual && window.AcheIAkiNativo && window.AcheIAkiNativo.drenarPontosOffline) {
+        window.AcheIAkiNativo.drenarPontosOffline((lat, lng) => updateBackend(idAtual, lat, lng));
+    }
+});
 
 function aplicarAjudaEntregador() {
     const aj = (typeof configAjuda === 'function' ? configAjuda().entregador : null)

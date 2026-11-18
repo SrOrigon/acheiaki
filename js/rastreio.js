@@ -93,15 +93,36 @@ function startTracking() {
         }
     }
     fetchLocation();
-    trackingInterval = setInterval(fetchLocation, 5000);
+    trackingInterval = setInterval(() => {
+        if (window.AcheIAkiRealtime && window.AcheIAkiRealtime.estaConectado && window.AcheIAkiRealtime.estaConectado()) {
+            return; // SSE conectado entrega atualização instantânea sem polling redundante
+        }
+        fetchLocation();
+    }, 6000);
+    const navBox = document.getElementById('rastreio-nav');
+    if (navBox && window.AcheIAkiRealtime && 'Notification' in window && Notification.permission !== 'granted') {
+        const btnPush = document.createElement('button');
+        btnPush.type = 'button';
+        btnPush.style.cssText = 'flex-basis:100%;padding:10px 12px;border-radius:12px;border:1px solid #f59e0b;background:#fffbeb;color:#92400e;font-weight:700;font-size:0.86rem;cursor:pointer;';
+        btnPush.innerHTML = '<i class="fa-solid fa-bell"></i> Ativar notificações em tempo real deste pedido';
+        btnPush.addEventListener('click', async () => {
+            btnPush.disabled = true;
+            const resPush = await window.AcheIAkiRealtime.ativarPush({ role: 'cliente', pedidoId: String(orderId || '') });
+            btnPush.textContent = (resPush && resPush.success) ? '✓ Alertas em tempo real ativados!' : ((resPush && resPush.message) || 'Alertas ativados neste aparelho');
+        });
+        navBox.appendChild(btnPush);
+    }
     if (typeof PedidoZapCelulas !== 'undefined') {
         PedidoZapCelulas.escutar((ev) => {
             if (!ev) return;
-            if (ev.tipo === 'pedido_status' || ev.tipo === 'pedido_gps') {
-                const evId = ev.dados && ev.dados.id ? String(ev.dados.id) : '';
-                if (!evId || evId === String(orderId)) {
-                    fetchLocation();
-                }
+            const d = ev.dados || {};
+            const evId = d.id ? String(d.id) : '';
+            if (evId && evId !== String(orderId)) return;
+            if (ev.tipo === 'pedido_gps' && typeof d.lat === 'number' && typeof d.lng === 'number' && typeof updateMotoboyMarker === 'function') {
+                updateMotoboyMarker(d.lat, d.lng);
+                if (loading) loading.style.display = 'none';
+            } else if (ev.tipo === 'pedido_status' || ev.tipo === 'pedido_gps') {
+                fetchLocation();
             }
         });
     }

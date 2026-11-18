@@ -3,6 +3,9 @@ require_once 'tenant_init.php';
 require_once 'saas_lib.php';
 require_once 'gestao_lib.php';
 require_once 'algoritmo_lib.php';
+require_once 'realtime_lib.php';
+require_once 'push_lib.php';
+require_once 'pdv_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -290,6 +293,16 @@ if (Database::saveOrder($registro)) {
             ]);
         }
     }
+    $slugSalvo = Database::getTenant();
+    pz_realtime_publicar($slugSalvo, 'pedido_criado', [
+        'id' => $id,
+        'cliente' => $registro['cliente'],
+        'total' => $totalCliente,
+        'status' => 'novo',
+    ]);
+    pz_pdv_enfileirar_evento($slugSalvo, 'order.created', $registro);
+    pz_push_notificar_status_pedido($slugSalvo, $registro, 'novo');
+
     echo json_encode([
         'success' => true,
         'id' => $id,

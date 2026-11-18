@@ -1,0 +1,57 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "AcheIAki Open Delivery PDV & ERP API",
+    "version": "1.0.0",
+    "description": "API aberta compatível com Saipos, Consumer, Linx, TOTVS, Stone e ERPs próprios para sincronização de pedidos em tempo real, catálogo/SKU e emissão fiscal."
+  },
+  "servers": [
+    { "url": "/", "description": "Instância AcheIAki" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "ApiKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Api-Key"
+      }
+    }
+  },
+  "security": [{ "BearerAuth": [] }, { "ApiKeyHeader": [] }],
+  "paths": {
+    "/pdv_api.php?action=ping": {
+      "get": {
+        "summary": "Verifica conectividade e driver PDV configurado na loja",
+        "responses": { "200": { "description": "API pronta" } }
+      }
+    },
+    "/pdv_api.php?action=orders_polling": {
+      "get": {
+        "summary": "Retorna pedidos pendentes no padrão Open Delivery (inclui SKU, NCM, CFOP, itens, pagamento e cliente)",
+        "responses": { "200": { "description": "Lista canônica de pedidos" } }
+      }
+    },
+    "/pdv_api.php?action=ack_orders": {
+      "post": {
+        "summary": "Confirma recebimento dos pedidos pelo PDV",
+        "responses": { "200": { "description": "Pedidos marcados como integrados" } }
+      }
+    },
+    "/pdv_api.php?action=order_status": {
+      "post": {
+        "summary": "Atualiza status do pedido a partir do PDV (CONFIRMED, IN_PREPARATION, DISPATCHED, CONCLUDED, CANCELLED)",
+        "responses": { "200": { "description": "Status atualizado com disparo de Push/SSE e emissão fiscal automática" } }
+      }
+    },
+    "/pdv_api.php?action=sync_catalog": {
+      "post": {
+        "summary": "Atualiza preços, pausa/ativa pratos e sincroniza sku_pdv / ncm / cfop do ERP para o cardápio",
+        "responses": { "200": { "description": "Cardápio sincronizado" } }
+      }
+    }
+  }
+}

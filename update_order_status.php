@@ -1,5 +1,9 @@
 <?php
 require_once 'tenant_init.php';
+require_once 'realtime_lib.php';
+require_once 'push_lib.php';
+require_once 'pdv_lib.php';
+require_once 'fiscal_lib.php';
 
 header('Content-Type: application/json');
 
@@ -113,6 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'estoque' => $estoqueInfo,
                 'financeiro' => $financeiroInfo,
             ];
+            $slugAtual = Database::getTenant();
             $pedidoAtual = Database::findOrder($req['id']);
             if (is_array($pedidoAtual)) {
                 $meta['comanda_id'] = $pedidoAtual['comanda_id'] ?? '';
@@ -122,7 +127,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $meta['financeiro_registrado'] = !empty($pedidoAtual['financeiro_registrado']);
                 $meta['entregador_id'] = $pedidoAtual['entregador_id'] ?? '';
                 $meta['entregador_nome'] = $pedidoAtual['entregador_nome'] ?? '';
+
+                pz_pdv_enfileirar_evento($slugAtual, $cancelar ? 'order.cancelled' : 'order.status_changed', $pedidoAtual);
+                pz_push_notificar_status_pedido($slugAtual, $pedidoAtual, $statusPersistir);
+                if (!$cancelar && in_array($statusPersistir, ['preparo', 'concluido'], true)) {
+                    pz_fiscal_agendar_se_automatico($slugAtual, (string) $req['id'], $statusPersistir === 'concluido' ? 'ao_concluir' : 'ao_preparar');
+                }
             }
+            pz_realtime_publicar($slugAtual, 'pedido_status', [
+                'id' => (string) $req['id'],
+                'status' => $statusPersistir,
+                'cancelado' => (bool) $cancelar,
+            ]);
             echo json_encode($meta, JSON_UNESCAPED_UNICODE);
             exit;
         }

@@ -4,6 +4,7 @@
  * Produção: PostgreSQL (Railway) via PDO. JSON em data/ apenas para dev local sem SQL.
  */
 require_once __DIR__ . '/db_pdo.php';
+require_once __DIR__ . '/cache_lib.php';
 
 class Database
 {
@@ -54,19 +55,28 @@ class Database
     }
 
     /**
-     * Leitura com lock compartilhado (usa PDO SQL quando configurado).
+     * Leitura com lock compartilhado (usa L1/Redis cache + PDO SQL quando configurado).
      */
     public static function read($filename)
     {
+        $cacheKey = 'kv:' . self::$tenant . ':' . $filename;
+        $cached = pz_cache_get($cacheKey, null);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
         $sqlRes = pz_db_kv_read(self::$tenant, $filename);
         if (is_array($sqlRes)) {
+            pz_cache_set($cacheKey, $sqlRes, 20);
             return $sqlRes;
         }
         if (function_exists('pz_db_sql_modo_ativo') && pz_db_sql_modo_ativo()) {
             return [];
         }
 
-        return self::readFromDisk($filename);
+        $diskRes = self::readFromDisk($filename);
+        pz_cache_set($cacheKey, $diskRes, 20);
+        return $diskRes;
     }
 
     private static function readFromDisk($filename)
@@ -92,10 +102,11 @@ class Database
     }
 
     /**
-     * Escrita atômica (grava em PDO SQL quando configurado e espelha no JSON local se possível).
+     * Escrita atômica (grava em PDO SQL quando configurado, invalida cache e espelha no JSON local se possível).
      */
     public static function write($filename, $data)
     {
+        pz_cache_del('kv:' . self::$tenant . ':' . $filename);
         $sqlOk = pz_db_kv_write(self::$tenant, $filename, $data);
         if ($sqlOk !== null) {
             if (function_exists('pz_db_should_mirror_json_files') && pz_db_should_mirror_json_files()) {
@@ -107,6 +118,9 @@ class Database
                 $json = json_encode($data, JSON_UNESCAPED_UNICODE);
                 @file_put_contents($path, $json, LOCK_EX);
             }
+            if ($sqlOk) {
+                pz_cache_set('kv:' . self::$tenant . ':' . $filename, $data, 20);
+            }
             return (bool) $sqlOk;
         }
 
@@ -117,7 +131,11 @@ class Database
         }
 
         $json = json_encode($data, JSON_UNESCAPED_UNICODE);
-        return file_put_contents($path, $json, LOCK_EX) !== false;
+        $ok = file_put_contents($path, $json, LOCK_EX) !== false;
+        if ($ok) {
+            pz_cache_set('kv:' . self::$tenant . ':' . $filename, $data, 20);
+        }
+        return $ok;
     }
 
     /**
@@ -127,6 +145,7 @@ class Database
      */
     public static function mutate($filename, callable $mutator)
     {
+        pz_cache_del('kv:' . self::$tenant . ':' . $filename);
         $pdo = pz_pdo();
         if ($pdo) {
             $sqlCheck = pz_db_kv_read(self::$tenant, $filename);
@@ -137,6 +156,7 @@ class Database
                 }
             }
             $sqlMut = pz_db_kv_mutate(self::$tenant, $filename, $mutator);
+            pz_cache_del('kv:' . self::$tenant . ':' . $filename);
             if ($sqlMut !== null) {
                 return (bool) $sqlMut;
             }

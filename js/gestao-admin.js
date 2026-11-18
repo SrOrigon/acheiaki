@@ -1649,6 +1649,215 @@
     }
 
     // =====================================================================
+    // ABA INTEGRAÇÕES PDV / ERP, FISCAL NFC-E / SAT, PUSH & ALTA ESCALA
+    // =====================================================================
+    async function carregarIntegracoes() {
+        const box = document.getElementById('fg-integracoes-root');
+        if (!box) return;
+        box.innerHTML = '<div class="fg-vazio">Carregando conectores PDV, NFC-e, Push e status de escala...</div>';
+        const res = await apiGestao('infra_resumo');
+        if (!res || !res.success) {
+            box.innerHTML = `<div class="fg-vazio">${esc((res && res.message) || 'Sem permissão para visualizar integrações.')}</div>`;
+            return;
+        }
+        renderIntegracoes(res, box);
+    }
+
+    function renderIntegracoes(res, box) {
+        const pdv = res.pdv || {};
+        const fiscal = res.fiscal || {};
+        const infra = res.infra || {};
+        const cacheInfo = infra.cache || {};
+        const queueInfo = infra.queue || {};
+        const mediaInfo = infra.media || {};
+        const rtInfo = infra.realtime || {};
+        const notas = Array.isArray(res.notas_fiscais) ? res.notas_fiscais : [];
+        const drivers = pdv.drivers_suportados || {
+            open_delivery: 'Open Delivery Padrão',
+            saipos: 'Saipos PDV',
+            consumer: 'Consumer / MenuDino',
+            linx: 'Linx Degust / Microvix',
+            totvs: 'TOTVS Chef / Bematech',
+            stone: 'Stone / Ton PDV'
+        };
+        const endpointPdv = new URL('pdv_api.php', global.location.href).href;
+        const specUrl = new URL('pdv_api.php?action=spec', global.location.href).href;
+        const mobileGuideUrl = new URL('pdv_api.php?action=mobile_guide', global.location.href).href;
+
+        box.innerHTML = `
+            <div class="fg-ter-kpis" style="margin-bottom:14px;">
+                <div class="fg-kpi"><span>Cache Memória</span><strong>${esc(cacheInfo.driver || 'l1_memoria')}</strong><small>${cacheInfo.redis_conectado ? 'Redis conectado' : 'L1 + Disco rápido'}</small></div>
+                <div class="fg-kpi"><span>Fila Assíncrona</span><strong>${Number(queueInfo.pendentes || 0)} pendente(s)</strong><small>Driver: ${esc(queueInfo.driver || 'sql')}</small></div>
+                <div class="fg-kpi"><span>Mídia WebP / CDN</span><strong>${mediaInfo.webp_suportado ? 'WebP Ativo' : 'GD Básico'}</strong><small>${mediaInfo.s3_r2_ativo ? 'R2 / S3 conectado' : 'Proxy WebP automático'}</small></div>
+                <div class="fg-kpi"><span>Tempo Real & Push</span><strong>${rtInfo.ws_habilitado ? 'WebSocket + SSE' : 'SSE Tempo Real'}</strong><small>${Number(res.push_inscritos || 0)} dispositivo(s) · Workers: ${esc(infra.php_workers || '1')}</small></div>
+            </div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+                <button type="button" class="btn-sec" id="fg-int-drenar"><i class="fa-solid fa-bolt"></i> Processar fila assíncrona agora</button>
+                <a class="btn-sec" href="${esc(specUrl)}" target="_blank" rel="noopener"><i class="fa-solid fa-file-code"></i> Documentação OpenAPI PDV (JSON)</a>
+                <a class="btn-sec" href="${esc(mobileGuideUrl)}" target="_blank" rel="noopener"><i class="fa-solid fa-mobile-screen-button"></i> Projeto Nativo iOS/Android (Capacitor)</a>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;">
+                <section class="fg-ter-box">
+                    <h4><i class="fa-solid fa-cash-register"></i> Conector PDV / ERP (Open Delivery)</h4>
+                    <label style="display:block;margin:8px 0;"><input type="checkbox" id="fg-pdv-ativo" ${pdv.habilitado ? 'checked' : ''}> Ativar API aberta para PDV / ERP externo</label>
+                    <label style="display:block;font-weight:700;margin-top:8px;">Sistema PDV / ERP</label>
+                    <select id="fg-pdv-driver" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;margin-top:4px;">
+                        ${Object.keys(drivers).map((k) => `<option value="${esc(k)}" ${pdv.driver === k ? 'selected' : ''}>${esc(drivers[k])}</option>`).join('')}
+                    </select>
+                    <label style="display:block;font-weight:700;margin-top:10px;">Endpoint base Open Delivery</label>
+                    <input type="text" readonly value="${esc(endpointPdv)}" style="width:100%;padding:8px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;">
+                    <label style="display:block;font-weight:700;margin-top:10px;">API Key (Authorization Bearer / X-Api-Key)</label>
+                    <div style="display:flex;gap:6px;margin-top:4px;">
+                        <input type="text" id="fg-pdv-apikey" readonly value="${esc(pdv.api_key || '(Será gerada ao salvar)')}" style="flex:1;padding:8px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;">
+                        <button type="button" class="btn-sec" id="fg-pdv-regen">Gerar nova</button>
+                    </div>
+                    <label style="display:block;font-weight:700;margin-top:10px;">Webhook URL do PDV (opcional)</label>
+                    <input type="url" id="fg-pdv-webhook" value="${esc(pdv.webhook_url || '')}" placeholder="https://seu-pdv.com.br/webhook/acheiaki" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;margin-top:4px;">
+                    <small style="display:block;color:#64748b;margin-top:4px;">Secret HMAC-SHA256: <code>${esc(pdv.webhook_secret || 'gerado ao salvar')}</code> · Último envio: ${esc(pdv.ultimo_webhook_status || 'nunca')}</small>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+                        <button type="button" class="btn-prim" id="fg-pdv-salvar">Salvar Conector PDV</button>
+                        <button type="button" class="btn-sec" id="fg-pdv-testar">Testar Webhook</button>
+                    </div>
+                </section>
+
+                <section class="fg-ter-box">
+                    <h4><i class="fa-solid fa-file-invoice-dollar"></i> Emissão Fiscal (NFC-e Modelo 65 / SAT)</h4>
+                    <label style="display:block;margin:8px 0;"><input type="checkbox" id="fg-fisc-ativo" ${fiscal.habilitado ? 'checked' : ''}> Habilitar emissão fiscal vinculada aos pedidos</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <div>
+                            <label style="font-weight:700;font-size:0.85rem;">Provedor / Engine</label>
+                            <select id="fg-fisc-prov" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;">
+                                <option value="local_homologacao" ${fiscal.provedor === 'local_homologacao' ? 'selected' : ''}>Homologação Interna</option>
+                                <option value="focusnfe" ${fiscal.provedor === 'focusnfe' ? 'selected' : ''}>Focus NFe</option>
+                                <option value="nuvemfiscal" ${fiscal.provedor === 'nuvemfiscal' ? 'selected' : ''}>Nuvem Fiscal</option>
+                                <option value="plugnotas" ${fiscal.provedor === 'plugnotas' ? 'selected' : ''}>PlugNotas</option>
+                                <option value="sat_local" ${fiscal.provedor === 'sat_local' ? 'selected' : ''}>Bridge SAT Local</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-weight:700;font-size:0.85rem;">Ambiente</label>
+                            <select id="fg-fisc-amb" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;">
+                                <option value="homologacao" ${fiscal.ambiente === 'homologacao' ? 'selected' : ''}>Homologação</option>
+                                <option value="producao" ${fiscal.ambiente === 'producao' ? 'selected' : ''}>Produção SEFAZ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+                        <div><label style="font-weight:700;font-size:0.85rem;">CNPJ Emitente</label><input type="text" id="fg-fisc-cnpj" value="${esc(fiscal.cnpj || '')}" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div>
+                        <div><label style="font-weight:700;font-size:0.85rem;">Inscrição Estadual</label><input type="text" id="fg-fisc-ie" value="${esc(fiscal.ie || '')}" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;">
+                        <div><label style="font-weight:700;font-size:0.82rem;">NCM padrão</label><input type="text" id="fg-fisc-ncm" value="${esc(fiscal.ncm_padrao || '21069090')}" style="width:100%;padding:7px;border:1px solid #cbd5e1;border-radius:8px;"></div>
+                        <div><label style="font-weight:700;font-size:0.82rem;">CFOP padrão</label><input type="text" id="fg-fisc-cfop" value="${esc(fiscal.cfop_padrao || '5102')}" style="width:100%;padding:7px;border:1px solid #cbd5e1;border-radius:8px;"></div>
+                        <div>
+                            <label style="font-weight:700;font-size:0.82rem;">Automação</label>
+                            <select id="fg-fisc-auto" style="width:100%;padding:7px;border:1px solid #cbd5e1;border-radius:8px;">
+                                <option value="ao_concluir" ${fiscal.emissao_automatica === 'ao_concluir' ? 'selected' : ''}>Ao concluir</option>
+                                <option value="ao_preparar" ${fiscal.emissao_automatica === 'ao_preparar' ? 'selected' : ''}>Ao aceitar</option>
+                                <option value="manual" ${fiscal.emissao_automatica === 'manual' ? 'selected' : ''}>Manual</option>
+                            </select>
+                        </div>
+                    </div>
+                    <label style="display:block;font-weight:700;margin-top:8px;font-size:0.85rem;">Token do Provedor Fiscal (FocusNFe / PlugNotas)</label>
+                    <input type="password" id="fg-fisc-token" placeholder="${fiscal.tem_provedor_token ? 'Token configurado (digite para substituir)' : 'Opcional em homologação'}" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                        <button type="button" class="btn-prim" id="fg-fisc-salvar">Salvar Config. Fiscal</button>
+                        <input type="text" id="fg-fisc-pedidoid" placeholder="Nº pedido para emitir" style="width:150px;padding:7px;border:1px solid #cbd5e1;border-radius:8px;">
+                        <button type="button" class="btn-sec" id="fg-fisc-emitir">Emitir NFC-e</button>
+                    </div>
+                </section>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;margin-top:16px;">
+                <section class="fg-ter-box">
+                    <h4><i class="fa-solid fa-bell"></i> Campanha Push em Tempo Real</h4>
+                    <input type="text" id="fg-push-titulo" value="Cupom relâmpago liberado!" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:8px;" placeholder="Título do alerta">
+                    <textarea id="fg-push-msg" rows="2" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;" placeholder="Ex.: Seu cupom de R$ 15 vence em 2 horas!">Seu cupom de R$ 15 vence em 2 horas. Aproveite agora!</textarea>
+                    <button type="button" class="btn-prim" id="fg-push-enviar" style="margin-top:8px;">Disparar Push para Clientes</button>
+                </section>
+
+                <section class="fg-ter-box">
+                    <h4><i class="fa-solid fa-receipt"></i> Últimas NFC-e / SAT Emitidas (${notas.length})</h4>
+                    ${notas.length ? `
+                        <div style="max-height:180px;overflow:auto;">
+                            ${notas.map((n) => `
+                                <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #e5e7eb;font-size:0.85rem;">
+                                    <span><strong>#${esc(n.numero)}</strong> · Ped #${esc(n.order_id)} (${esc(n.status)})</span>
+                                    <a href="${esc(n.danfe_url || ('fiscal_api.php?action=danfe&order_id=' + encodeURIComponent(n.order_id)))}" target="_blank" rel="noopener" style="color:#0284c7;font-weight:700;">Ver DANFE</a>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p class="texto-ajuda">Nenhuma nota emitida ainda nesta loja.</p>'}
+                </section>
+            </div>
+        `;
+
+        document.getElementById('fg-int-drenar')?.addEventListener('click', async () => {
+            const r = await apiGestao('worker_drenar');
+            toast(r && r.success ? `Fila processada: ${(r.resultado && r.resultado.processados) || 0} job(s).` : 'Erro ao processar fila.');
+            carregarIntegracoes();
+        });
+
+        document.getElementById('fg-pdv-salvar')?.addEventListener('click', async () => {
+            const r = await apiGestao('pdv_config_salvar', {
+                habilitado: document.getElementById('fg-pdv-ativo')?.checked,
+                driver: document.getElementById('fg-pdv-driver')?.value,
+                webhook_url: document.getElementById('fg-pdv-webhook')?.value
+            });
+            toast(r && r.success ? 'Conector PDV salvo!' : ((r && r.message) || 'Erro ao salvar PDV.'), r && r.success ? 'ok' : 'erro');
+            carregarIntegracoes();
+        });
+
+        document.getElementById('fg-pdv-regen')?.addEventListener('click', async () => {
+            if (!confirm('Gerar nova API Key substituirá a atual nos seus sistemas PDV. Continuar?')) return;
+            await apiGestao('pdv_config_salvar', { gerar_nova_chave: true });
+            toast('Nova API Key gerada!');
+            carregarIntegracoes();
+        });
+
+        document.getElementById('fg-pdv-testar')?.addEventListener('click', async () => {
+            const r = await apiGestao('pdv_testar_webhook');
+            toast(r && r.success ? 'Webhook entregue com sucesso!' : ((r && r.message) || 'Falha ao enviar webhook.'), r && r.success ? 'ok' : 'erro');
+            carregarIntegracoes();
+        });
+
+        document.getElementById('fg-fisc-salvar')?.addEventListener('click', async () => {
+            const r = await apiGestao('fiscal_config_salvar', {
+                habilitado: document.getElementById('fg-fisc-ativo')?.checked,
+                provedor: document.getElementById('fg-fisc-prov')?.value,
+                ambiente: document.getElementById('fg-fisc-amb')?.value,
+                cnpj: document.getElementById('fg-fisc-cnpj')?.value,
+                ie: document.getElementById('fg-fisc-ie')?.value,
+                ncm_padrao: document.getElementById('fg-fisc-ncm')?.value,
+                cfop_padrao: document.getElementById('fg-fisc-cfop')?.value,
+                emissao_automatica: document.getElementById('fg-fisc-auto')?.value,
+                provedor_token: document.getElementById('fg-fisc-token')?.value
+            });
+            toast(r && r.success ? 'Configuração fiscal salva!' : 'Erro ao salvar configuração fiscal.', r && r.success ? 'ok' : 'erro');
+            carregarIntegracoes();
+        });
+
+        document.getElementById('fg-fisc-emitir')?.addEventListener('click', async () => {
+            const pid = (document.getElementById('fg-fisc-pedidoid')?.value || '').trim();
+            if (!pid) { toast('Informe o número do pedido.', 'aviso'); return; }
+            const r = await apiGestao('fiscal_emitir_pedido', { order_id: pid, forcar: true });
+            toast(r && r.success ? `NFC-e #${r.nota && r.nota.numero} emitida!` : ((r && r.message) || 'Erro na emissão.'), r && r.success ? 'ok' : 'erro');
+            carregarIntegracoes();
+        });
+
+        document.getElementById('fg-push-enviar')?.addEventListener('click', async () => {
+            const titulo = (document.getElementById('fg-push-titulo')?.value || '').trim();
+            const mensagem = (document.getElementById('fg-push-msg')?.value || '').trim();
+            if (!mensagem) { toast('Escreva a mensagem do push.', 'aviso'); return; }
+            const r = await apiGestao('push_campanha_enviar', { titulo, mensagem });
+            toast(r && r.success ? 'Campanha Push disparada em tempo real!' : 'Erro ao disparar push.', r && r.success ? 'ok' : 'erro');
+            carregarIntegracoes();
+        });
+    }
+
+    // =====================================================================
     // BOOTSTRAP E INTEGRAÇÃO COM AS ABAS DO ADMIN.HTML
     // =====================================================================
     function aoAtivarAba(aba) {
@@ -1659,6 +1868,7 @@
         else if (aba === 'clientes') carregarClientes();
         else if (aba === 'entregadores') carregarEntregadores();
         else if (aba === 'equipe') carregarEquipe();
+        else if (aba === 'integracoes') carregarIntegracoes();
         else if (aba === 'seguranca') carregarIaPessoalSeguranca();
     }
 
@@ -1697,6 +1907,7 @@
         carregarClientes,
         carregarEntregadores,
         carregarEquipe,
+        carregarIntegracoes,
         carregarIaPessoalSeguranca,
         aoAtivarAba
     };

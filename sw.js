@@ -4,7 +4,7 @@
  * - API pública get_public_store.php em Network-First com fallback em cache por tenant
  * - Imagens de pratos/logos em Cache-First com atualização em segundo plano
  */
-const CACHE_NAME = 'acheiaki-app-v3';
+const CACHE_NAME = 'acheiaki-app-v4';
 const SHELL_ASSETS = [
   'index.html',
   'categoria.html',
@@ -16,6 +16,8 @@ const SHELL_ASSETS = [
   'css/lgpd-consent.css',
   'js/tenant.js',
   'js/offline-cache.js',
+  'js/realtime-client.js',
+  'js/native-bridge.js',
   'js/store-loader.js',
   'js/store-hydrate.js',
   'js/frete.js',
@@ -181,4 +183,41 @@ self.addEventListener('fetch', (event) => {
       )
     );
   }
+});
+
+self.addEventListener('push', (event) => {
+  let payload = { title: 'AcheIAki', body: 'Você tem uma atualização.', url: 'marketplace.html' };
+  try {
+    if (event.data) {
+      const parsed = event.data.json();
+      payload = Object.assign(payload, parsed || {});
+    }
+  } catch (e) {
+    if (event.data) payload.body = event.data.text();
+  }
+  event.waitUntil(
+    self.registration.showNotification(payload.title || payload.titulo || 'AcheIAki', {
+      body: payload.body || payload.mensagem || '',
+      icon: 'assets/images/acheiaki-icon.jpg',
+      badge: 'assets/images/acheiaki-icon.jpg',
+      data: { url: payload.url || 'marketplace.html' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification && event.notification.data && event.notification.data.url) || 'marketplace.html';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ('focus' in client) {
+          if (client.navigate) client.navigate(targetUrl).catch(() => {});
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+      return null;
+    })
+  );
 });

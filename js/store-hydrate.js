@@ -645,7 +645,8 @@
             vitrineRepState.cellBound = true;
             global.PedidoZapCelulas.escutar((ev) => {
                 if (!ev || ev.tipo !== 'avaliacao_publicada') return;
-                if (!ev.payload || !ev.payload.tenant || ev.payload.tenant === vitrineRepState.tenant) {
+                const d = ev.dados || ev.payload || {};
+                if (!d.tenant || d.tenant === vitrineRepState.tenant) {
                     carregarAvaliacoesPublicasVitrine(vitrineRepState.tenant);
                 }
             });

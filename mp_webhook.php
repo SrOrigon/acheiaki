@@ -5,6 +5,7 @@
  */
 require_once __DIR__ . '/tenant_init.php';
 require_once __DIR__ . '/saas_lib.php';
+require_once __DIR__ . '/queue_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -22,12 +23,11 @@ $resultado = ['success' => true, 'ignorado' => true];
 
 if ($id !== '') {
     if ($tipo === 'subscription_preapproval' || $tipo === 'preapproval') {
-        $resultado = pedidozap_mp_sincronizar_assinatura($id);
+        $jobId = pz_queue_push('mp.sync_subscription', ['kind' => 'preapproval', 'id' => $id], 'default');
+        $resultado = ['success' => true, 'queued' => true, 'job_id' => $jobId];
     } elseif ($tipo === 'subscription_authorized_payment' || $tipo === 'authorized_payment') {
-        [$codigo, $pagamento] = pedidozap_mp_request('GET', '/authorized_payments/' . $id);
-        if ($codigo === 200 && !empty($pagamento['preapproval_id'])) {
-            $resultado = pedidozap_mp_sincronizar_assinatura($pagamento['preapproval_id']);
-        }
+        $jobId = pz_queue_push('mp.sync_subscription', ['kind' => 'authorized_payment', 'id' => $id], 'default');
+        $resultado = ['success' => true, 'queued' => true, 'job_id' => $jobId];
     }
 }
 

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/tenant_init.php';
 require_once __DIR__ . '/auth_lib.php';
 require_once __DIR__ . '/saas_lib.php';
+require_once __DIR__ . '/media_cdn_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -138,12 +139,18 @@ if ($salvouSql !== true && !$salvouDisco) {
     exit;
 }
 
-$path = ($salvouSql === true)
-    ? ('media.php?t=' . rawurlencode($tenant) . '&f=' . rawurlencode($nome))
-    : ('assets/lojas/' . $tenant . '/' . $nome);
+$s3Res = pz_media_s3_put('assets/lojas/' . $tenant . '/' . $nome, $bytes, $mime);
+
+$path = !empty($s3Res['success']) && !empty($s3Res['url'])
+    ? $s3Res['url']
+    : (($salvouSql === true)
+        ? ('media.php?t=' . rawurlencode($tenant) . '&f=' . rawurlencode($nome))
+        : ('assets/lojas/' . $tenant . '/' . $nome));
 
 echo json_encode([
     'success' => true,
     'url' => $path,
+    'cdn' => !empty($s3Res['success']),
+    'ext' => $ext,
     'message' => 'Foto do produto atualizada (uma foto por item).',
 ], JSON_UNESCAPED_UNICODE);

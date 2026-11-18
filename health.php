@@ -4,6 +4,10 @@
  */
 require_once __DIR__ . '/db_pdo.php';
 require_once __DIR__ . '/saas_lib.php';
+require_once __DIR__ . '/cache_lib.php';
+require_once __DIR__ . '/queue_lib.php';
+require_once __DIR__ . '/media_cdn_lib.php';
+require_once __DIR__ . '/realtime_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -69,6 +73,10 @@ echo json_encode([
     'data_writable' => $dataGravavel,
     'master_configured' => $masterOk,
     'brand_icon_present' => $iconOk,
+    'cache' => pz_cache_backend_info(),
+    'queue' => pz_queue_stats(),
+    'media' => pz_media_cdn_publico(),
+    'realtime' => pz_realtime_ws_publico(),
     'warnings' => $warnings,
     'time' => date('c'),
 ], JSON_UNESCAPED_UNICODE);

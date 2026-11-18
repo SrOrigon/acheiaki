@@ -2,6 +2,7 @@
 header('Content-Type: application/json; charset=utf-8');
 require_once 'tenant_init.php';
 require_once 'pedido_acesso.php';
+require_once 'realtime_lib.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
 pedidozap_bootstrap_tenant(is_array($data) ? $data : null);
@@ -36,6 +37,11 @@ if (!$pedido || !pz_pode_ver_pedido($pedido, $data['c'] ?? ($_GET['c'] ?? ''), $
 }
 
 if (Database::updateOrderLocation($id, (float) $lat, (float) $lng)) {
+    pz_realtime_publicar(Database::getTenant(), 'pedido_gps', [
+        'id' => $id,
+        'lat' => (float) $lat,
+        'lng' => (float) $lng,
+    ]);
     echo json_encode(['success' => true]);
 } else {
     echo json_encode(['success' => false, 'message' => 'Não foi possível atualizar a localização.'], JSON_UNESCAPED_UNICODE);

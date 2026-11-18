@@ -72,10 +72,31 @@ if ($decodedPath === '/marketplace.html' || $decodedPath === '/cadastro.html') {
     return true;
 }
 
-// Fallback de imagens de produtos salvas no SQL (Railway ephemeral disk)
+// Otimização automática para WebP/AVIF e CDN (Cloudflare R2 / S3) nas imagens pesadas de assets/images e assets/lojas
+if (preg_match('#^(?:/loja/[a-zA-Z0-9_-]+)?/assets/images/([a-zA-Z0-9._-]+\.(?:png|jpg|jpeg))$#i', $decodedPath, $mAsset)) {
+    $diskAsset = __DIR__ . '/assets/images/' . $mAsset[1];
+    if (is_file($diskAsset)) {
+        require_once __DIR__ . '/media_cdn_lib.php';
+        $cdnUrl = pz_media_cdn_url('assets/images/' . $mAsset[1]);
+        if ($cdnUrl !== ('assets/images/' . $mAsset[1])) {
+            header('Location: ' . $cdnUrl, true, 302);
+            return true;
+        }
+        $acceptHeader = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
+        if (strpos($acceptHeader, 'image/webp') !== false || strpos($acceptHeader, 'image/avif') !== false || !empty($_GET['w']) || !empty($_GET['fmt'])) {
+            $_GET['t'] = 'assets';
+            $_GET['f'] = $mAsset[1];
+            require __DIR__ . '/media.php';
+            return true;
+        }
+    }
+}
+
+// Fallback de imagens de produtos salvas no SQL (Railway ephemeral disk) ou WebP sob demanda
 if (preg_match('#^/assets/lojas/([a-zA-Z0-9_-]+)/([a-zA-Z0-9._-]+\.(?:jpg|jpeg|png|webp|gif))$#i', $decodedPath, $mImg)) {
     $disk = __DIR__ . $decodedPath;
-    if (!is_file($disk)) {
+    $acceptHeader = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
+    if (!is_file($disk) || strpos($acceptHeader, 'image/webp') !== false || !empty($_GET['w']) || !empty($_GET['fmt'])) {
         $_GET['t'] = $mImg[1];
         $_GET['f'] = $mImg[2];
         require __DIR__ . '/media.php';

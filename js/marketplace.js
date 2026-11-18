@@ -2012,7 +2012,8 @@
                 } else if (ev.tipo === 'loja_atualizada' || ev.tipo === 'avaliacao_publicada') {
                     carregarMarketplace();
                     if (ev.tipo === 'avaliacao_publicada' && $('mkt-modal-loja') && !$('mkt-modal-loja').hidden) {
-                        const slugRefresh = STATE.lojaAtualSlug || (ev.payload && ev.payload.tenant) || '';
+                        const d = ev.dados || ev.payload || {};
+                        const slugRefresh = STATE.lojaAtualSlug || d.tenant || '';
                         if (slugRefresh) abrirPaginaEmpresa(slugRefresh, true);
                     }
                 } else if (ev.tipo === 'comprador_atualizado') {

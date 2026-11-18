@@ -607,6 +607,7 @@
             <button type="button" data-tab="equipe" data-modo="expert">Equipe &amp; Backup</button>
             <button type="button" data-tab="comandas" data-modo="expert">Cozinha / comanda</button>
             <button type="button" data-tab="tutorial" data-modo="expert">Textos do sistema &amp; Guia</button>
+            <button type="button" data-tab="integracoes" data-modo="expert"><i class="fa-solid fa-plug-circle-bolt"></i> PDV, Fiscal &amp; Escala</button>
             <button type="button" data-tab="expert-dados" data-modo="expert"><i class="fa-solid fa-code"></i> Cadastro &amp; JSON (Expert)</button>
         </nav>
 
@@ -643,6 +644,12 @@
         <div class="admin-card" data-painel="equipe" hidden>
             <h3><i class="fa-solid fa-shield-halved"></i> Equipe (RBAC), Auditoria, Backup &amp; Checklist</h3>
             <div id="fg-equipe-root">Carregando equipe e homologação...</div>
+        </div>
+
+        <div class="admin-card" data-painel="integracoes" hidden>
+            <h3><i class="fa-solid fa-plug-circle-bolt"></i> Conector PDV/ERP (Open Delivery), NFC-e/SAT, Push &amp; Alta Escala</h3>
+            <p class="dica-secao">Conecte seu PDV (Saipos, Consumer, Linx, TOTVS, Stone), configure emissão automática de NFC-e, dispare campanhas Push em tempo real e acompanhe o cache Redis/WebP e filas assíncronas.</p>
+            <div id="fg-integracoes-root">Carregando PDV, Fiscal &amp; Infraestrutura...</div>
         </div>
 
         <div class="admin-card" data-painel="tutorial" hidden>
@@ -1260,6 +1267,8 @@
             document.write('<script src="js/tenant.js?v=' + v + '"><\/script>');
             document.write('<script src="js/modo-apresentacao.js?v=' + v + '"><\/script>');
             document.write('<script src="js/celulas-sync.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/native-bridge.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/realtime-client.js?v=' + v + '"><\/script>');
             document.write('<script src="js/store-loader.js?v=' + v + '"><\/script>');
         })();
     </script>

@@ -11,6 +11,10 @@ require_once 'store_schema.php';
 require_once 'gestao_lib.php';
 require_once 'territorio_lib.php';
 require_once 'algoritmo_lib.php';
+require_once 'pdv_lib.php';
+require_once 'fiscal_lib.php';
+require_once 'push_lib.php';
+require_once 'media_cdn_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -490,6 +494,92 @@ switch ($action) {
             ['id' => 14, 'titulo' => 'Agente IA Integrado ativo e operacional', 'ok' => true, 'detalhe' => 'NLU local + ações em tempo real + assistente vitrine'],
         ];
         echo json_encode(['success' => true, 'checks' => $checks], JSON_UNESCAPED_UNICODE);
+        break;
+
+    // -----------------------------------------------------------------
+    // MÓDULO 13 — PDV OPEN DELIVERY, NFC-E / SAT, PUSH & ALTA ESCALA
+    // -----------------------------------------------------------------
+    case 'infra_resumo':
+        pz_exigir_perm($sessao, ['config', 'equipe', 'financeiro', 'pedidos']);
+        $slugAtual = Database::getTenant();
+        echo json_encode([
+            'success' => true,
+            'tenant' => $slugAtual,
+            'pdv' => pz_pdv_mascarar_config(pz_pdv_ler_config($slugAtual)),
+            'fiscal' => pz_fiscal_mascarar_config(pz_fiscal_ler_config($slugAtual)),
+            'notas_fiscais' => pz_fiscal_listar_notas($slugAtual, 15),
+            'push_inscritos' => count(pz_push_listar_inscritos($slugAtual)),
+            'infra' => [
+                'cache' => pz_cache_backend_info(),
+                'queue' => pz_queue_stats(),
+                'media' => pz_media_cdn_publico(),
+                'realtime' => pz_realtime_ws_publico(),
+                'php_workers' => getenv('PHP_CLI_SERVER_WORKERS') ?: '1',
+            ],
+        ], JSON_UNESCAPED_UNICODE);
+        break;
+
+    case 'pdv_config_salvar':
+        pz_exigir_perm($sessao, ['config', 'equipe']);
+        $slugAtual = Database::getTenant();
+        $resPdv = pz_pdv_salvar_config($slugAtual, $req);
+        pz_registrar_auditoria('integracoes', 'pdv_config_salva', 'Driver PDV: ' . ($resPdv['config']['driver'] ?? ''), $ator);
+        echo json_encode($resPdv, JSON_UNESCAPED_UNICODE);
+        break;
+
+    case 'pdv_testar_webhook':
+        pz_exigir_perm($sessao, ['config', 'equipe']);
+        $slugAtual = Database::getTenant();
+        $testePedido = [
+            'id' => 'TEST-' . date('His'),
+            'status' => 'novo',
+            'cliente' => 'Pedido Teste Open Delivery',
+            'celular' => '11999999999',
+            'total' => 49.90,
+            'frete' => 5.00,
+            'pagamento' => 'PIX',
+            'itens' => [['idProduto' => '1', 'nome' => 'X-Tudo Teste PDV', 'quantidade' => 1, 'preco' => 44.90]],
+            'timestamp' => date('c'),
+        ];
+        $cfgLojaPdv = pedidozap_normalizar_config(Database::read('config.json'), $slugAtual);
+        $mapped = pz_pdv_mapear_pedido_open_delivery($testePedido, $slugAtual, $cfgLojaPdv);
+        $resTest = pz_pdv_entregar_webhook($slugAtual, 'order.test', $mapped);
+        echo json_encode($resTest, JSON_UNESCAPED_UNICODE);
+        break;
+
+    case 'fiscal_config_salvar':
+        pz_exigir_perm($sessao, ['config', 'financeiro']);
+        $slugAtual = Database::getTenant();
+        $resFisc = pz_fiscal_salvar_config($slugAtual, $req);
+        pz_registrar_auditoria('fiscal', 'fiscal_config_salva', 'Provedor: ' . ($resFisc['config']['provedor'] ?? ''), $ator);
+        echo json_encode($resFisc, JSON_UNESCAPED_UNICODE);
+        break;
+
+    case 'fiscal_emitir_pedido':
+        pz_exigir_perm($sessao, ['financeiro', 'pedidos', 'config']);
+        $slugAtual = Database::getTenant();
+        $resNota = pz_fiscal_emitir_pedido($slugAtual, (string) ($req['order_id'] ?? ''), !empty($req['forcar']));
+        echo json_encode($resNota, JSON_UNESCAPED_UNICODE);
+        break;
+
+    case 'push_campanha_enviar':
+        pz_exigir_perm($sessao, ['clientes', 'config']);
+        $slugAtual = Database::getTenant();
+        $resPush = pz_push_enfileirar_campanha(
+            $slugAtual,
+            $req['titulo'] ?? 'Oferta especial!',
+            $req['mensagem'] ?? 'Seu cupom de R$ 15 vence em 2 horas.',
+            $req['url'] ?? '',
+            $req['role'] ?? 'cliente'
+        );
+        pz_registrar_auditoria('marketing', 'push_campanha', (string) ($req['titulo'] ?? ''), $ator);
+        echo json_encode($resPush, JSON_UNESCAPED_UNICODE);
+        break;
+
+    case 'worker_drenar':
+        pz_exigir_perm($sessao, ['config', 'equipe']);
+        $lote = pz_queue_run_batch(20, 6);
+        echo json_encode(['success' => true, 'resultado' => $lote, 'queue' => pz_queue_stats()], JSON_UNESCAPED_UNICODE);
         break;
 
     default:
