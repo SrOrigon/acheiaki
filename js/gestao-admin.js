@@ -1456,7 +1456,63 @@
                     </table>
                 </div>
             ` : ''}
+
+            <div class="fg-ter-box" style="margin-top:16px;">
+                <h4>★ Avaliações e Feedbacks Públicos dos Clientes (${Number((l.resumo_avaliacoes && l.resumo_avaliacoes.total) || (Array.isArray(l.avaliacoes) ? l.avaliacoes.length : 0))})</h4>
+                ${Array.isArray(l.avaliacoes) && l.avaliacoes.length ? `
+                    <div style="display:grid;gap:10px;margin-top:10px;">
+                        ${l.avaliacoes.slice(0, 20).map((av) => {
+                            const avId = String(av.id || '');
+                            const nota = Number(av.nota || 5);
+                            const estrelas = '★'.repeat(Math.max(1, Math.min(5, Math.round(nota)))) + '☆'.repeat(Math.max(0, 5 - Math.round(nota)));
+                            const tagsHtml = Array.isArray(av.tags) && av.tags.length
+                                ? av.tags.map((tg) => `<span style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:2px 8px;font-size:0.75rem;margin-right:4px;">${esc(tg)}</span>`).join('')
+                                : '';
+                            return `
+                                <div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px;background:#fff;">
+                                    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;align-items:center;">
+                                        <div>
+                                            <strong style="color:#f59e0b;">${estrelas} (${nota.toFixed(1)})</strong>
+                                            <span style="margin-left:6px;font-weight:700;">${esc(av.autor || 'Cliente')}</span>
+                                            ${av.compra_verificada ? '<span style="margin-left:6px;color:#059669;font-size:0.75rem;font-weight:700;">✓ Compra verificada</span>' : ''}
+                                        </div>
+                                        <small style="color:#6b7280;">${esc((av.criado_em || '').slice(0, 10))}</small>
+                                    </div>
+                                    ${av.comentario ? `<p style="margin:6px 0;color:#374151;">${esc(av.comentario)}</p>` : '<p style="margin:6px 0;color:#9ca3af;font-style:italic;">Sem comentário escrito.</p>'}
+                                    ${tagsHtml ? `<div style="margin:4px 0;">${tagsHtml}</div>` : ''}
+                                    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                                        <input type="text" class="fg-input-resp-av" data-resp-input-id="${esc(avId)}" value="${esc(av.resposta_loja || '')}" placeholder="Responder publicamente a este cliente..." style="flex:1;min-width:200px;padding:7px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:0.86rem;">
+                                        <button type="button" class="btn-sec" data-resp-av-id="${esc(avId)}" style="padding:7px 12px;font-size:0.85rem;">${av.resposta_loja ? 'Atualizar resposta' : 'Responder'}</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                ` : '<p class="texto-ajuda">Esta loja ainda não recebeu avaliações de clientes.</p>'}
+            </div>
         `;
+
+        box.querySelectorAll('[data-resp-av-id]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const avId = btn.getAttribute('data-resp-av-id');
+                const input = box.querySelector(`[data-resp-input-id="${CSS.escape ? CSS.escape(avId) : avId}"]`);
+                const resposta = input ? input.value.trim() : '';
+                if (!avId || !resposta) {
+                    toast('Digite uma resposta antes de enviar.', 'aviso');
+                    return;
+                }
+                btn.disabled = true;
+                try {
+                    await apiGestao('responder_avaliacao', { id: avId, resposta });
+                    toast('Resposta publicada na vitrine e no AcheiAki!');
+                    await carregarTerritorio();
+                } catch (err) {
+                    toast(err.message || 'Erro ao responder avaliação.', 'erro');
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        });
 
         const btnSalvar = document.getElementById('fg-ter-salvar');
         if (btnSalvar) {

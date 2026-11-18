@@ -79,10 +79,21 @@
 </head>
 
 <body data-pagina="home">
-    <!-- Preloader -->
-    <div id="preloader">
-        <div class="loader-spinner"></div>
-        <p class="loader-text">Carregando delícias...</p>
+    <!-- Preloader Skeleton Fluido -->
+    <div id="preloader" aria-live="polite">
+        <div class="pz-skel-wrap">
+            <div class="pz-skel-bar"></div>
+            <div class="pz-skel-hero"></div>
+            <div class="pz-skel-grid">
+                <div class="pz-skel-card"></div>
+                <div class="pz-skel-card"></div>
+                <div class="pz-skel-card"></div>
+            </div>
+            <div class="pz-skel-status">
+                <div class="loader-spinner" aria-hidden="true"></div>
+                <p class="loader-text">Preparando cardápio...</p>
+            </div>
+        </div>
     </div>
 
     <!-- Aviso de Alta Demanda removido da topbar -->
@@ -213,10 +224,55 @@
         </section>
 
         <section id="avaliacoes" class="secao-avaliacoes">
-            <h2><i class="fa-solid fa-comments"></i> <span data-bind="secao-avaliacoes">O que nossos clientes
-                    dizem</span></h2>
+            <div class="pz-vrep-header-row">
+                <h2><i class="fa-solid fa-star" style="color:#f59e0b;"></i> <span data-bind="secao-avaliacoes">O que nossos clientes dizem</span></h2>
+                <button type="button" id="btn-abrir-avaliar-vitrine" class="pz-vrep-cta-btn"><i class="fa-solid fa-pen"></i> Avaliar estabelecimento</button>
+            </div>
+            <div id="pz-vitrine-rep-resumo"></div>
             <div class="container-avaliacoes" id="lista-avaliacoes"></div>
         </section>
+
+        <div id="modal-avaliar-vitrine" class="modal-overlay escondido">
+            <div class="modal-conteudo" style="max-width:480px;">
+                <div class="modal-cabecalho">
+                    <h2>Avaliar estabelecimento</h2>
+                    <button type="button" id="btn-fechar-avaliar-vitrine" class="btn-fechar">&times;</button>
+                </div>
+                <form id="form-avaliar-vitrine" class="modal-corpo-form">
+                    <input type="hidden" id="v-av-nota" value="5">
+                    <div class="form-grupo">
+                        <label>Sua nota geral *</label>
+                        <div id="v-av-stars" class="pz-vrep-stars-picker">
+                            <button type="button" class="pz-vrep-star-btn ativo" data-v-star="1">★</button>
+                            <button type="button" class="pz-vrep-star-btn ativo" data-v-star="2">★</button>
+                            <button type="button" class="pz-vrep-star-btn ativo" data-v-star="3">★</button>
+                            <button type="button" class="pz-vrep-star-btn ativo" data-v-star="4">★</button>
+                            <button type="button" class="pz-vrep-star-btn ativo" data-v-star="5">★</button>
+                            <span id="v-av-nota-lbl" style="font-weight:700;color:#b45309;font-size:0.9rem;margin-left:6px;">5/5 · Excelente</span>
+                        </div>
+                    </div>
+                    <div class="form-grupo-horizontal" style="grid-template-columns:repeat(3,minmax(0,1fr));display:grid;gap:8px;">
+                        <div class="form-grupo" style="margin:0;"><label for="v-av-comida">Comida</label><select id="v-av-comida"><option value="5">5 ★</option><option value="4">4 ★</option><option value="3">3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option></select></div>
+                        <div class="form-grupo" style="margin:0;"><label for="v-av-entrega">Entrega</label><select id="v-av-entrega"><option value="5">5 ★</option><option value="4">4 ★</option><option value="3">3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option></select></div>
+                        <div class="form-grupo" style="margin:0;"><label for="v-av-custo">Preço</label><select id="v-av-custo"><option value="5">5 ★</option><option value="4">4 ★</option><option value="3">3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option></select></div>
+                    </div>
+                    <div class="form-grupo">
+                        <label>Destaques positivos</label>
+                        <div id="v-av-tags" class="pz-vrep-tag-picker">
+                            <button type="button" class="pz-vrep-tag-btn" data-v-tag="Sabor incrível">Sabor incrível</button>
+                            <button type="button" class="pz-vrep-tag-btn" data-v-tag="Comida quentinha">Comida quentinha</button>
+                            <button type="button" class="pz-vrep-tag-btn" data-v-tag="Entrega rápida">Entrega rápida</button>
+                            <button type="button" class="pz-vrep-tag-btn" data-v-tag="Bem embalado">Bem embalado</button>
+                            <button type="button" class="pz-vrep-tag-btn" data-v-tag="Preço justo">Preço justo</button>
+                        </div>
+                    </div>
+                    <div class="form-grupo"><label for="v-av-nome">Seu nome *</label><input type="text" id="v-av-nome" required placeholder="Ex.: João Silva"></div>
+                    <div class="form-grupo"><label for="v-av-comentario">Seu feedback público *</label><textarea id="v-av-comentario" rows="3" required placeholder="Conte como foi sua experiência com a loja..."></textarea></div>
+                    <p id="v-av-msg" style="font-weight:700;margin:4px 0;min-height:18px;"></p>
+                    <div class="modal-rodape" style="padding:8px 0 0;"><button type="submit" class="botao-principal" style="width:100%;">Publicar avaliação</button></div>
+                </form>
+            </div>
+        </div>
 
     </main>
 
@@ -475,6 +531,7 @@
         (function () {
             const v = Date.now();
             document.write('<script src="js/tenant.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/offline-cache.js?v=' + v + '"><\/script>');
             document.write('<script src="js/modo-apresentacao.js?v=' + v + '"><\/script>');
             document.write('<script src="js/lgpd-consent.js?v=' + v + '"><\/script>');
             document.write('<script src="js/localizacao-gate.js?v=' + v + '"><\/script>');

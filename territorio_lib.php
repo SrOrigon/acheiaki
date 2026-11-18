@@ -192,16 +192,11 @@ function pz_territorio_coletar_lojas()
             $tempoReal = 35;
         }
 
-        // Avaliações reais dos compradores
-        $somaNotas = 0.0;
-        $qtdAval = 0;
-        foreach ($avaliacoes as $av) {
-            if (is_array($av) && isset($av['nota'])) {
-                $somaNotas += max(1, min(5, (int) $av['nota']));
-                $qtdAval++;
-            }
-        }
-        $notaMedia = $qtdAval > 0 ? round($somaNotas / $qtdAval, 1) : 4.8;
+        // Avaliações reais dos compradores + depoimentos configurados na loja
+        $depoConfig = is_array($cfg['AVALIACOES'] ?? null) ? $cfg['AVALIACOES'] : [];
+        $resumoAv = pz_territorio_resumo_avaliacoes(is_array($avaliacoes) ? $avaliacoes : [], $depoConfig);
+        $notaMedia = $resumoAv['nota_media'];
+        $qtdAval = $resumoAv['total'];
 
         // Score Territorial (0-100)
         $ptsCardapio = 0;
@@ -353,6 +348,14 @@ function pz_territorio_coletar_lojas()
             'destaque' => !empty($meta['destaque']),
             'nota_media' => $notaMedia,
             'total_avaliacoes' => $qtdAval,
+            'resumo_avaliacoes' => [
+                'nota_media' => $notaMedia,
+                'total' => $qtdAval,
+                'distribuicao' => $resumoAv['distribuicao'],
+                'percentuais' => $resumoAv['percentuais'],
+                'criterios' => $resumoAv['criterios'],
+                'top_tags' => $resumoAv['top_tags'],
+            ],
             'qtd_itens' => $qtdItens,
             'com_foto' => $comFoto,
             'com_desc' => $comDesc,
@@ -371,7 +374,7 @@ function pz_territorio_coletar_lojas()
             ],
             'categorias' => is_array($cfg['CATEGORIAS'] ?? null) ? $cfg['CATEGORIAS'] : [],
             'itens' => $itens,
-            'avaliacoes' => array_slice($avaliacoes, 0, 15),
+            'avaliacoes' => array_slice($resumoAv['lista_completa'], 0, 50),
             'cadastro_completo' => count($pendencias) === 0,
             'pendencias_cadastro' => $pendencias,
             'url_loja' => $slug === 'default' ? 'index.html?tenant=default' : ('loja/' . rawurlencode($slug) . '/'),
@@ -769,13 +772,136 @@ function pz_territorio_analisar_loja($slug)
     ];
 }
 
+function pz_territorio_resumo_avaliacoes(array $avaliacoes, array $depoimentosConfig = [])
+{
+    $dist = ['5' => 0, '4' => 0, '3' => 0, '2' => 0, '1' => 0];
+    $somaNota = 0.0;
+    $qtdReal = 0;
+    $somaComida = 0.0;
+    $qtdComida = 0;
+    $somaEntrega = 0.0;
+    $qtdEntrega = 0;
+    $somaCusto = 0.0;
+    $qtdCusto = 0;
+    $tagsCount = [];
+    $listaCompleta = [];
+
+    foreach ($avaliacoes as $av) {
+        if (!is_array($av) || !isset($av['nota'])) {
+            continue;
+        }
+        $n = max(1, min(5, (int) $av['nota']));
+        $dist[(string) $n]++;
+        $somaNota += $n;
+        $qtdReal++;
+
+        if (!empty($av['nota_comida'])) {
+            $somaComida += max(1, min(5, (int) $av['nota_comida']));
+            $qtdComida++;
+        }
+        if (!empty($av['nota_entrega'])) {
+            $somaEntrega += max(1, min(5, (int) $av['nota_entrega']));
+            $qtdEntrega++;
+        }
+        if (!empty($av['nota_custo'])) {
+            $somaCusto += max(1, min(5, (int) $av['nota_custo']));
+            $qtdCusto++;
+        }
+        foreach ((array) ($av['melhorias_tags'] ?? []) as $t) {
+            $tClean = trim((string) $t);
+            if ($tClean !== '') {
+                $tagsCount[$tClean] = ($tagsCount[$tClean] ?? 0) + 1;
+            }
+        }
+        $listaCompleta[] = [
+            'id' => (string) ($av['id'] ?? ''),
+            'pedido_id' => (string) ($av['pedido_id'] ?? ''),
+            'cliente_nome' => (string) ($av['cliente_nome'] ?? 'Cliente'),
+            'nota' => $n,
+            'nota_comida' => !empty($av['nota_comida']) ? (int) $av['nota_comida'] : null,
+            'nota_entrega' => !empty($av['nota_entrega']) ? (int) $av['nota_entrega'] : null,
+            'nota_custo' => !empty($av['nota_custo']) ? (int) $av['nota_custo'] : null,
+            'comentario' => (string) ($av['comentario'] ?? ''),
+            'melhorias_tags' => array_values((array) ($av['melhorias_tags'] ?? [])),
+            'recomendaria' => !isset($av['recomendaria']) || !empty($av['recomendaria']),
+            'verificada' => !empty($av['verificada']) || ((string) ($av['pedido_id'] ?? '') !== ''),
+            'resposta_loja' => (string) ($av['resposta_loja'] ?? ''),
+            'resposta_autor' => (string) ($av['resposta_autor'] ?? ''),
+            'resposta_em' => (string) ($av['resposta_em'] ?? ''),
+            'criado_em' => (string) ($av['criado_em'] ?? ''),
+            'origem' => 'avaliacao',
+        ];
+    }
+
+    foreach ($depoimentosConfig as $dep) {
+        if (!is_array($dep)) {
+            continue;
+        }
+        $txtDep = trim((string) ($dep['texto'] ?? ''));
+        $nomeDep = trim((string) ($dep['nome'] ?? ''));
+        if ($txtDep === '' && $nomeDep === '') {
+            continue;
+        }
+        $nDep = max(1, min(5, (int) ($dep['nota'] ?? 5)));
+        $listaCompleta[] = [
+            'id' => '',
+            'pedido_id' => '',
+            'cliente_nome' => $nomeDep ?: 'Cliente da loja',
+            'nota' => $nDep,
+            'nota_comida' => null,
+            'nota_entrega' => null,
+            'nota_custo' => null,
+            'comentario' => $txtDep,
+            'melhorias_tags' => [],
+            'recomendaria' => true,
+            'verificada' => false,
+            'resposta_loja' => '',
+            'resposta_autor' => '',
+            'resposta_em' => '',
+            'criado_em' => '',
+            'foto' => (string) ($dep['foto'] ?? ''),
+            'origem' => 'destaque',
+        ];
+    }
+
+    $notaMedia = $qtdReal > 0 ? round($somaNota / $qtdReal, 1) : 4.8;
+    $percentuais = [];
+    foreach ($dist as $estrela => $qtd) {
+        $percentuais[$estrela] = $qtdReal > 0 ? (int) round(($qtd / $qtdReal) * 100) : 0;
+    }
+    arsort($tagsCount);
+    $topTags = [];
+    foreach (array_slice($tagsCount, 0, 8, true) as $tag => $qtd) {
+        $topTags[] = ['tag' => $tag, 'qtd' => $qtd];
+    }
+
+    return [
+        'nota_media' => $notaMedia,
+        'total' => $qtdReal,
+        'distribuicao' => $dist,
+        'percentuais' => $percentuais,
+        'criterios' => [
+            'comida' => $qtdComida > 0 ? round($somaComida / $qtdComida, 1) : null,
+            'entrega' => $qtdEntrega > 0 ? round($somaEntrega / $qtdEntrega, 1) : null,
+            'custo' => $qtdCusto > 0 ? round($somaCusto / $qtdCusto, 1) : null,
+        ],
+        'top_tags' => $topTags,
+        'lista_completa' => $listaCompleta,
+    ];
+}
+
 function pz_territorio_registrar_avaliacao($slug, array $dados)
 {
     $nota = max(1, min(5, (int) ($dados['nota'] ?? 5)));
+    $notaComida = !empty($dados['nota_comida']) ? max(1, min(5, (int) $dados['nota_comida'])) : null;
+    $notaEntrega = !empty($dados['nota_entrega']) ? max(1, min(5, (int) $dados['nota_entrega'])) : null;
+    $notaCusto = !empty($dados['nota_custo']) ? max(1, min(5, (int) $dados['nota_custo'])) : null;
     $comentario = trim(strip_tags((string) ($dados['comentario'] ?? '')));
     $pedidoId = trim((string) ($dados['pedido_id'] ?? ''));
     $clienteNome = trim(strip_tags((string) ($dados['cliente_nome'] ?? 'Cliente'))) ?: 'Cliente';
     $compradorId = (int) ($dados['comprador_id'] ?? 0);
+    $verificada = !empty($dados['verificada']) || ($pedidoId !== '');
+    $recomendaria = !isset($dados['recomendaria']) || !empty($dados['recomendaria']);
     $tags = array_values(array_filter(array_map(function ($t) {
         return trim(strip_tags((string) $t));
     }, (array) ($dados['melhorias_tags'] ?? []))));
@@ -793,8 +919,16 @@ function pz_territorio_registrar_avaliacao($slug, array $dados)
         'comprador_id' => $compradorId,
         'cliente_nome' => $clienteNome,
         'nota' => $nota,
+        'nota_comida' => $notaComida,
+        'nota_entrega' => $notaEntrega,
+        'nota_custo' => $notaCusto,
         'comentario' => $comentario,
         'melhorias_tags' => $tags,
+        'recomendaria' => $recomendaria,
+        'verificada' => $verificada,
+        'resposta_loja' => '',
+        'resposta_autor' => '',
+        'resposta_em' => '',
         'criado_em' => date('Y-m-d H:i:s'),
     ];
 
@@ -841,4 +975,40 @@ function pz_territorio_registrar_avaliacao($slug, array $dados)
     }
 
     return ['success' => true, 'avaliacao' => $registro];
+}
+
+function pz_territorio_responder_avaliacao($slug, $avId, $resposta, $autor = 'Estabelecimento')
+{
+    $avId = trim((string) $avId);
+    $respLimpa = trim(strip_tags((string) $resposta));
+    $autorLimpo = trim(strip_tags((string) $autor)) ?: 'Estabelecimento';
+    if ($avId === '' || mb_strlen($respLimpa, 'UTF-8') < 2) {
+        return ['success' => false, 'message' => 'Informe o ID da avaliação e a resposta do estabelecimento.'];
+    }
+
+    $anterior = Database::getTenant();
+    Database::setTenant($slug);
+    $encontrada = null;
+    Database::mutate('avaliacoes.json', function (&$lista) use ($avId, $respLimpa, $autorLimpo, &$encontrada) {
+        if (!is_array($lista)) {
+            return false;
+        }
+        foreach ($lista as $i => $item) {
+            if (!is_array($item) || (string) ($item['id'] ?? '') !== $avId) {
+                continue;
+            }
+            $lista[$i]['resposta_loja'] = $respLimpa;
+            $lista[$i]['resposta_autor'] = $autorLimpo;
+            $lista[$i]['resposta_em'] = date('Y-m-d H:i:s');
+            $encontrada = $lista[$i];
+            return true;
+        }
+        return false;
+    });
+    Database::setTenant($anterior);
+
+    if (!$encontrada) {
+        return ['success' => false, 'message' => 'Avaliação não encontrada para responder.'];
+    }
+    return ['success' => true, 'avaliacao' => $encontrada];
 }

@@ -257,8 +257,55 @@ function updateStatusUI(status) {
                 <i class="fa-solid fa-shield-halved" style="font-size: 2rem; margin-bottom: 10px;"></i>
                 <h3 style="margin:0 0 5px 0;">Rastreio Encerrado</h3>
                 <p style="margin:0; font-size: 0.9em;">Por motivos de segurança, o sinal de GPS foi finalizado e os dados do entregador apagados do sistema.</p>
+                <div id="rastreio-avaliar-box" style="margin-top:14px;background:rgba(255,255,255,0.96);color:#0f172a;border-radius:14px;padding:14px;text-align:left;pointer-events:auto;">
+                    <strong style="display:block;font-size:0.95rem;margin-bottom:6px;">⭐ Avalie seu pedido</strong>
+                    <div id="rastreio-av-stars" style="display:flex;gap:6px;margin-bottom:8px;">
+                        <button type="button" data-r-star="1" style="border:1px solid #fde68a;background:#fffbeb;color:#f59e0b;font-size:1.35rem;border-radius:8px;padding:4px 9px;cursor:pointer;">★</button>
+                        <button type="button" data-r-star="2" style="border:1px solid #fde68a;background:#fffbeb;color:#f59e0b;font-size:1.35rem;border-radius:8px;padding:4px 9px;cursor:pointer;">★</button>
+                        <button type="button" data-r-star="3" style="border:1px solid #fde68a;background:#fffbeb;color:#f59e0b;font-size:1.35rem;border-radius:8px;padding:4px 9px;cursor:pointer;">★</button>
+                        <button type="button" data-r-star="4" style="border:1px solid #fde68a;background:#fffbeb;color:#f59e0b;font-size:1.35rem;border-radius:8px;padding:4px 9px;cursor:pointer;">★</button>
+                        <button type="button" data-r-star="5" style="border:1px solid #fde68a;background:#fffbeb;color:#f59e0b;font-size:1.35rem;border-radius:8px;padding:4px 9px;cursor:pointer;">★</button>
+                    </div>
+                    <textarea id="rastreio-av-txt" rows="2" placeholder="Como estava a comida e a entrega?" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;box-sizing:border-box;font-family:inherit;"></textarea>
+                    <button type="button" id="rastreio-av-enviar" style="margin-top:8px;width:100%;border:none;border-radius:10px;padding:10px;background:#e85d04;color:#fff;font-weight:800;cursor:pointer;">Enviar feedback</button>
+                    <p id="rastreio-av-msg" style="margin:6px 0 0;font-size:0.84rem;font-weight:700;"></p>
+                </div>
             `;
             overlay.appendChild(privacyMsg);
+            let notaR = 5;
+            privacyMsg.querySelectorAll('[data-r-star]').forEach((b) => {
+                b.addEventListener('click', () => {
+                    notaR = Number(b.getAttribute('data-r-star') || 5);
+                    privacyMsg.querySelectorAll('[data-r-star]').forEach((x) => {
+                        x.style.color = Number(x.getAttribute('data-r-star')) <= notaR ? '#f59e0b' : '#cbd5e1';
+                    });
+                });
+            });
+            const btnEnvR = document.getElementById('rastreio-av-enviar');
+            if (btnEnvR) {
+                btnEnvR.addEventListener('click', () => {
+                    const msgR = document.getElementById('rastreio-av-msg');
+                    if (msgR) msgR.textContent = 'Publicando...';
+                    const baseMkt = (location.pathname.includes('/loja/')) ? '../../marketplace_api.php?action=avaliar' : 'marketplace_api.php?action=avaliar';
+                    fetch(baseMkt, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            tenant: (typeof TENANT !== 'undefined' && TENANT.slug) ? TENANT.slug : 'default',
+                            pedido_id: String(orderId || ''),
+                            nota: notaR,
+                            comentario: (document.getElementById('rastreio-av-txt') || {}).value || ''
+                        })
+                    }).then((r) => r.json()).then((d) => {
+                        if (msgR) {
+                            msgR.style.color = d.success ? '#15803d' : '#b91c1c';
+                            msgR.textContent = d.success ? 'Feedback publicado para todos! Obrigado.' : (d.message || 'Erro ao enviar.');
+                        }
+                    }).catch(() => {
+                        if (msgR) msgR.textContent = 'Sem conexão para publicar agora.';
+                    });
+                });
+            }
         }
     }
 }

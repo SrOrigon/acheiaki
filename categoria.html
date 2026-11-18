@@ -40,10 +40,21 @@
 </head>
 
 <body data-pagina="categoria">
-    <!-- Preloader -->
-    <div id="preloader">
-        <div class="loader-spinner"></div>
-        <p class="loader-text">Carregando...</p>
+    <!-- Preloader Skeleton Fluido -->
+    <div id="preloader" aria-live="polite">
+        <div class="pz-skel-wrap">
+            <div class="pz-skel-bar"></div>
+            <div class="pz-skel-hero"></div>
+            <div class="pz-skel-grid">
+                <div class="pz-skel-card"></div>
+                <div class="pz-skel-card"></div>
+                <div class="pz-skel-card"></div>
+            </div>
+            <div class="pz-skel-status">
+                <div class="loader-spinner" aria-hidden="true"></div>
+                <p class="loader-text">Preparando categoria...</p>
+            </div>
+        </div>
     </div>
 
     <!-- Header Completo (Igual Index) -->
@@ -345,6 +356,7 @@
         (function () {
             const v = Date.now();
             document.write('<script src="js/tenant.js?v=' + v + '"><\/script>');
+            document.write('<script src="js/offline-cache.js?v=' + v + '"><\/script>');
             document.write('<script src="js/modo-apresentacao.js?v=' + v + '"><\/script>');
             document.write('<script src="js/lgpd-consent.js?v=' + v + '"><\/script>');
             document.write('<script src="js/localizacao-gate.js?v=' + v + '"><\/script>');

@@ -411,7 +411,17 @@
         });
 
         const grid = $('mkt-grid-lojas');
-        if (grid) grid.innerHTML = '<div class="mkt-empty">Analisando preços, raios de CNPJ e recomendações na sua região...</div>';
+        if (grid) {
+            grid.innerHTML = Array.from({ length: 4 }, () =>
+                '<div class="mkt-skel-card" aria-hidden="true">'
+                + '<div class="mkt-skel-capa mkt-skel-shimmer"></div>'
+                + '<div class="mkt-skel-body">'
+                + '<div class="mkt-skel-line mkt-skel-shimmer" style="width:65%;height:18px;"></div>'
+                + '<div class="mkt-skel-line mkt-skel-shimmer" style="width:45%;"></div>'
+                + '<div class="mkt-skel-line mkt-skel-shimmer" style="width:85%;"></div>'
+                + '</div></div>'
+            ).join('');
+        }
 
         const podeIA = !(window.AcheIAkiLGPD && typeof window.AcheIAkiLGPD.podeUsarIA === 'function')
             || window.AcheIAkiLGPD.podeUsarIA();
@@ -709,6 +719,10 @@
 
         const freteTxt = Number(loja.taxa_entrega_base || 0) === 0 ? 'Frete grátis' : 'Frete ' + brl(loja.taxa_entrega_base);
         const distTxt = loja.distancia_km != null ? ' · ' + loja.distancia_km + ' km' : '';
+        const avalRec = (Array.isArray(loja.avaliacoes_recentes) && loja.avaliacoes_recentes.find((a) => a && a.comentario)) || null;
+        const quoteHtml = avalRec
+            ? '<div class="mkt-card-quote">“' + esc(String(avalRec.comentario).slice(0, 92)) + (String(avalRec.comentario).length > 92 ? '…' : '') + '” — <strong>' + esc(avalRec.cliente_nome || 'Cliente') + '</strong></div>'
+            : '';
 
         return '<article class="mkt-card">'
             + '<div class="mkt-card-capa" style="' + bgStyle + '">'
@@ -726,11 +740,12 @@
             + (badges.length ? '<div class="mkt-badges-row">' + badges.join('') + '</div>' : '')
             + (loja.motivo_algoritmo ? '<div class="mkt-card-motivo-ia"><i class="fa-solid fa-sparkles"></i> ' + esc(loja.motivo_algoritmo) + '</div>' : '')
             + '<div class="mkt-meta">'
-            + '<span>★ ' + esc(loja.nota_media) + ' (' + esc(loja.total_avaliacoes || 0) + ')</span>'
+            + '<button type="button" class="mkt-rating-btn" data-ver-opinioes="' + esc(loja.slug) + '" title="Ver todas as estrelas e opiniões">★ ' + esc(loja.nota_media) + ' (' + esc(loja.total_avaliacoes || 0) + ')</button>'
             + '<span><i class="fa-regular fa-clock"></i> ' + esc(loja.tempo_espera_txt || ((loja.tempo_medio_min || 35) + ' min')) + '</span>'
             + '<span><i class="fa-solid fa-motorcycle"></i> ' + esc(freteTxt + distTxt) + '</span>'
             + (Number(loja.preco_medio || 0) > 0 ? '<span>Média ' + brl(loja.preco_medio) + '</span>' : '')
             + '</div>'
+            + quoteHtml
             + '<div class="mkt-card-actions">'
             + '<button type="button" class="mkt-btn-outline" data-ver-loja="' + esc(loja.slug) + '"><i class="fa-solid fa-store"></i> Ver página completa</button>'
             + '<a class="mkt-btn-go" href="' + esc(loja.url_loja) + '" data-open-loja="' + esc(loja.slug) + '">Pedir agora →</a>'
@@ -876,7 +891,13 @@
 
     function ligarEventosGrid(container) {
         container.querySelectorAll('[data-ver-loja]').forEach((btn) => {
-            btn.addEventListener('click', () => abrirPaginaEmpresa(btn.dataset.verLoja));
+            btn.addEventListener('click', () => abrirPaginaEmpresa(btn.dataset.verLoja, false));
+        });
+        container.querySelectorAll('[data-ver-opinioes]').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                abrirPaginaEmpresa(btn.getAttribute('data-ver-opinioes'), true);
+            });
         });
         container.querySelectorAll('[data-fav]').forEach((btn) => {
             btn.addEventListener('click', (e) => {
@@ -938,7 +959,101 @@
     // =========================================================
     // VISUALIZADOR DA PÁGINA COMPLETA DA EMPRESA CNPJ
     // =========================================================
-    function abrirPaginaEmpresa(slug) {
+    function montarEstrelasTexto(n) {
+        const nota = Math.max(1, Math.min(5, Math.round(Number(n) || 5)));
+        return '★'.repeat(nota) + '☆'.repeat(5 - nota);
+    }
+
+    function renderizarBlocoReputacaoModal(loja) {
+        const res = loja.resumo_avaliacoes || {};
+        const total = Number(res.total != null ? res.total : (loja.total_avaliacoes || 0));
+        const notaMedia = Number(res.nota_media != null ? res.nota_media : (loja.nota_media || 4.8)).toFixed(1);
+        const dist = res.distribuicao || { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+        const pct = res.percentuais || { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+        const crit = res.criterios || {};
+        const topTags = Array.isArray(res.top_tags) ? res.top_tags : [];
+
+        const barrasHtml = [5, 4, 3, 2, 1].map((s) =>
+            '<div class="mkt-rep-bar-row">'
+            + '<span>' + s + '★</span>'
+            + '<div class="mkt-rep-track"><div class="mkt-rep-fill" style="width:' + (pct[s] || 0) + '%"></div></div>'
+            + '<span style="text-align:right;">' + (dist[s] || 0) + '</span>'
+            + '</div>'
+        ).join('');
+
+        const critHtml = ['comida', 'entrega', 'custo'].map((k) => {
+            if (!crit[k]) return '';
+            const label = k === 'comida' ? 'Comida' : (k === 'entrega' ? 'Entrega' : 'Custo-benefício');
+            return '<span class="mkt-rep-crit">' + label + ': ★ ' + esc(crit[k]) + '</span>';
+        }).filter(Boolean).join('');
+
+        const tagsHtml = topTags.length
+            ? '<div class="mkt-rev-tags">' + topTags.map((t) => '<span class="mkt-rev-tag">' + esc(t.tag) + ' (' + esc(t.qtd) + ')</span>').join('') + '</div>'
+            : '';
+
+        return '<section class="mkt-rep-box" id="mkt-loja-reputacao">'
+            + '<div class="mkt-rep-head">'
+            + '<h3 style="margin:0;"><i class="fa-solid fa-star" style="color:#f59e0b"></i> Estrelas &amp; O que os clientes pensam</h3>'
+            + '<button type="button" class="mkt-btn-prim" id="mkt-btn-avaliar-loja" data-av-direto-slug="' + esc(loja.slug) + '" data-av-direto-nome="' + esc(loja.nome) + '" style="padding:8px 14px;font-size:0.84rem;"><i class="fa-solid fa-pen"></i> Deixar avaliação</button>'
+            + '</div>'
+            + '<div class="mkt-rep-overview">'
+            + '<div class="mkt-rep-score">'
+            + '<strong>' + esc(notaMedia) + '</strong>'
+            + '<div class="mkt-rep-stars">' + montarEstrelasTexto(notaMedia) + '</div>'
+            + '<small>' + esc(total) + ' avaliação(ões) reais</small>'
+            + '</div>'
+            + '<div class="mkt-rep-bars">' + barrasHtml + '</div>'
+            + '</div>'
+            + (critHtml ? '<div class="mkt-rep-criterios">' + critHtml + '</div>' : '')
+            + tagsHtml
+            + '<div class="mkt-rep-filtros" id="mkt-rep-filtros">'
+            + '<button type="button" class="mkt-rep-filtro-btn ativo" data-rep-filtro="todas">Todas</button>'
+            + '<button type="button" class="mkt-rep-filtro-btn" data-rep-filtro="5">5★</button>'
+            + '<button type="button" class="mkt-rep-filtro-btn" data-rep-filtro="4">4★</button>'
+            + '<button type="button" class="mkt-rep-filtro-btn" data-rep-filtro="baixas">3★ ou menos</button>'
+            + '<button type="button" class="mkt-rep-filtro-btn" data-rep-filtro="resposta">Com resposta da loja</button>'
+            + '</div>'
+            + '<div class="mkt-rev-list" id="mkt-rep-lista"></div>'
+            + '</section>';
+    }
+
+    function pintarListaReputacao(avals, filtro) {
+        const listaEl = $('mkt-rep-lista');
+        if (!listaEl) return;
+        const filtradas = (avals || []).filter((av) => {
+            if (!av) return false;
+            if (filtro === '5') return Number(av.nota) === 5;
+            if (filtro === '4') return Number(av.nota) === 4;
+            if (filtro === 'baixas') return Number(av.nota) <= 3;
+            if (filtro === 'resposta') return Boolean(av.resposta_loja && av.resposta_loja.trim());
+            return true;
+        });
+        if (!filtradas.length) {
+            listaEl.innerHTML = '<div class="mkt-empty" style="padding:18px;">Nenhuma avaliação com este filtro ainda. Seja o primeiro a opinar!</div>';
+            return;
+        }
+        listaEl.innerHTML = filtradas.map((av) => {
+            const tags = Array.isArray(av.melhorias_tags) && av.melhorias_tags.length
+                ? '<div class="mkt-rev-tags">' + av.melhorias_tags.map((t) => '<span class="mkt-rev-tag">' + esc(t) + '</span>').join('') + '</div>'
+                : '';
+            const verif = av.verificada ? '<span class="mkt-rev-verif"><i class="fa-solid fa-check"></i> Pedido verificado</span>' : '';
+            const resp = av.resposta_loja
+                ? '<div class="mkt-rev-reply"><strong>Resposta de ' + esc(av.resposta_autor || 'Loja') + ':</strong> ' + esc(av.resposta_loja) + '</div>'
+                : '';
+            const dataFmt = av.criado_em ? '<small style="color:#64748b;">' + esc(String(av.criado_em).slice(0, 10).split('-').reverse().join('/')) + '</small>' : '';
+            return '<article class="mkt-rev-card">'
+                + '<div class="mkt-rev-top">'
+                + '<div><strong>' + esc(av.cliente_nome || 'Cliente') + '</strong> ' + verif + '<div style="color:#f59e0b;font-size:0.95rem;margin-top:2px;">' + montarEstrelasTexto(av.nota || 5) + '</div></div>'
+                + dataFmt
+                + '</div>'
+                + (av.comentario ? '<p style="margin:0;color:#1e293b;font-size:0.9rem;line-height:1.45;">' + esc(av.comentario) + '</p>' : '')
+                + tags
+                + resp
+                + '</article>';
+        }).join('');
+    }
+
+    function abrirPaginaEmpresa(slug, irParaAvaliacoes) {
         const modal = $('mkt-modal-loja');
         const box = $('mkt-loja-conteudo');
         if (!modal || !box) return;
@@ -958,6 +1073,12 @@
                     return;
                 }
                 renderizarPaginaCompletaEmpresa(res.loja, box);
+                if (irParaAvaliacoes) {
+                    setTimeout(() => {
+                        const secRep = $('mkt-loja-reputacao');
+                        if (secRep) secRep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 80);
+                }
                 if (window.PZAlgoritmo && window.PZAlgoritmo.registrar) {
                     window.PZAlgoritmo.registrar('view_loja', { tenant: slug, nicho: res.loja.nicho || '' });
                 }
@@ -1022,11 +1143,7 @@
             }).join('')
             : '<div class="mkt-empty">Esta empresa ainda está cadastrando os itens do cardápio.</div>';
 
-        const avalsHtml = (Array.isArray(loja.avaliacoes) && loja.avaliacoes.length)
-            ? '<div><h3 style="margin:8px 0;">Avaliações recentes (' + loja.avaliacoes.length + ')</h3><div style="display:grid;gap:8px;">'
-              + loja.avaliacoes.slice(0, 6).map((av) => '<div class="mkt-info-pill"><strong>' + esc(av.cliente_nome || 'Cliente') + ' · ' + '★'.repeat(av.nota || 5) + '</strong><span>' + esc(av.comentario || 'Sem comentário') + '</span></div>').join('')
-              + '</div></div>'
-            : '';
+        const avalsHtml = renderizarBlocoReputacaoModal(loja);
 
         const distInfo = loja.distancia_km != null
             ? loja.distancia_km + ' km de você (raio até ' + loja.raio_entrega_km + ' km' + (loja.entrega_estendida ? ' — entrega regional' : '') + ')'
@@ -1072,6 +1189,22 @@
                 toast('Cupom ' + cod + ' copiado! Cole no carrinho da loja.');
             });
         });
+
+        const avalsOriginais = Array.isArray(loja.avaliacoes) ? loja.avaliacoes : [];
+        pintarListaReputacao(avalsOriginais, 'todas');
+        box.querySelectorAll('#mkt-rep-filtros [data-rep-filtro]').forEach((fb) => {
+            fb.addEventListener('click', () => {
+                box.querySelectorAll('#mkt-rep-filtros [data-rep-filtro]').forEach((x) => x.classList.remove('ativo'));
+                fb.classList.add('ativo');
+                pintarListaReputacao(avalsOriginais, fb.getAttribute('data-rep-filtro'));
+            });
+        });
+        const btnAvDireto = $('mkt-btn-avaliar-loja');
+        if (btnAvDireto) {
+            btnAvDireto.addEventListener('click', () => {
+                abrirModalAvaliar(btnAvDireto.getAttribute('data-av-direto-slug'), btnAvDireto.getAttribute('data-av-direto-nome'), '');
+            });
+        }
     }
 
     // =========================================================
@@ -1187,11 +1320,30 @@
             .catch(() => {});
     }
 
+    function setEstrelasModal(n) {
+        const val = Math.max(1, Math.min(5, Number(n) || 5));
+        if ($('mkt-av-nota')) $('mkt-av-nota').value = String(val);
+        document.querySelectorAll('#mkt-av-stars [data-av-star]').forEach((b) => {
+            b.classList.toggle('ativo', Number(b.getAttribute('data-av-star')) <= val);
+        });
+        const labels = { 1: '1/5 · Precisa melhorar', 2: '2/5 · Abaixo do esperado', 3: '3/5 · Razoável', 4: '4/5 · Muito bom', 5: '5/5 · Excelente' };
+        if ($('mkt-av-nota-label')) $('mkt-av-nota-label').textContent = labels[val] || '';
+    }
+
     function abrirModalAvaliar(slug, nome, codigo) {
         $('mkt-av-slug').value = slug || 'default';
         $('mkt-av-codigo').value = codigo || '';
-        $('mkt-av-loja-nome').textContent = (nome || slug) + (codigo ? ' · Pedido #' + codigo : '');
+        $('mkt-av-loja-nome').textContent = (nome || slug) + (codigo ? ' · Pedido #' + codigo : ' · Avaliação pública do estabelecimento');
         $('mkt-av-msg').textContent = '';
+        if ($('mkt-av-coment')) $('mkt-av-coment').value = '';
+        setEstrelasModal(5);
+        document.querySelectorAll('#mkt-av-tags .mkt-tag-chip-btn').forEach((c) => c.classList.remove('ativo'));
+        const wrapNome = $('mkt-av-nome-wrap');
+        if (wrapNome) {
+            const precisaNome = !(STATE.comprador && STATE.comprador.nome);
+            wrapNome.hidden = !precisaNome;
+            if (!precisaNome && $('mkt-av-cliente-nome')) $('mkt-av-cliente-nome').value = STATE.comprador.nome;
+        }
         $('mkt-modal-avaliar').hidden = false;
     }
 
@@ -1786,19 +1938,35 @@
 
         if ($('mkt-buscar-pedidos')) $('mkt-buscar-pedidos').addEventListener('click', () => buscarPedidos(false));
 
+        document.querySelectorAll('#mkt-av-stars [data-av-star]').forEach((sb) => {
+            sb.addEventListener('click', () => setEstrelasModal(sb.getAttribute('data-av-star')));
+        });
+        document.querySelectorAll('#mkt-av-tags .mkt-tag-chip-btn').forEach((tb) => {
+            tb.addEventListener('click', () => tb.classList.toggle('ativo'));
+        });
+
         if ($('mkt-form-avaliar')) $('mkt-form-avaliar').addEventListener('submit', (e) => {
             e.preventDefault();
             const msg = $('mkt-av-msg');
             msg.textContent = 'Enviando...';
+            const tagsSel = Array.from(document.querySelectorAll('#mkt-av-tags .mkt-tag-chip-btn.ativo')).map((b) => b.getAttribute('data-av-tag')).filter(Boolean);
+            const nomeAv = ($('mkt-av-cliente-nome') && $('mkt-av-cliente-nome').value.trim()) || (STATE.comprador && STATE.comprador.nome) || 'Cliente';
+            const telPref = (STATE.comprador && STATE.comprador.telefone) || (window.PedidoZapCelulas && window.PedidoZapCelulas.obterTelefonePreferido()) || '';
+            const slugAv = $('mkt-av-slug').value;
             fetch('marketplace_api.php?action=avaliar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    tenant: $('mkt-av-slug').value,
+                    tenant: slugAv,
                     pedido_id: $('mkt-av-codigo').value,
-                    cliente_nome: (STATE.comprador && STATE.comprador.nome) || 'Cliente',
+                    cliente_nome: nomeAv,
+                    telefone: telPref,
                     comprador_id: (STATE.comprador && STATE.comprador.id) || 0,
                     nota: Number($('mkt-av-nota').value || 5),
+                    nota_comida: Number(($('mkt-av-comida') && $('mkt-av-comida').value) || 5),
+                    nota_entrega: Number(($('mkt-av-entrega') && $('mkt-av-entrega').value) || 5),
+                    nota_custo: Number(($('mkt-av-custo') && $('mkt-av-custo').value) || 5),
+                    melhorias_tags: tagsSel,
                     comentario: $('mkt-av-coment').value.trim(),
                 }),
             }).then((r) => r.json()).then((d) => {
@@ -1807,13 +1975,18 @@
                 if (d.success) {
                     const notaNum = Number($('mkt-av-nota').value || 5);
                     if (window.PZAlgoritmo && window.PZAlgoritmo.registrar) {
-                        const lj = STATE.lojas.find((x) => x.slug === $('mkt-av-slug').value) || {};
+                        const lj = STATE.lojas.find((x) => x.slug === slugAv) || {};
                         window.PZAlgoritmo.registrar(notaNum >= 4 ? 'avaliacao_positiva' : (notaNum <= 2 ? 'avaliacao_negativa' : 'view_loja'), {
-                            tenant: $('mkt-av-slug').value,
+                            tenant: slugAv,
                             nicho: lj.nicho || '',
                         });
                     }
-                    setTimeout(() => { $('mkt-modal-avaliar').hidden = true; }, 1100);
+                    if (window.PedidoZapCelulas) window.PedidoZapCelulas.emitir('avaliacao_publicada', { tenant: slugAv });
+                    carregarMarketplace();
+                    if ($('mkt-modal-loja') && !$('mkt-modal-loja').hidden) {
+                        abrirPaginaEmpresa(slugAv, true);
+                    }
+                    setTimeout(() => { $('mkt-modal-avaliar').hidden = true; }, 900);
                 }
             });
         });

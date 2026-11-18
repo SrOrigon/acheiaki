@@ -285,19 +285,366 @@
         });
     }
 
-    function aplicarAvaliacoes(config) {
+    const vitrineRepState = {
+        tenant: '',
+        nota: 5,
+        filtro: 'todas',
+        resumo: null,
+        avaliacoes: [],
+        legacy: [],
+        modalBound: false,
+        cellBound: false,
+    };
+
+    function apiMarketplaceBase() {
+        return location.pathname.indexOf('/loja/') !== -1 ? '../../marketplace_api.php' : 'marketplace_api.php';
+    }
+
+    function tenantSlugVitrine(config) {
+        const cfg = cfgOf(config);
+        const query = new URLSearchParams(location.search || '');
+        const q = (query.get('tenant') || query.get('loja') || '').trim();
+        if (q) return q;
+        const m = location.pathname.match(/\/loja\/([^/?#]+)/i);
+        if (m && m[1]) return decodeURIComponent(m[1]);
+        return String(cfg.TENANT_SLUG || cfg.SLUG || 'default').trim() || 'default';
+    }
+
+    function estrelasHtmlVitrine(nota) {
+        const n = Math.max(0, Math.min(5, Math.round(Number(nota || 0))));
+        let html = '';
+        for (let i = 1; i <= 5; i += 1) {
+            html += i <= n ? '★' : '☆';
+        }
+        return html;
+    }
+
+    function filtrarAvaliacoesVitrine(lista) {
+        const filtro = vitrineRepState.filtro || 'todas';
+        if (filtro === '5') return lista.filter((a) => Number(a.nota || 0) === 5);
+        if (filtro === '4') return lista.filter((a) => Number(a.nota || 0) === 4);
+        if (filtro === '3menos') return lista.filter((a) => Number(a.nota || 0) <= 3);
+        if (filtro === 'respondidas') return lista.filter((a) => String(a.resposta_loja || '').trim() !== '');
+        return lista;
+    }
+
+    function renderizarVitrineAvaliacoes() {
+        const boxResumo = document.getElementById('pz-vitrine-rep-resumo');
         const lista = document.getElementById('lista-avaliacoes');
         const secao = document.getElementById('avaliacoes');
-        const itens = Array.isArray(config.AVALIACOES) ? config.AVALIACOES.filter((a) => a && (a.texto || a.nome)) : [];
-        if (secao) secao.style.display = itens.length ? '' : 'none';
+        if (secao) secao.style.display = '';
+
+        const itensFonte = vitrineRepState.avaliacoes.length ? vitrineRepState.avaliacoes : vitrineRepState.legacy;
+        const total = vitrineRepState.resumo && vitrineRepState.resumo.total
+            ? Number(vitrineRepState.resumo.total)
+            : itensFonte.length;
+        const media = vitrineRepState.resumo && vitrineRepState.resumo.media
+            ? Number(vitrineRepState.resumo.media)
+            : (itensFonte.length
+                ? itensFonte.reduce((acc, it) => acc + Number(it.nota || 5), 0) / itensFonte.length
+                : 0);
+        const pct = vitrineRepState.resumo && vitrineRepState.resumo.percentuais ? vitrineRepState.resumo.percentuais : {};
+        const dist = vitrineRepState.resumo && vitrineRepState.resumo.distribuicao ? vitrineRepState.resumo.distribuicao : {};
+        const criterios = vitrineRepState.resumo && vitrineRepState.resumo.criterios ? vitrineRepState.resumo.criterios : {};
+        const topTags = vitrineRepState.resumo && Array.isArray(vitrineRepState.resumo.top_tags)
+            ? vitrineRepState.resumo.top_tags
+            : [];
+
+        if (boxResumo) {
+            if (!total) {
+                boxResumo.innerHTML = '<div class="pz-vrep-vazio">'
+                    + '<strong>Ainda sem avaliações públicas</strong>'
+                    + '<span>Seja o primeiro cliente a contar como foi sua experiência com este estabelecimento.</span>'
+                    + '</div>';
+            } else {
+                const barras = [5, 4, 3, 2, 1].map((s) => {
+                    const p = Number(pct[String(s)] || 0);
+                    const q = Number(dist[String(s)] || 0);
+                    return '<div class="pz-vrep-bar-row">'
+                        + '<span>' + s + '★</span>'
+                        + '<div class="pz-vrep-track"><div class="pz-vrep-fill" style="width:' + p + '%"></div></div>'
+                        + '<span>' + q + '</span>'
+                        + '</div>';
+                }).join('');
+
+                const critHtml = [
+                    criterios.comida ? '<span class="pz-vrep-tag">🍽️ Comida ' + Number(criterios.comida).toFixed(1) + '</span>' : '',
+                    criterios.entrega ? '<span class="pz-vrep-tag">🛵 Entrega ' + Number(criterios.entrega).toFixed(1) + '</span>' : '',
+                    criterios.custo ? '<span class="pz-vrep-tag">💰 Preço ' + Number(criterios.custo).toFixed(1) + '</span>' : '',
+                ].filter(Boolean).join('');
+
+                const tagsHtml = topTags.map((t) => '<span class="pz-vrep-tag">#' + escapeHtml(t.tag || '') + ' (' + Number(t.qtd || 0) + ')</span>').join('');
+
+                const filtros = [
+                    { id: 'todas', label: 'Todas (' + itensFonte.length + ')' },
+                    { id: '5', label: '5 ★' },
+                    { id: '4', label: '4 ★' },
+                    { id: '3menos', label: '3 ★ ou menos' },
+                    { id: 'respondidas', label: 'Respondidas' },
+                ];
+                const filtrosHtml = filtros.map((f) => {
+                    const active = vitrineRepState.filtro === f.id ? ' ativo' : '';
+                    return '<button type="button" class="pz-vrep-filtro-btn' + active + '" data-vrep-filtro="' + f.id + '">' + f.label + '</button>';
+                }).join('');
+
+                boxResumo.innerHTML = '<div class="pz-vrep-box">'
+                    + '<div class="pz-vrep-overview">'
+                    + '<div class="pz-vrep-score">'
+                    + '<strong>' + media.toFixed(1) + '</strong>'
+                    + '<div class="pz-vrep-score-stars">' + estrelasHtmlVitrine(Math.round(media)) + '</div>'
+                    + '<small>' + total + (total === 1 ? ' avaliação de cliente' : ' avaliações de clientes') + '</small>'
+                    + '</div>'
+                    + '<div class="pz-vrep-bars">' + barras + '</div>'
+                    + '</div>'
+                    + ((critHtml || tagsHtml) ? '<div class="pz-vrep-tags">' + critHtml + tagsHtml + '</div>' : '')
+                    + '<div class="pz-vrep-filtros">' + filtrosHtml + '</div>'
+                    + '</div>';
+
+                boxResumo.querySelectorAll('[data-vrep-filtro]').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        vitrineRepState.filtro = btn.getAttribute('data-vrep-filtro') || 'todas';
+                        renderizarVitrineAvaliacoes();
+                    });
+                });
+            }
+        }
+
         if (!lista) return;
-        lista.innerHTML = itens.map((item) => {
+        const filtradas = filtrarAvaliacoesVitrine(itensFonte);
+        if (!filtradas.length) {
+            lista.innerHTML = '<div class="card-avaliacao pz-vrep-empty-card">'
+                + '<p>' + (itensFonte.length ? 'Nenhuma avaliação encontrada para este filtro.' : 'Ainda não há comentários registrados nesta loja. Use o botão "Avaliar estabelecimento" para compartilhar sua opinião!') + '</p>'
+                + '</div>';
+            return;
+        }
+
+        lista.innerHTML = filtradas.map((item) => {
             const foto = item.foto || PLACEHOLDER;
-            const nome = item.nome || 'Cliente';
-            return '<div class="card-avaliacao"><p>' + escapeHtml(item.texto || '') + '</p>'
-                + '<div class="autor-avaliacao"><img src="' + escapeAttr(foto) + '" alt="Foto de ' + escapeAttr(nome) + '"><span>- '
-                + escapeHtml(nome) + '</span></div></div>';
+            const nome = item.autor || item.nome || 'Cliente';
+            const nota = Number(item.nota || 5);
+            const dataFmt = item.criado_em ? String(item.criado_em).slice(0, 10).split('-').reverse().join('/') : '';
+            const verif = item.compra_verificada ? '<span class="pz-vrep-verif">✓ Compra verificada</span>' : '';
+            const tagsItem = Array.isArray(item.tags) && item.tags.length
+                ? '<div class="pz-vrep-tags" style="margin:6px 0;">' + item.tags.map((tg) => '<span class="pz-vrep-tag">' + escapeHtml(tg) + '</span>').join('') + '</div>'
+                : '';
+            const respLoja = String(item.resposta_loja || '').trim()
+                ? '<div class="pz-vrep-reply"><strong>Resposta do estabelecimento</strong><p style="margin:4px 0 0;">' + escapeHtml(item.resposta_loja) + '</p></div>'
+                : '';
+            const coment = item.comentario || item.texto || '';
+            return '<div class="card-avaliacao">'
+                + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">'
+                + '<span style="color:#f59e0b;font-weight:800;" aria-label="' + nota + ' de 5 estrelas">' + estrelasHtmlVitrine(nota) + ' <b>' + nota.toFixed(1) + '</b></span>'
+                + verif
+                + (dataFmt ? '<small style="color:#64748b;margin-left:auto;">' + escapeHtml(dataFmt) + '</small>' : '')
+                + '</div>'
+                + (coment ? '<p>' + escapeHtml(coment) + '</p>' : '<p style="color:#64748b;font-style:italic;">Avaliação por estrelas sem comentário.</p>')
+                + tagsItem
+                + '<div class="autor-avaliacao"><img src="' + escapeAttr(foto) + '" alt="Foto de ' + escapeAttr(nome) + '"><span>- ' + escapeHtml(nome) + '</span></div>'
+                + respLoja
+                + '</div>';
         }).join('');
+    }
+
+    async function carregarAvaliacoesPublicasVitrine(tenant) {
+        const cacheKey = 'pz_offline_reviews_' + tenant;
+        try {
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (parsed && Array.isArray(parsed.avaliacoes)) {
+                    vitrineRepState.resumo = parsed.resumo || null;
+                    vitrineRepState.avaliacoes = parsed.avaliacoes;
+                    renderizarVitrineAvaliacoes();
+                }
+            }
+        } catch (e) { /* sem cache */ }
+
+        try {
+            const res = await fetch(apiMarketplaceBase() + '?action=avaliacoes_loja&tenant=' + encodeURIComponent(tenant));
+            const data = await res.json();
+            if (data && data.ok) {
+                vitrineRepState.resumo = data.resumo || null;
+                vitrineRepState.avaliacoes = Array.isArray(data.avaliacoes) ? data.avaliacoes : [];
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify({
+                        resumo: vitrineRepState.resumo,
+                        avaliacoes: vitrineRepState.avaliacoes,
+                        savedAt: Date.now(),
+                    }));
+                } catch (e) { /* cota */ }
+                renderizarVitrineAvaliacoes();
+            }
+        } catch (e) { /* offline usa cache local */ }
+    }
+
+    function vincularModalAvaliacaoVitrine() {
+        if (vitrineRepState.modalBound) return;
+        vitrineRepState.modalBound = true;
+
+        const modal = document.getElementById('modal-avaliar-vitrine');
+        const btnAbrir = document.getElementById('btn-abrir-avaliar-vitrine');
+        const btnFechar = document.getElementById('btn-fechar-avaliar-vitrine');
+        const form = document.getElementById('form-avaliar-vitrine');
+        const starsWrap = document.getElementById('v-av-stars');
+        const inputNota = document.getElementById('v-av-nota');
+        const lblNota = document.getElementById('v-av-nota-lbl');
+        const tagsWrap = document.getElementById('v-av-tags');
+        const statusEl = document.getElementById('v-av-msg');
+        const rotulosNota = { 1: '1/5 · Ruim', 2: '2/5 · Regular', 3: '3/5 · Bom', 4: '4/5 · Muito bom', 5: '5/5 · Excelente' };
+
+        function pintarEstrelas(val) {
+            vitrineRepState.nota = Math.max(1, Math.min(5, Number(val || 5)));
+            if (inputNota) inputNota.value = String(vitrineRepState.nota);
+            if (lblNota) lblNota.textContent = rotulosNota[vitrineRepState.nota] || (vitrineRepState.nota + '/5');
+            if (!starsWrap) return;
+            starsWrap.querySelectorAll('[data-v-star]').forEach((btn) => {
+                const s = Number(btn.getAttribute('data-v-star') || 0);
+                btn.classList.toggle('ativo', s <= vitrineRepState.nota);
+                btn.textContent = s <= vitrineRepState.nota ? '★' : '☆';
+            });
+        }
+
+        if (starsWrap) {
+            pintarEstrelas(5);
+            starsWrap.addEventListener('click', (ev) => {
+                const btn = ev.target.closest('[data-v-star]');
+                if (!btn) return;
+                pintarEstrelas(btn.getAttribute('data-v-star'));
+            });
+        }
+
+        if (tagsWrap) {
+            tagsWrap.addEventListener('click', (ev) => {
+                const chip = ev.target.closest('[data-v-tag]');
+                if (!chip) return;
+                chip.classList.toggle('ativo');
+            });
+        }
+
+        function fechar() {
+            if (modal) modal.classList.add('escondido');
+        }
+
+        if (btnAbrir && modal) {
+            btnAbrir.addEventListener('click', () => {
+                if (statusEl) {
+                    statusEl.textContent = '';
+                    statusEl.style.color = '#334155';
+                }
+                pintarEstrelas(5);
+                modal.classList.remove('escondido');
+            });
+        }
+
+        if (btnFechar) btnFechar.addEventListener('click', fechar);
+        if (modal) {
+            modal.addEventListener('click', (ev) => {
+                if (ev.target === modal) fechar();
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', async (ev) => {
+                ev.preventDefault();
+                const btnEnviar = form.querySelector('button[type="submit"]');
+                const autor = (document.getElementById('v-av-nome') || {}).value || '';
+                const comentario = (document.getElementById('v-av-comentario') || {}).value || '';
+                const comida = Number((document.getElementById('v-av-comida') || {}).value || vitrineRepState.nota);
+                const entrega = Number((document.getElementById('v-av-entrega') || {}).value || vitrineRepState.nota);
+                const custo = Number((document.getElementById('v-av-custo') || {}).value || vitrineRepState.nota);
+                const tags = tagsWrap
+                    ? Array.from(tagsWrap.querySelectorAll('[data-v-tag].ativo')).map((el) => el.getAttribute('data-v-tag')).filter(Boolean)
+                    : [];
+
+                if (btnEnviar) btnEnviar.disabled = true;
+                if (statusEl) {
+                    statusEl.textContent = 'Publicando sua avaliação...';
+                    statusEl.style.color = '#334155';
+                }
+
+                try {
+                    const res = await fetch(apiMarketplaceBase() + '?action=avaliar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            tenant: vitrineRepState.tenant || 'default',
+                            nota: vitrineRepState.nota,
+                            nota_comida: comida,
+                            nota_entrega: entrega,
+                            nota_custo: custo,
+                            tags: tags,
+                            autor: autor.trim(),
+                            comentario: comentario.trim(),
+                            origem: 'vitrine_publica',
+                        }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data || !data.ok) {
+                        throw new Error((data && data.erro) || 'Não foi possível enviar a avaliação.');
+                    }
+                    if (data.resumo) vitrineRepState.resumo = data.resumo;
+                    if (data.avaliacao) {
+                        vitrineRepState.avaliacoes = [data.avaliacao].concat(vitrineRepState.avaliacoes);
+                    }
+                    renderizarVitrineAvaliacoes();
+                    if (global.PedidoZapCelulas && typeof global.PedidoZapCelulas.emit === 'function') {
+                        global.PedidoZapCelulas.emit('avaliacao_publicada', {
+                            tenant: vitrineRepState.tenant,
+                            nota: vitrineRepState.nota,
+                        });
+                    }
+                    form.reset();
+                    if (tagsWrap) tagsWrap.querySelectorAll('[data-v-tag]').forEach((t) => t.classList.remove('ativo'));
+                    pintarEstrelas(5);
+                    if (statusEl) {
+                        statusEl.textContent = 'Obrigado! Sua avaliação já está visível para todos.';
+                        statusEl.style.color = '#059669';
+                    }
+                    setTimeout(() => {
+                        fechar();
+                        carregarAvaliacoesPublicasVitrine(vitrineRepState.tenant);
+                    }, 900);
+                } catch (err) {
+                    if (statusEl) {
+                        statusEl.textContent = (err && err.message) || 'Sem conexão no momento. Tente novamente quando estiver online.';
+                        statusEl.style.color = '#dc2626';
+                    }
+                } finally {
+                    if (btnEnviar) btnEnviar.disabled = false;
+                }
+            });
+        }
+    }
+
+    function aplicarAvaliacoes(config) {
+        const itens = Array.isArray(config.AVALIACOES)
+            ? config.AVALIACOES.filter((a) => a && (a.texto || a.nome || a.comentario))
+            : [];
+        vitrineRepState.legacy = itens.map((it) => ({
+            autor: it.nome || it.autor || 'Cliente',
+            nota: Number(it.nota || 5),
+            comentario: it.texto || it.comentario || '',
+            foto: it.foto || PLACEHOLDER,
+            criado_em: it.criado_em || '',
+            compra_verificada: Boolean(it.compra_verificada),
+            tags: Array.isArray(it.tags) ? it.tags : [],
+            resposta_loja: it.resposta_loja || '',
+        }));
+
+        const tenant = tenantSlugVitrine(config);
+        vitrineRepState.tenant = tenant;
+        renderizarVitrineAvaliacoes();
+        vincularModalAvaliacaoVitrine();
+        carregarAvaliacoesPublicasVitrine(tenant);
+
+        if (!vitrineRepState.cellBound && global.PedidoZapCelulas && typeof global.PedidoZapCelulas.on === 'function') {
+            vitrineRepState.cellBound = true;
+            global.PedidoZapCelulas.on('avaliacao_publicada', (payload) => {
+                if (!payload || !payload.tenant || payload.tenant === vitrineRepState.tenant) {
+                    carregarAvaliacoesPublicasVitrine(vitrineRepState.tenant);
+                }
+            });
+        }
     }
 
     function aplicarPagamentos(config) {

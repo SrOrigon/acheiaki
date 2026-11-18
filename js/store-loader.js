@@ -17,7 +17,19 @@
             script.src = src;
             script.async = false;
             script.onload = () => resolve();
-            script.onerror = () => reject(new Error('Falha ao carregar: ' + src));
+            script.onerror = () => {
+                if (src.includes('?')) {
+                    const clean = src.split('?')[0];
+                    const retry = document.createElement('script');
+                    retry.src = clean;
+                    retry.async = false;
+                    retry.onload = () => resolve();
+                    retry.onerror = () => reject(new Error('Falha ao carregar: ' + src));
+                    document.head.appendChild(retry);
+                    return;
+                }
+                reject(new Error('Falha ao carregar: ' + src));
+            };
             document.head.appendChild(script);
         });
     }
@@ -35,12 +47,17 @@
 
     async function ensureExtras() {
         const v = Date.now();
+        const tarefas = [];
+        if (!global.PedidoZapOfflineCache) {
+            tarefas.push(loadScript('js/offline-cache.js?v=' + v).catch((e) => console.warn(e)));
+        }
         if (!global.PedidoZapHydrate) {
-            try { await loadScript('js/store-hydrate.js?v=' + v); } catch (e) { console.warn(e); }
+            tarefas.push(loadScript('js/store-hydrate.js?v=' + v).catch((e) => console.warn(e)));
         }
         if (!global.PedidoZapFrete) {
-            try { await loadScript('js/frete.js?v=' + v); } catch (e) { console.warn(e); }
+            tarefas.push(loadScript('js/frete.js?v=' + v).catch((e) => console.warn(e)));
         }
+        if (tarefas.length) await Promise.all(tarefas);
     }
 
     function publishStore() {
@@ -91,21 +108,37 @@
     }
 
     function showLoading() {
+        if (document.getElementById('preloader')) return;
         if (document.getElementById('pedidozap-store-loading')) return;
         const el = document.createElement('div');
         el.id = 'pedidozap-store-loading';
         el.setAttribute('aria-live', 'polite');
-        el.style.cssText = 'position:fixed;inset:0;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;z-index:99998;font-family:Roboto,sans-serif;color:#374151;';
-        el.innerHTML = '<div style="text-align:center"><div style="width:40px;height:40px;border:3px solid #f97136;border-top-color:transparent;border-radius:50%;animation:pz-spin .8s linear infinite;margin:0 auto 12px"></div><p style="margin:0">Carregando cardápio...</p></div>';
+        el.style.cssText = 'position:fixed;inset:0;background:rgba(247,246,242,0.96);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;z-index:99998;font-family:Inter,system-ui,sans-serif;color:#14171f;transition:opacity 0.18s ease;';
+        el.innerHTML = ''
+            + '<div style="width:100%;max-width:560px;background:#fff;border:1px solid rgba(20,23,31,0.08);border-radius:18px;padding:20px;box-shadow:0 12px 32px rgba(15,23,42,0.08);">'
+            + '  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">'
+            + '    <div style="width:20px;height:20px;border:2.5px solid #e5e7eb;border-top-color:#e85d04;border-radius:50%;animation:pz-spin .7s linear infinite;flex-shrink:0;"></div>'
+            + '    <strong style="font-size:0.96rem;">Preparando painel e dados da loja...</strong>'
+            + '  </div>'
+            + '  <div style="display:grid;gap:10px;">'
+            + '    <div style="height:16px;border-radius:8px;background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:pz-shimmer 1.1s infinite linear;"></div>'
+            + '    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+            + '      <div style="height:64px;border-radius:12px;background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:pz-shimmer 1.1s infinite linear;"></div>'
+            + '      <div style="height:64px;border-radius:12px;background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:pz-shimmer 1.1s infinite linear;"></div>'
+            + '    </div>'
+            + '  </div>'
+            + '</div>';
         const style = document.createElement('style');
-        style.textContent = '@keyframes pz-spin{to{transform:rotate(360deg)}}';
+        style.textContent = '@keyframes pz-spin{to{transform:rotate(360deg)}}@keyframes pz-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}';
         document.head.appendChild(style);
         document.body.appendChild(el);
     }
 
     function hideLoading() {
         const el = document.getElementById('pedidozap-store-loading');
-        if (el) el.remove();
+        if (!el) return;
+        el.style.opacity = '0';
+        setTimeout(() => { if (el.parentNode) el.remove(); }, 180);
     }
 
     async function loadStaticFallback() {
@@ -212,9 +245,16 @@
         setGlobals(data.config || {}, data.cardapio || DEFAULT_CARDAPIO);
         global.PedidoZapStore.assinatura = data.assinatura || null;
         global.PedidoZapStore.lojaBloqueada = !!data.loja_bloqueada;
+        global.PedidoZapStore.offline = !!data.offline;
+        if (global.PedidoZapOfflineCache && !data.offline) {
+            global.PedidoZapOfflineCache.salvarLoja(slug, data).catch(() => {});
+            global.PedidoZapOfflineCache.mostrarFaixaOffline(false);
+        }
         publishStore();
-        return { source: 'api', version: data.version || 0 };
+        return { source: data.offline ? 'offline-cache' : 'api', version: data.version || 0 };
     }
+
+    let onlineSyncRegistrado = false;
 
     async function load(options) {
         const opts = options || {};
@@ -232,6 +272,31 @@
             return result;
         } catch (err) {
             console.warn('PedidoZapStore: API indisponível para tenant "' + slug + '"', err);
+
+            if (global.PedidoZapOfflineCache && typeof global.PedidoZapOfflineCache.lerLoja === 'function') {
+                const offlineSnap = await global.PedidoZapOfflineCache.lerLoja(slug);
+                if (offlineSnap && offlineSnap.config && offlineSnap.cardapio) {
+                    setGlobals(offlineSnap.config, offlineSnap.cardapio);
+                    global.PedidoZapStore.assinatura = offlineSnap.assinatura || null;
+                    global.PedidoZapStore.lojaBloqueada = !!offlineSnap.loja_bloqueada;
+                    global.PedidoZapStore.offline = true;
+                    publishStore();
+                    syncStoreState();
+                    emitReady('offline-cache');
+                    global.PedidoZapOfflineCache.mostrarFaixaOffline(true);
+                    if (!onlineSyncRegistrado && typeof global.addEventListener === 'function') {
+                        onlineSyncRegistrado = true;
+                        global.addEventListener('online', () => {
+                            load({ silent: true }).then((res) => {
+                                if (res && res.source === 'api' && global.PedidoZapOfflineCache) {
+                                    global.PedidoZapOfflineCache.mostrarFaixaOffline(false);
+                                }
+                            }).catch(() => {});
+                        }, { once: true });
+                    }
+                    return { source: 'offline-cache', version: offlineSnap.version || 0 };
+                }
+            }
 
             if (opts.fallbackStatic === true && slug === 'default') {
                 const fallback = await loadStaticFallback();
@@ -265,42 +330,74 @@
         document.body.appendChild(overlay);
     }
 
+    function lerSnapshotCacheSincrono(slug) {
+        try {
+            const raw = localStorage.getItem('pz_offline_store_' + (slug || 'default'));
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            return (parsed && parsed.config && parsed.cardapio) ? parsed : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     async function bootstrap(scriptPaths, options) {
         const opts = Object.assign({ fallbackStatic: true, showLoading: true }, options || {});
         const slug = getSlug();
+        const arquivo = (global.location.pathname.split('/').pop() || 'index.html');
+        const interno = /admin|painel|motoboy|superadmin|rastreio/.test(arquivo);
 
-        if (opts.showLoading) showLoading();
-
-        try {
-            await load(opts);
-            const arquivo = (global.location.pathname.split('/').pop() || 'index.html');
-            const interno = /admin|painel|motoboy|superadmin|rastreio/.test(arquivo);
-            if (global.PedidoZapStore.lojaBloqueada && !interno) {
+        const snapRapido = !interno ? lerSnapshotCacheSincrono(slug) : null;
+        if (snapRapido) {
+            if (snapRapido.loja_bloqueada) {
                 showFatalError('Este estabelecimento está temporariamente indisponível. Para mais informações, contate o administrador.');
                 hideLoading();
                 hideSitePreloader();
                 return;
             }
-        } catch (err) {
-            hideLoading();
-            showFatalError(err.message, slug);
-            hideSitePreloader();
-            return;
+            setGlobals(snapRapido.config, snapRapido.cardapio);
+            global.PedidoZapStore.assinatura = snapRapido.assinatura || null;
+            global.PedidoZapStore.lojaBloqueada = !!snapRapido.loja_bloqueada;
+            await ensureExtras();
+            publishStore();
+            syncStoreState();
+            emitReady('fast-cache');
+            load(Object.assign({}, opts, { silent: true })).then((res) => {
+                if (res && res.source === 'api' && global.PedidoZapHydrate && global.PedidoZapHydrate.apply) {
+                    global.PedidoZapHydrate.apply(activeConfig, activeCardapio);
+                }
+            }).catch(() => {});
+        } else {
+            if (opts.showLoading) showLoading();
+            try {
+                await load(opts);
+                if (global.PedidoZapStore.lojaBloqueada && !interno) {
+                    showFatalError('Este estabelecimento está temporariamente indisponível. Para mais informações, contate o administrador.');
+                    hideLoading();
+                    hideSitePreloader();
+                    return;
+                }
+            } catch (err) {
+                hideLoading();
+                showFatalError(err.message, slug);
+                hideSitePreloader();
+                return;
+            }
         }
 
         const paths = Array.isArray(scriptPaths) ? scriptPaths : [scriptPaths];
         const v = Date.now();
-        for (const path of paths) {
-            const src = path.includes('?') ? path : path + '?v=' + v;
-            try {
-                await loadScript(src);
-            } catch (scriptErr) {
-                console.error(scriptErr);
-                hideLoading();
-                showFatalError('Erro ao carregar módulo: ' + path, slug);
-                hideSitePreloader();
-                return;
-            }
+        try {
+            await Promise.all(paths.map((path) => {
+                const src = path.includes('?') ? path : path + '?v=' + v;
+                return loadScript(src);
+            }));
+        } catch (scriptErr) {
+            console.error(scriptErr);
+            hideLoading();
+            showFatalError('Erro ao carregar módulo da página.', slug);
+            hideSitePreloader();
+            return;
         }
 
         hideLoading();

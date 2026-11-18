@@ -368,6 +368,20 @@ switch ($action) {
         echo json_encode($resTer, JSON_UNESCAPED_UNICODE);
         break;
 
+    case 'responder_avaliacao':
+        pz_exigir_perm($sessao, ['clientes', 'config', 'pedidos']);
+        $resResp = pz_territorio_responder_avaliacao(
+            Database::getTenant(),
+            $req['id'] ?? '',
+            $req['resposta'] ?? '',
+            $ator['nome'] ?? ($ator['user'] ?? 'Estabelecimento')
+        );
+        if (!empty($resResp['success'])) {
+            pz_registrar_auditoria('territorio', 'avaliacao_respondida', 'Resposta à avaliação ' . ($req['id'] ?? ''), $ator);
+        }
+        echo json_encode($resResp, JSON_UNESCAPED_UNICODE);
+        break;
+
     case 'territorio_salvar_endereco':
         pz_exigir_perm($sessao, ['config', 'equipe']);
         $slugAtual = Database::getTenant();

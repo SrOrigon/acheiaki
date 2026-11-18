@@ -96,6 +96,7 @@ if ($acao === 'listar_lojas') {
             'destaque' => $l['destaque'],
             'nota_media' => $l['nota_media'],
             'total_avaliacoes' => $l['total_avaliacoes'],
+            'resumo_avaliacoes' => $l['resumo_avaliacoes'] ?? null,
             'tempo_medio_min' => $l['tempo_medio_min'],
             'taxa_entrega_base' => $l['taxa_entrega_base'],
             'raio_entrega_km' => $raioLoja,
@@ -444,23 +445,88 @@ if ($acao === 'meus_pedidos') {
     exit;
 }
 
+if ($acao === 'avaliacoes_loja') {
+    $slug = strtolower(trim((string) ($_GET['tenant'] ?? $_GET['slug'] ?? $body['tenant'] ?? $body['slug'] ?? 'default')));
+    $detalhe = pz_territorio_buscar_loja_detalhe($slug);
+    if (!$detalhe) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Loja não encontrada.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $filtroNota = isset($_GET['nota']) ? (int) $_GET['nota'] : 0;
+    $soCom = !empty($_GET['com_comentario']);
+    $soResp = !empty($_GET['com_resposta']);
+    $listaAv = is_array($detalhe['avaliacoes'] ?? null) ? $detalhe['avaliacoes'] : [];
+    $filtradas = array_values(array_filter($listaAv, function ($av) use ($filtroNota, $soCom, $soResp) {
+        if (!is_array($av)) {
+            return false;
+        }
+        if ($filtroNota >= 1 && $filtroNota <= 5 && (int) ($av['nota'] ?? 0) !== $filtroNota) {
+            return false;
+        }
+        if ($soCom && trim((string) ($av['comentario'] ?? '')) === '') {
+            return false;
+        }
+        if ($soResp && trim((string) ($av['resposta_loja'] ?? '')) === '') {
+            return false;
+        }
+        return true;
+    }));
+    echo json_encode([
+        'success' => true,
+        'tenant' => $slug,
+        'nome_loja' => $detalhe['nome'] ?? $slug,
+        'nota_media' => $detalhe['nota_media'] ?? 4.8,
+        'total_avaliacoes' => $detalhe['total_avaliacoes'] ?? 0,
+        'resumo' => $detalhe['resumo_avaliacoes'] ?? null,
+        'avaliacoes' => $filtradas,
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if ($acao === 'avaliar') {
     $slug = strtolower(trim((string) ($body['tenant'] ?? 'default')));
     $pedidoIdAv = trim((string) ($body['pedido_id'] ?? ''));
-    if ($pedidoIdAv === '') {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Informe o pedido para avaliar.'], JSON_UNESCAPED_UNICODE);
-        exit;
+    $comentarioAv = trim(strip_tags((string) ($body['comentario'] ?? '')));
+    $nomeAv = trim(strip_tags((string) ($body['cliente_nome'] ?? '')));
+    $verificada = false;
+
+    if ($pedidoIdAv !== '') {
+        $anteriorAv = Database::getTenant();
+        Database::setTenant($slug);
+        $pedidoExiste = Database::findOrder($pedidoIdAv);
+        Database::setTenant($anteriorAv);
+        if (!$pedidoExiste) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Código de pedido não encontrado nesta loja.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        $verificada = true;
+    } else {
+        if (mb_strlen($nomeAv, 'UTF-8') < 2 || mb_strlen($comentarioAv, 'UTF-8') < 4) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Informe seu nome e conte sua experiência com o estabelecimento (mín. 4 caracteres).'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        $telAv = preg_replace('/\D/', '', (string) ($body['telefone'] ?? ''));
+        if (strlen($telAv) >= 10) {
+            $anteriorAv = Database::getTenant();
+            Database::setTenant($slug);
+            $pedidosLoja = Database::read('pedidos.json');
+            Database::setTenant($anteriorAv);
+            if (is_array($pedidosLoja)) {
+                foreach ($pedidosLoja as $pl) {
+                    $telPed = preg_replace('/\D/', '', (string) ($pl['celular'] ?? ''));
+                    if ($telPed !== '' && substr($telPed, -8) === substr($telAv, -8)) {
+                        $verificada = true;
+                        break;
+                    }
+                }
+            }
+        }
     }
-    $anteriorAv = Database::getTenant();
-    Database::setTenant($slug);
-    $pedidoExiste = Database::findOrder($pedidoIdAv);
-    Database::setTenant($anteriorAv);
-    if (!$pedidoExiste) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Avaliação permitida apenas para pedidos reais da loja.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
+
+    $body['verificada'] = $verificada;
     $res = pz_territorio_registrar_avaliacao($slug, $body);
     if (empty($res['success'])) {
         http_response_code(400);

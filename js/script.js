@@ -415,8 +415,18 @@ function iniciarVitrine() {
     }
 
     function salvarCarrinho() {
-        localStorage.setItem(cartStorageKey, JSON.stringify(carrinho));
-        if (canalAtendente) return;
+        try {
+            localStorage.setItem(cartStorageKey, JSON.stringify(carrinho));
+        } catch (e) { /* quota fallback */ }
+        if (window.PedidoZapOfflineCache && typeof window.PedidoZapOfflineCache.salvarCarrinho === 'function') {
+            window.PedidoZapOfflineCache.salvarCarrinho(cartStorageKey, {
+                carrinho: carrinho,
+                enderecoCliente: enderecoCliente,
+                cupomAplicado: cupomAplicado,
+                modoRecebimento: modoRecebimento
+            });
+        }
+        if (canalAtendente || (typeof navigator !== 'undefined' && navigator.onLine === false)) return;
         clearTimeout(timerHeartbeatCarrinho);
         timerHeartbeatCarrinho = setTimeout(() => {
             const total = subtotalCarrinho();
@@ -845,12 +855,17 @@ function iniciarVitrine() {
             pedidoData.visitor_id = window.PZAlgoritmo.getVisitorId();
         }
 
+        let pedidoSalvoNoServidor = false;
+
         apiFetch('save_order.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(pedidoData),
             keepalive: true
-        }).then((res) => res.json().catch(() => ({}))).then((resp) => {
+        }).then(async (res) => {
+            if (res && res.ok) pedidoSalvoNoServidor = true;
+            return res.json().catch(() => ({}));
+        }).then((resp) => {
             if (resp && resp.codigo && resp.codigo !== codigoRastreio) {
                 localStorage.setItem('ultimoPedidoCodigo', resp.codigo);
                 resumoCelulaPedido.codigo = resp.codigo;
@@ -858,12 +873,30 @@ function iniciarVitrine() {
                     window.PedidoZapCelulas.registrarPedidoLocal(resumoCelulaPedido);
                 }
             }
+            if (pedidoSalvoNoServidor && window.PedidoZapOfflineCache) {
+                const s = (typeof TENANT !== 'undefined' && TENANT.slug) ? TENANT.slug : 'default';
+                window.PedidoZapOfflineCache.limparPedidoPendente(s).catch(() => {});
+            }
             if (window.PedidoZapCelulas) {
                 window.PedidoZapCelulas.emitir('pedido_criado', resumoCelulaPedido);
             }
         }).catch(err => {
             console.error("Erro ao salvar no painel:", err);
         }).finally(() => {
+            if (!pedidoSalvoNoServidor && typeof navigator !== 'undefined' && navigator.onLine === false) {
+                const s = (typeof TENANT !== 'undefined' && TENANT.slug) ? TENANT.slug : 'default';
+                if (window.PedidoZapOfflineCache) {
+                    window.PedidoZapOfflineCache.salvarPedidoPendente(s, {
+                        pedidoData: pedidoData,
+                        mensagem: mensagem,
+                        rastreioRelativo: rastreioRelativo
+                    }).catch(() => {});
+                }
+                salvarCarrinho();
+                if (modalConfirmacao) modalConfirmacao.classList.add('escondido');
+                showToast('Você está offline: seu carrinho e pedido ficaram salvos na página para enviar quando voltar a internet!', 'info');
+                return;
+            }
             carrinho = [];
             salvarCarrinho();
             setTimeout(() => {
@@ -1766,6 +1799,43 @@ function iniciarVitrine() {
     garantirBlocosFrete();
     if (window.PedidoZapHydrate) PedidoZapHydrate.apply(config, cardapio);
     renderizarPromocoes(); renderizarDestaques(); renderizarCardapio(); atualizarCarrinho();
+
+    if (window.PedidoZapOfflineCache && typeof window.PedidoZapOfflineCache.lerCarrinho === 'function') {
+        window.PedidoZapOfflineCache.lerCarrinho(cartStorageKey).then((snap) => {
+            if (!snap || !Array.isArray(snap.carrinho)) return;
+            if (carrinho.length === 0 && snap.carrinho.length > 0) {
+                carrinho = snap.carrinho;
+                if (snap.enderecoCliente && Object.keys(snap.enderecoCliente).length) enderecoCliente = snap.enderecoCliente;
+                if (snap.cupomAplicado && snap.cupomAplicado.codigo) cupomAplicado = snap.cupomAplicado;
+                if (snap.modoRecebimento) modoRecebimento = snap.modoRecebimento;
+                atualizarCarrinho();
+            }
+        }).catch(() => {});
+
+        const tentarReenviarPendente = () => {
+            if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+            const slugPend = (typeof TENANT !== 'undefined' && TENANT.slug) ? TENANT.slug : 'default';
+            window.PedidoZapOfflineCache.lerPedidoPendente(slugPend).then((pend) => {
+                if (!pend || !pend.pedidoData) return;
+                apiFetch('save_order.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(pend.pedidoData)
+                }).then((r) => {
+                    if (r && r.ok) {
+                        window.PedidoZapOfflineCache.limparPedidoPendente(slugPend);
+                        carrinho = [];
+                        salvarCarrinho();
+                        atualizarCarrinho();
+                        showToast('Conexão voltou! Seu pedido salvo offline foi enviado para a loja.', 'sucesso');
+                    }
+                }).catch(() => {});
+            }).catch(() => {});
+        };
+        tentarReenviarPendente();
+        window.addEventListener('online', tentarReenviarPendente);
+    }
+
     document.querySelectorAll('.nav-desktop a[href^="#"]').forEach((link) => {
         const id = (link.getAttribute('href') || '').replace('#', '');
         const alvo = document.getElementById(id);

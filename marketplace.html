@@ -518,26 +518,74 @@
         </div>
     </div>
 
-    <!-- MODAL AVALIAR -->
+    <!-- MODAL AVALIAR COMPLETO (ESTRELAS + CRITÉRIOS + TAGS + COMENTÁRIO) -->
     <div id="mkt-modal-avaliar" class="mkt-modal" hidden>
         <div class="mkt-modal-card">
             <button type="button" class="mkt-modal-x" id="mkt-fechar-avaliar">&times;</button>
-            <h3>Avaliar pedido</h3>
+            <h3>Avaliar estabelecimento</h3>
             <p id="mkt-av-loja-nome" style="color:#64748b;margin-top:0;"></p>
             <form id="mkt-form-avaliar" class="mkt-form">
                 <input type="hidden" id="mkt-av-slug">
                 <input type="hidden" id="mkt-av-codigo">
-                <label>Nota (1 a 5 estrelas)
-                    <select id="mkt-av-nota">
-                        <option value="5">★★★★★ Excelente (5)</option>
-                        <option value="4">★★★★☆ Muito bom (4)</option>
-                        <option value="3">★★★☆☆ Razoável (3)</option>
-                        <option value="2">★★☆☆☆ Ruim (2)</option>
-                        <option value="1">★☆☆☆☆ Muito ruim (1)</option>
-                    </select>
+                <input type="hidden" id="mkt-av-nota" value="5">
+                <div>
+                    <label style="margin-bottom:6px;display:block;">Sua nota geral *</label>
+                    <div class="mkt-stars-picker" id="mkt-av-stars" role="radiogroup" aria-label="Nota de 1 a 5 estrelas">
+                        <button type="button" class="mkt-star-btn ativo" data-av-star="1" title="1 estrela">★</button>
+                        <button type="button" class="mkt-star-btn ativo" data-av-star="2" title="2 estrelas">★</button>
+                        <button type="button" class="mkt-star-btn ativo" data-av-star="3" title="3 estrelas">★</button>
+                        <button type="button" class="mkt-star-btn ativo" data-av-star="4" title="4 estrelas">★</button>
+                        <button type="button" class="mkt-star-btn ativo" data-av-star="5" title="5 estrelas">★</button>
+                        <span id="mkt-av-nota-label" style="margin-left:8px;font-weight:800;color:#b45309;font-size:0.9rem;">5/5 · Excelente</span>
+                    </div>
+                </div>
+                <div class="mkt-form-3" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">
+                    <label>Comida
+                        <select id="mkt-av-comida">
+                            <option value="5">5 ★</option>
+                            <option value="4">4 ★</option>
+                            <option value="3">3 ★</option>
+                            <option value="2">2 ★</option>
+                            <option value="1">1 ★</option>
+                        </select>
+                    </label>
+                    <label>Entrega
+                        <select id="mkt-av-entrega">
+                            <option value="5">5 ★</option>
+                            <option value="4">4 ★</option>
+                            <option value="3">3 ★</option>
+                            <option value="2">2 ★</option>
+                            <option value="1">1 ★</option>
+                        </select>
+                    </label>
+                    <label>Custo-benefício
+                        <select id="mkt-av-custo">
+                            <option value="5">5 ★</option>
+                            <option value="4">4 ★</option>
+                            <option value="3">3 ★</option>
+                            <option value="2">2 ★</option>
+                            <option value="1">1 ★</option>
+                        </select>
+                    </label>
+                </div>
+                <div>
+                    <label style="margin-bottom:6px;display:block;">O que mais chamou atenção? (opcional)</label>
+                    <div class="mkt-tag-picker" id="mkt-av-tags">
+                        <button type="button" class="mkt-tag-chip-btn" data-av-tag="Sabor incrível">Sabor incrível</button>
+                        <button type="button" class="mkt-tag-chip-btn" data-av-tag="Comida quentinha">Comida quentinha</button>
+                        <button type="button" class="mkt-tag-chip-btn" data-av-tag="Entrega rápida">Entrega rápida</button>
+                        <button type="button" class="mkt-tag-chip-btn" data-av-tag="Bem embalado">Bem embalado</button>
+                        <button type="button" class="mkt-tag-chip-btn" data-av-tag="Preço justo">Preço justo</button>
+                        <button type="button" class="mkt-tag-chip-btn" data-av-tag="Porção generosa">Porção generosa</button>
+                    </div>
+                </div>
+                <label id="mkt-av-nome-wrap" hidden>Seu nome *
+                    <input type="text" id="mkt-av-cliente-nome" placeholder="Ex.: Maria Oliveira">
                 </label>
-                <label>Comentário<textarea id="mkt-av-coment" rows="3" placeholder="Conte como foi seu pedido..."></textarea></label>
-                <button type="submit" class="mkt-btn-prim">Enviar avaliação</button>
+                <label>Comentário (todos podem ver) *
+                    <textarea id="mkt-av-coment" rows="3" placeholder="Conte o que achou da comida, entrega e preço..."></textarea>
+                </label>
+                <button type="submit" class="mkt-btn-prim">Publicar avaliação</button>
                 <p id="mkt-av-msg" class="mkt-msg"></p>
             </form>
         </div>
