@@ -18,6 +18,12 @@ $adminOk = ($user !== '' || $pass !== '') ? (pedidozap_autorizado($user, $pass) 
 
 if ($acao === 'danfe') {
     if ($orderId === '') {
+        if (!$adminOk && $codigoPedido === '') {
+            http_response_code(401);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo 'Autenticação obrigatória para acessar documentos fiscais.';
+            exit;
+        }
         http_response_code(400);
         header('Content-Type: text/plain; charset=utf-8');
         echo 'Informe o número do pedido.';
@@ -25,7 +31,7 @@ if ($acao === 'danfe') {
     }
 
     $pedido = Database::findOrder($orderId);
-    if (!$pedido || !$adminOk && !pz_pode_ver_pedido($pedido, $codigoPedido, '')) {
+    if (!$pedido || (!$adminOk && !pz_pode_ver_pedido($pedido, $codigoPedido, ''))) {
         http_response_code(401);
         header('Content-Type: text/plain; charset=utf-8');
         echo 'Acesso não autorizado a este documento fiscal.';
