@@ -521,8 +521,8 @@
             if (/^(desfaz|desfazer|ctrl\+z|volta atras|salv(a|ar|e)|publica|salvar tudo)$/.test(n)) return true;
             // Quando o cliente configurou sua IA pessoal, deixa comandos naturais passarem por ela (com fallback local)
             if (global.__pzIaPessoalStatus && global.__pzIaPessoalStatus.ativa) return false;
-            if (/painel completo|modo avan|mostrar tudo|todas as abas|modo facil/.test(n)) return true;
-            if (/analis(ar)? minha loja|monta(r)? cardapio|cardapio inicial|sugere prato/.test(n)) return true;
+            if (/painel completo|modo avan|nivel avan|modo expert|nivel expert|nivel basico|modo basico|acesso total|mostrar tudo|todas as abas|modo facil/.test(n)) return true;
+            if (/analis(ar)? minha loja|monta(r)? (minha )?(pagina|cardapio)|cardapio inicial|ensina(r)?.*cardapio|como fazer.*cardapio|sugere prato/.test(n)) return true;
             if (/^(cadastra|adiciona|coloca|bota|inclui|novo prato|novo produto)\b/.test(n) && !/fornecedor|insumo|estoque|funcionario|entregador|cupom/.test(n)) return true;
             if (/^(muda|altera|troca|pausa|desativa|ativa|reativa|apaga|exclui|remove)\b/.test(n) && !/pedido|cupom|estoque|caixa/.test(n)) return true;
             return false;
@@ -773,7 +773,7 @@
             }
 
             // Se estava aguardando um passo específico, preenche o passo atual
-            if (!extraiuAlgo || ['login', 'senha', 'nome', 'whatsapp', 'cnpj', 'cep', 'endereco_manual', 'numero', 'raio'].includes(st.passo)) {
+            if (!extraiuAlgo || ['login', 'senha', 'nome', 'whatsapp', 'cnpj', 'cep', 'endereco_manual', 'numero', 'raio', 'nivel'].includes(st.passo)) {
                 switch (st.passo) {
                     case 'livre':
                     case 'nome':
@@ -883,6 +883,12 @@
                         }
                         d.senha = entrada;
                         break;
+                    case 'nivel': {
+                        if (/expert|total|tecnolog/.test(n)) d.nivel_experiencia = 'expert';
+                        else if (/avanc|manual/.test(n)) d.nivel_experiencia = 'avancado';
+                        else d.nivel_experiencia = 'basico';
+                        break;
+                    }
                     case 'confirmar':
                         this.falar('Digite SIM para criar a loja, NÃO para recomeçar, ou me diga o que quer mudar (ex.: "mudar CNPJ", "mudar raio").');
                         return;
@@ -942,12 +948,19 @@
                 this.renderAtalhos([]);
                 return 'Agora escolha uma senha com pelo menos 6 caracteres:';
             }
+            if (!d.nivel_experiencia) {
+                st.passo = 'nivel';
+                this.renderAtalhos(['Básico (Com IA)', 'Avançado (IA + Manual)', 'Expert (Acesso Total)']);
+                return 'Como você prefere montar e gerenciar sua página?\n• Básico: a IA monta tudo e te ensina o cardápio\n• Avançado: IA + controles manuais\n• Expert: acesso total a todos os dados e tecnologias';
+            }
 
             st.passo = 'confirmar';
             this.renderAtalhos(['SIM', 'Mudar CNPJ', 'Mudar raio', 'NÃO']);
+            const rotNivel = { basico: 'Básico (IA guiada)', avancado: 'Avançado (IA + Manual)', expert: 'Expert (Acesso Total)' }[d.nivel_experiencia] || 'Básico';
             return (
                 'Tudo pronto! Confira o resumo obrigatório:\n' +
                 '• Loja: ' + d.nome_empresa + '\n' +
+                '• Nível escolhido: ' + rotNivel + '\n' +
                 '• CNPJ: ' + d.cnpj + '\n' +
                 '• Segmento: ' + (NICHOS_INFO[d.nicho] ? NICHOS_INFO[d.nicho].rotulo : d.nicho) + '\n' +
                 '• WhatsApp: ' + d.whatsapp + '\n' +
@@ -1284,15 +1297,49 @@
                 }
             }
 
-            // 2. Modos do painel e salvar
-            if (/painel completo|modo avan|mostrar tudo|todas as abas/.test(n)) {
-                global.PedidoZapModoAdmin && global.PedidoZapModoAdmin.set('completo');
-                this.falar('Pronto! Liberei todas as abas avançadas (Relatórios, Cozinha/Comanda, Balcão, Textos e Categorias).');
+            // 2. Modos do painel (3 níveis) e salvar
+            if (/modo expert|nivel expert|painel completo|acesso total|mostrar tudo|todas as abas/.test(n)) {
+                global.PedidoZapModoAdmin && global.PedidoZapModoAdmin.set('expert');
+                this.falar('Nível Expert ativado! Liberei acesso total a todas as informações de cadastro, JSON/APIs, Estoque/CMV, Caixa/DRE e Equipe.');
                 return;
             }
-            if (/modo facil|esconder avan|so o basico/.test(n)) {
-                global.PedidoZapModoAdmin && global.PedidoZapModoAdmin.set('facil');
-                this.falar('Voltei para o Modo Fácil com apenas o essencial.');
+            if (/modo avan|nivel avan/.test(n)) {
+                global.PedidoZapModoAdmin && global.PedidoZapModoAdmin.set('avancado');
+                this.falar('Nível Avançado ativado! Você continua com ajuda da IA e agora vê os controles manuais de entrega, categorias, textos, cupons e relatórios.');
+                return;
+            }
+            if (/modo basico|nivel basico|modo facil|esconder avan|so o basico/.test(n)) {
+                global.PedidoZapModoAdmin && global.PedidoZapModoAdmin.set('basico');
+                this.falar('Nível Básico ativado! Eu cuido da montagem da página e te ensino a criar seu cardápio passo a passo.');
+                return;
+            }
+            if (/ensina(r)?.*cardapio|como fazer.*cardapio|tutorial.*cardapio/.test(n)) {
+                this.renderAtalhos(['Montar cardápio inicial', 'Cadastra X-Bacon 28', 'Abrir Pratos e preços']);
+                this.falar(
+                    'Aula rápida para fazer um cardápio que vende muito:\n' +
+                    '1) Comece com um cardápio base tocando em "Montar cardápio inicial" ou me ditando os pratos (ex.: "Cadastra Marmita P 22, Suco 7").\n' +
+                    '2) Vá em "Pratos e preços" e envie 1 foto real e nítida para cada item.\n' +
+                    '3) Coloque 1 item em Promoção para atrair cliques no Marketplace.\n' +
+                    '4) Sempre toque no botão verde SALVAR no topo para publicar!'
+                );
+                return;
+            }
+            if (/monta(r)? (minha )?pagina|construir (minha )?pagina/.test(n)) {
+                const nichoPag = this.detectarNicho(entrada) || (api && api.config && api.config.NICHO) || 'lanchonete';
+                if (api && api.config) {
+                    if (!api.config.TEXTOS) api.config.TEXTOS = {};
+                    const nomeLoja = api.config.NOME_LOJA || 'Sua Loja';
+                    if (!api.config.TEXTOS.HERO_TITULO) api.config.TEXTOS.HERO_TITULO = 'Bem-vindo à ' + nomeLoja;
+                    if (!api.config.TEXTOS.HERO_SUBTITULO) api.config.TEXTOS.HERO_SUBTITULO = 'Peça direto pelo cardápio digital sem taxas extras e receba rapidinho.';
+                }
+                const cardAtual = api && api.getCardapio ? api.getCardapio() : {};
+                const temItens = Object.values(cardAtual).some((arr) => Array.isArray(arr) && arr.length > 0);
+                if (!temItens) {
+                    this.aplicarCardapioBase(nichoPag);
+                } else {
+                    api && api.salvar && api.salvar();
+                    this.falar('Atualizei os textos de boas-vindas da sua página e mantive os pratos que você já cadastrou! Toque em "Salvar" no topo para publicar.');
+                }
                 return;
             }
             if (/^(salv(a|ar|e)|grava|publica|salvar tudo)$/.test(n) || /salva(r)? (tudo|no servidor|alteracoes)/.test(n)) {
@@ -1896,34 +1943,103 @@
         global.PedidoZapAssistente = assistente;
     }
 
+    function normalizarNivelAdmin(valor) {
+        const v = String(valor || '').toLowerCase().trim();
+        if (v === 'expert' || v === 'completo') return 'expert';
+        if (v === 'avancado') return 'avancado';
+        return 'basico';
+    }
+
     function initModoAdmin() {
-        const chave = (typeof TENANT !== 'undefined' ? TENANT.slug : 'default') + '_modo_admin';
+        const slug = (typeof TENANT !== 'undefined' ? TENANT.slug : 'default');
+        const chave = slug + '_modo_admin';
+        const chaveConfirmado = slug + '_nivel_confirmado';
         const corpo = document.body;
-        const chk = document.getElementById('chk-modo-completo');
-        const aplicar = (modo) => {
-            corpo.dataset.modoAdmin = modo;
-            try { localStorage.setItem(chave, modo); } catch (e) { /* ignore */ }
-            if (chk) chk.checked = modo === 'completo';
-            if (modo === 'facil') {
-                const ativo = document.querySelector('#admin-tabs button.ativo');
-                if (ativo && ativo.getAttribute('data-modo') === 'avancado' && global.__pzAtivarAbaAdmin) {
-                    global.__pzAtivarAbaAdmin('identidade');
+
+        const textosDica = {
+            basico: 'Nível Básico: a IA monta toda a sua página e te ensina a criar o cardápio passo a passo.',
+            avancado: 'Nível Avançado: ajuda da IA + opções manuais de entrega, categorias, textos, cupons e vendas.',
+            expert: 'Nível Expert: acesso total a todos os dados de cadastro, JSON bruto, APIs, estoque/DRE e equipe.'
+        };
+
+        const aplicar = (modo, opcoes) => {
+            const opts = opcoes || {};
+            const nivel = normalizarNivelAdmin(modo);
+            corpo.dataset.modoAdmin = nivel;
+            try {
+                localStorage.setItem(chave, nivel);
+                if (!opts.naoMarcarConfirmado) localStorage.setItem(chaveConfirmado, '1');
+            } catch (e) { /* ignore */ }
+
+            if (!opts.silenciarConfig && global.__pzAdmin && global.__pzAdmin.config) {
+                global.__pzAdmin.config.NIVEL_EXPERIENCIA = nivel;
+                if (!opts.naoMarcarConfirmado) global.__pzAdmin.config.NIVEL_EXPERIENCIA_CONFIRMADO = true;
+                if (typeof global.__pzAdmin.salvar === 'function') global.__pzAdmin.salvar();
+            }
+
+            document.querySelectorAll('#barra-modo-admin [data-set-nivel]').forEach((b) => {
+                b.classList.toggle('ativo', b.getAttribute('data-set-nivel') === nivel);
+            });
+
+            const ativo = document.querySelector('#admin-tabs button.ativo');
+            if (ativo) {
+                const modAba = ativo.getAttribute('data-modo') || 'basico';
+                const ocultaNoBasico = nivel === 'basico' && (modAba === 'avancado' || modAba === 'expert');
+                const ocultaNoAvancado = nivel === 'avancado' && modAba === 'expert';
+                if ((ocultaNoBasico || ocultaNoAvancado) && global.__pzAtivarAbaAdmin) {
+                    global.__pzAtivarAbaAdmin('visao-geral');
                 }
             }
+
             const dica = document.getElementById('dica-modo-admin');
-            if (dica) {
-                dica.textContent = modo === 'completo'
-                    ? 'Modo completo: todas as configurações avançadas visíveis.'
-                    : 'Modo fácil: só o essencial. Diga à assistente “painel completo” para ver tudo.';
+            if (dica) dica.textContent = textosDica[nivel];
+            if (nivel === 'expert' && typeof global.__pzRenderPainelExpert === 'function') {
+                global.__pzRenderPainelExpert();
             }
         };
-        let salvo = 'facil';
-        try { salvo = localStorage.getItem(chave) || 'facil'; } catch (e) { /* ignore */ }
-        aplicar(salvo === 'completo' ? 'completo' : 'facil');
-        if (chk) {
-            chk.addEventListener('change', () => aplicar(chk.checked ? 'completo' : 'facil'));
-        }
-        global.PedidoZapModoAdmin = { set: aplicar, get: () => corpo.dataset.modoAdmin };
+
+        let salvo = 'basico';
+        try {
+            const cfgNivel = global.__pzAdmin && global.__pzAdmin.config && global.__pzAdmin.config.NIVEL_EXPERIENCIA;
+            salvo = localStorage.getItem(chave) || cfgNivel || 'basico';
+        } catch (e) { /* ignore */ }
+
+        aplicar(salvo, { silenciarConfig: true, naoMarcarConfirmado: true });
+
+        document.querySelectorAll('#barra-modo-admin [data-set-nivel]').forEach((btn) => {
+            btn.addEventListener('click', () => aplicar(btn.getAttribute('data-set-nivel')));
+        });
+
+        const abrirAssistenteCom = (cmd) => {
+            if (!global.PedidoZapAssistente) return;
+            global.PedidoZapAssistente.abrirPainel();
+            if (cmd) global.PedidoZapAssistente.receber(cmd);
+        };
+
+        document.getElementById('btn-basico-ia-montar')?.addEventListener('click', () => abrirAssistenteCom('Montar minha página'));
+        document.getElementById('btn-basico-ia-ensinar')?.addEventListener('click', () => abrirAssistenteCom('Ensinar como fazer meu cardápio'));
+        document.getElementById('btn-basico-ia-auditar')?.addEventListener('click', () => abrirAssistenteCom('Analisar minha loja'));
+
+        document.getElementById('btn-abrir-escolha-nivel')?.addEventListener('click', () => {
+            const m = document.getElementById('modal-nivel-boas-vindas');
+            if (m) m.hidden = false;
+        });
+
+        document.querySelectorAll('#modal-nivel-boas-vindas [data-escolher-nivel-modal]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const escolhido = normalizarNivelAdmin(btn.getAttribute('data-escolher-nivel-modal'));
+                aplicar(escolhido);
+                const m = document.getElementById('modal-nivel-boas-vindas');
+                if (m) m.hidden = true;
+                if (escolhido === 'basico') {
+                    setTimeout(() => abrirAssistenteCom('Ensinar como fazer meu cardápio'), 250);
+                } else if (escolhido === 'expert' && global.__pzAtivarAbaAdmin) {
+                    global.__pzAtivarAbaAdmin('expert-dados');
+                }
+            });
+        });
+
+        global.PedidoZapModoAdmin = { set: aplicar, get: () => normalizarNivelAdmin(corpo.dataset.modoAdmin) };
     }
 
     function initCadastroEmbed() {
@@ -1980,6 +2096,7 @@
                         lng: (locSalva && locSalva.lng) || (lngEl && lngEl.value) || 0,
                         raio_entrega_km: dados.raio_entrega_km || 10,
                         tempo_medio_min: 35,
+                        nivel_experiencia: dados.nivel_experiencia || 'basico',
                         pagamentos: ['Pix', 'Cartão de Crédito', 'Dinheiro'],
                         login: dados.login,
                         senha: dados.senha,

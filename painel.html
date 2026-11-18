@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0b192c">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Painel de Pedidos</title>
     <meta name="robots" content="noindex, nofollow">
@@ -90,13 +91,27 @@
             font-weight: 700;
         }
 
-        /* Otimização Mobile & Tablet */
-        @media (max-width: 960px) {
-            body { padding: 14px 14px calc(24px + env(safe-area-inset-bottom)); height: auto; overflow: auto; }
+        /* Tablet (768px–1024px): grade 2x2 limpa sem rolagem lateral gigante */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            body { padding: 16px 16px calc(28px + env(safe-area-inset-bottom)); }
+            .board {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 14px;
+                height: auto;
+                overflow: visible;
+            }
+            .column { width: 100%; }
+            .column-content { min-height: 240px; max-height: 58vh; overflow-y: auto; }
+        }
+
+        /* Otimização Mobile (<= 767px) */
+        @media (max-width: 767px) {
+            body { padding: 12px 12px calc(70px + env(safe-area-inset-bottom)); height: auto; overflow: auto; }
             .header { flex-direction: column; align-items: stretch; }
-            .header h1 { font-size: 1.25rem; }
+            .header h1 { font-size: 1.2rem; }
             .header > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-            .header div button, .header div a { width: 100%; justify-content: center; margin: 0; padding: 10px !important; }
+            .header div button, .header div a { width: 100%; justify-content: center; margin: 0; padding: 10px !important; font-size: 0.88rem !important; }
             #last-update { grid-column: span 2; text-align: center; margin: 0; }
             .aki-kanban-tabs { display: flex; }
             .board { flex-direction: column; height: auto; overflow: visible; gap: 14px; }

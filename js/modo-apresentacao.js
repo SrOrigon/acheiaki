@@ -50,6 +50,12 @@
         } catch (e) { /* noop */ }
 
         const liberado = ativo();
+        if (!document.getElementById('pz-modo-apresentacao-css')) {
+            const st = document.createElement('style');
+            st.id = 'pz-modo-apresentacao-css';
+            st.textContent = '@media (max-width:640px){#pz-modo-apresentacao-pill{left:8px!important;bottom:8px!important;padding:5px 8px!important;gap:5px!important;font-size:11px!important;max-width:calc(100vw - 148px)!important;}#pz-modo-apresentacao-pill .pz-modo-lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:92px;}#pz-modo-toggle-btn{padding:4px 7px!important;font-size:10px!important;}}';
+            document.head.appendChild(st);
+        }
         const wrap = document.createElement('div');
         wrap.id = 'pz-modo-apresentacao-pill';
         wrap.style.cssText = [
@@ -73,13 +79,13 @@
         ].join(';');
 
         const dot = '<span style="width:8px;height:8px;border-radius:50%;background:' + (liberado ? '#22c55e' : '#ef4444') + ';flex-shrink:0;"></span>';
-        const txt = liberado ? 'Modo Análise (Travas aliviadas)' : 'Modo Produção (Travas ativas)';
+        const txt = liberado ? 'Modo Análise' : 'Modo Produção';
         const btnTxt = liberado ? 'Ativar travas' : 'Liberar análise';
 
         wrap.innerHTML = ''
             + dot
-            + '<span>' + txt + '</span>'
-            + '<button type="button" id="pz-modo-toggle-btn" style="border:none;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;background:' + (liberado ? '#f97316' : '#0f172a') + ';color:#fff;">' + btnTxt + '</button>'
+            + '<span class="pz-modo-lbl">' + txt + '</span>'
+            + '<button type="button" id="pz-modo-toggle-btn" style="border:none;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;background:' + (liberado ? '#f97316' : '#0f172a') + ';color:#fff;">' + btnTxt + '</button>'
             + '<button type="button" id="pz-modo-fechar-pill" title="Ocultar aviso nesta sessão" style="border:none;background:transparent;color:inherit;opacity:0.7;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;">&times;</button>';
 
         document.body.appendChild(wrap);

@@ -44,12 +44,28 @@ html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    max-width: 100%;
+    overflow-x: clip;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
 }
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     color: var(--aki-ink);
     background-color: var(--aki-canvas);
+    max-width: 100%;
+    overflow-x: clip;
+}
+
+img,
+video,
+canvas {
+    max-width: 100%;
 }
 
 h1, h2, h3, h4, .aki-display {

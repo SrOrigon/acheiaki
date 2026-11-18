@@ -1622,6 +1622,8 @@ function ligarWhiteLabel() {
     }
 
     function tentarBoasVindas() {
+        const modalNivel = document.getElementById('modal-nivel-boas-vindas');
+        if (modalNivel && !modalNivel.hidden) return;
         const tut = cfg.TUTORIAL || {};
         if (tut.primeiro_acesso_ativo === false) return;
         try {
@@ -1892,6 +1894,100 @@ function ligarWhiteLabel() {
     const btnRel = document.getElementById('btn-carregar-relatorio');
     if (btnRel) btnRel.addEventListener('click', carregarRelatorioVendas);
 
+    function renderizarPainelExpert() {
+        const grid = document.getElementById('expert-resumo-grid');
+        const txtCfg = document.getElementById('expert-json-config');
+        const txtCard = document.getElementById('expert-json-cardapio');
+        if (!grid && !txtCfg && !txtCard) return;
+
+        const c = ctx.config || {};
+        const end = c.ENDERECO || {};
+        const f = c.FRETE || {};
+        const slug = ctx.tenant || 'default';
+        const base = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+        const items = [
+            { k: 'Tenant Slug', v: slug },
+            { k: 'Nome da Empresa', v: c.NOME_LOJA || '—' },
+            { k: 'CNPJ / Razão Social', v: (c.CNPJ || 'Não informado') + (c.RAZAO_SOCIAL ? ' · ' + c.RAZAO_SOCIAL : '') },
+            { k: 'WhatsApp / Segmento', v: (c.WHATSAPP_NUMBER || '—') + ' · ' + (c.NICHO || 'lanchonete') },
+            { k: 'Endereço Completo', v: [end.rua, end.numero, end.bairro, end.cidade, end.estado, end.cep].filter(Boolean).join(', ') || 'Não cadastrado' },
+            { k: 'Coordenadas GPS & Raio', v: (end.lat != null ? end.lat : '0') + ', ' + (end.lng != null ? end.lng : '0') + ' · Raio: ' + (f.raio_max_km || 10) + ' km' },
+            { k: 'Vitrine Pública', v: slug === 'default' ? base + 'index.html' : base + 'loja/' + encodeURIComponent(slug) + '/' },
+            { k: 'Endpoints Principais', v: 'get_public_store.php?tenant=' + slug + ' | save_data.php?tenant=' + slug + ' | agente_api.php?tenant=' + slug }
+        ];
+        if (grid) {
+            grid.innerHTML = items.map((it) =>
+                '<div class="pz-expert-kv"><strong>' + String(it.k).replace(/</g, '&lt;') + '</strong><span>' + String(it.v).replace(/</g, '&lt;') + '</span></div>'
+            ).join('');
+        }
+        if (txtCfg) txtCfg.value = JSON.stringify(ctx.config || {}, null, 2);
+        if (txtCard) txtCard.value = JSON.stringify(ctx.getCardapio() || {}, null, 2);
+    }
+
+    window.__pzRenderPainelExpert = renderizarPainelExpert;
+
+    (function vincularAcoesExpert() {
+        document.getElementById('btn-expert-recarregar')?.addEventListener('click', () => {
+            renderizarPainelExpert();
+            ctx.toast('JSON atualizado com os dados atuais do painel.', 'success');
+        });
+        document.getElementById('btn-expert-aplicar')?.addEventListener('click', () => {
+            try {
+                const txtCfg = document.getElementById('expert-json-config');
+                const txtCard = document.getElementById('expert-json-cardapio');
+                if (txtCfg && txtCfg.value.trim()) {
+                    const parsedCfg = JSON.parse(txtCfg.value);
+                    if (!parsedCfg || typeof parsedCfg !== 'object' || Array.isArray(parsedCfg)) {
+                        throw new Error('config.json precisa ser um objeto JSON válido.');
+                    }
+                    ctx.config = parsedCfg;
+                }
+                if (txtCard && txtCard.value.trim()) {
+                    const parsedCard = JSON.parse(txtCard.value);
+                    if (!parsedCard || typeof parsedCard !== 'object' || Array.isArray(parsedCard)) {
+                        throw new Error('cardapio.json precisa ser um objeto JSON válido.');
+                    }
+                    ctx.setCardapio(parsedCard);
+                }
+                ctx.salvar();
+                if (typeof window.__pzRenderEditor === 'function') window.__pzRenderEditor();
+                if (typeof window.__pzMontarCategorias === 'function') window.__pzMontarCategorias();
+                renderizarPainelExpert();
+                ctx.toast('JSON aplicado! Clique no botão verde Salvar no topo para gravar no servidor.', 'success');
+            } catch (err) {
+                ctx.toast('Erro no JSON: ' + (err.message || 'sintaxe inválida.'), 'error');
+            }
+        });
+        document.getElementById('btn-expert-baixar')?.addEventListener('click', () => {
+            const pacote = {
+                exported_at: new Date().toISOString(),
+                tenant: ctx.tenant,
+                config: ctx.config,
+                cardapio: ctx.getCardapio()
+            };
+            const blob = new Blob([JSON.stringify(pacote, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'expert-' + (ctx.tenant || 'loja') + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+        document.getElementById('btn-expert-copiar-api')?.addEventListener('click', () => {
+            const slug = encodeURIComponent(ctx.tenant || 'default');
+            const base = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+            const texto = [
+                'Loja Pública: ' + base + 'loja/' + slug + '/',
+                'GET Config/Cardápio: ' + base + 'get_public_store.php?tenant=' + slug,
+                'POST Salvar Dados: ' + base + 'save_data.php?tenant=' + slug,
+                'POST Agente IA: ' + base + 'agente_api.php?tenant=' + slug
+            ].join('\n');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(texto).then(() => ctx.toast('Endpoints copiados!', 'success'));
+            }
+        });
+    })();
+
     function ativarAbaAdmin(tab) {
         if (!tab) return;
         const btn = document.querySelector('#admin-tabs [data-tab="' + tab + '"]');
@@ -1901,6 +1997,7 @@ function ligarWhiteLabel() {
             sec.hidden = sec.dataset.painel !== tab;
         });
         if (tab === 'relatorios') carregarRelatorioVendas();
+        if (tab === 'expert-dados') renderizarPainelExpert();
         if (window.FoodGestaoAdmin && window.FoodGestaoAdmin.aoAtivarAba) {
             window.FoodGestaoAdmin.aoAtivarAba(tab);
         }
@@ -1939,6 +2036,22 @@ function ligarWhiteLabel() {
         if (tabUrl) ativarAbaAdmin(tabUrl);
         else if (typeof window.restaurarEstadoAdminUi === 'function') window.restaurarEstadoAdminUi();
     } catch (e) { /* URL inválida */ }
+
+    (function tentarEscolhaNivelInicial() {
+        const slug = ctx.tenant || 'default';
+        const chaveConf = slug + '_nivel_confirmado';
+        let confLocal = false;
+        try { confLocal = localStorage.getItem(chaveConf) === '1'; } catch (e) { /* */ }
+        if (window.PedidoZapModoAdmin && typeof window.PedidoZapModoAdmin.set === 'function') {
+            let salvo = cfg.NIVEL_EXPERIENCIA || 'basico';
+            try { salvo = localStorage.getItem(slug + '_modo_admin') || salvo; } catch (e) { /* */ }
+            window.PedidoZapModoAdmin.set(salvo, { silenciarConfig: true, naoMarcarConfirmado: true });
+        }
+        if (!confLocal && !cfg.NIVEL_EXPERIENCIA_CONFIRMADO) {
+            const modalNivel = document.getElementById('modal-nivel-boas-vindas');
+            if (modalNivel) modalNivel.hidden = false;
+        }
+    })();
 
     tentarBoasVindas();
 

@@ -485,6 +485,8 @@ function pedidozap_default_config()
             'resumo_whatsapp_ativo' => true,
         ],
         'VERSION' => 1,
+        'NIVEL_EXPERIENCIA' => 'basico',
+        'NIVEL_EXPERIENCIA_CONFIRMADO' => false,
     ];
 }
 
@@ -492,6 +494,14 @@ function pedidozap_normalizar_config($saved, $tenant = 'default')
 {
     $config = pedidozap_merge_assoc(pedidozap_default_config(), is_array($saved) ? $saved : []);
     $config['TENANT_SLUG'] = $tenant;
+    $nivelBruto = strtolower(trim((string) ($config['NIVEL_EXPERIENCIA'] ?? 'basico')));
+    if ($nivelBruto === 'facil') {
+        $nivelBruto = 'basico';
+    } elseif ($nivelBruto === 'completo') {
+        $nivelBruto = 'expert';
+    }
+    $config['NIVEL_EXPERIENCIA'] = in_array($nivelBruto, ['basico', 'avancado', 'expert'], true) ? $nivelBruto : 'basico';
+    $config['NIVEL_EXPERIENCIA_CONFIRMADO'] = !empty($config['NIVEL_EXPERIENCIA_CONFIRMADO']);
     if (!isset($config['NOME_LOJA']) || trim((string) $config['NOME_LOJA']) === '') {
         $config['NOME_LOJA'] = 'Nome da Sua Loja';
     }

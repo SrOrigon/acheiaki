@@ -361,3 +361,85 @@
     color: #1d4ed8;
     margin-top: 4px;
 }
+
+/* Mobile & Tablet: Gestão Executiva sem overflow */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .fg-grid-kpis {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .fg-form-grid,
+    .fg-dre-grid,
+    .fg-alertas-lista {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .fg-grid-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .fg-kpi {
+        padding: 12px;
+        min-width: 0;
+    }
+    .fg-kpi-valor {
+        font-size: 1.2rem;
+    }
+    .fg-ia-hub {
+        padding: 14px 12px;
+        border-radius: 14px;
+    }
+    .fg-ia-mensagens {
+        max-height: 240px;
+        padding: 10px;
+    }
+    .fg-ia-chips {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+    .fg-ia-form {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+    .fg-ia-form input {
+        min-width: 0;
+        font-size: 16px;
+    }
+    .fg-ia-form button {
+        padding: 0 14px;
+        flex-shrink: 0;
+    }
+    .fg-form-grid,
+    .fg-dre-grid,
+    .fg-alertas-lista {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .fg-subtabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 8px;
+    }
+    .fg-subtabs::-webkit-scrollbar {
+        display: none;
+    }
+    .fg-subtab-btn {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+    .fg-tabela-wrap {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .fg-tabela th,
+    .fg-tabela td {
+        padding: 8px 9px;
+        font-size: 0.84rem;
+        white-space: nowrap;
+    }
+}

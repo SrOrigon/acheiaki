@@ -157,10 +157,8 @@
         const btnCupom = document.getElementById('aki-div-btn-cupom');
         if (btnCupom) {
             btnCupom.addEventListener('click', function () {
-                const chkComp = document.getElementById('chk-modo-completo');
-                if (chkComp && !chkComp.checked) {
-                    chkComp.checked = true;
-                    chkComp.dispatchEvent(new Event('change', { bubbles: true }));
+                if (window.PedidoZapModoAdmin && typeof window.PedidoZapModoAdmin.get === 'function' && window.PedidoZapModoAdmin.get() === 'basico') {
+                    window.PedidoZapModoAdmin.set('avancado');
                 }
                 const abaClientes = document.querySelector('#admin-tabs [data-tab="clientes"]');
                 if (abaClientes) {

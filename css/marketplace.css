@@ -382,8 +382,11 @@ body.mkt-body { margin: 0; background: var(--aki-canvas, var(--mkt-bg)); font-fa
     .mkt-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .aki-quick-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
     .mkt-comp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .mkt-conta-grid { grid-template-columns: 1fr 1fr; }
+    .mkt-conta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .mkt-ia-radar { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 16px; }
     .mkt-pratos-rail { grid-auto-columns: minmax(210px, 235px); }
+    .mkt-itens-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .mkt-modal-loja-card { max-width: 92vw; }
 }
 
 /* Mobile & Portrait Tablet -> Bottom Tab Navigation Nativa */
@@ -545,6 +548,17 @@ body.mkt-body { margin: 0; background: var(--aki-canvas, var(--mkt-bg)); font-fa
     .mkt-loja-footer-cta { padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); }
     .aki-role-grid { grid-template-columns: 1fr !important; }
     .aki-tabs-grandes { flex-direction: row; }
+    .mkt-comp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+    .mkt-pratos-rail { grid-auto-columns: minmax(195px, 72vw); gap: 10px; }
+    .mkt-ia-radar { grid-template-columns: 1fr; padding: 14px; gap: 12px; }
+    .mkt-ped-top { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .mkt-ped-top > div:last-child { text-align: left !important; display: flex; gap: 10px; align-items: center; }
+    .mkt-conta-grid { grid-template-columns: 1fr; gap: 12px; }
+    .mkt-pedidos-acoes { width: 100%; display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .mkt-loja-hero { padding: 20px 14px 16px; min-height: 155px; }
+    .mkt-loja-logo-lg { width: 62px; height: 62px; font-size: 1.4rem; }
+    .mkt-loja-body { padding: 16px 14px 24px; }
+    .mkt-itens-grid { grid-template-columns: 1fr; }
 }
 
 /* MODO DIRETO — DESIGN HUMANO, CALMO E LEGÍVEL */

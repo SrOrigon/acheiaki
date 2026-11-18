@@ -28,6 +28,19 @@
         .pill { border-radius: 999px; padding: 2px 9px; font-size: .75rem; font-weight: 600; background: #dcfce7; color: #166534; }
         .pill.bloqueado { background: #fee2e2; color: #991b1b; }
         .pill.pendente, .pill.teste { background: #fef3c7; color: #92400e; }
+        .card { overflow-x: auto; max-width: 100%; }
+        @media (min-width: 641px) and (max-width: 1024px) {
+            main { padding: 18px 16px 48px; }
+            .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 640px) {
+            header { flex-direction: column; align-items: flex-start; padding: 12px 14px; }
+            header #btn-sair { width: 100%; }
+            main { padding: 14px 12px 48px; }
+            .card { padding: 16px 14px; }
+            .grade { grid-template-columns: 1fr; }
+            table { min-width: 620px; }
+        }
     </style>
 </head>
 <body>

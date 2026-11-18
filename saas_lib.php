@@ -542,11 +542,23 @@ function pedidozap_criar_loja(array $dados)
         return ['success' => false, 'message' => 'Selecione pelo menos 1 forma de pagamento aceita pela empresa.'];
     }
 
+    $nivelExp = strtolower(trim((string) ($dados['nivel_experiencia'] ?? 'basico')));
+    if ($nivelExp === 'facil') {
+        $nivelExp = 'basico';
+    } elseif ($nivelExp === 'completo') {
+        $nivelExp = 'expert';
+    }
+    if (!in_array($nivelExp, ['basico', 'avancado', 'expert'], true)) {
+        $nivelExp = 'basico';
+    }
+
     $config = pedidozap_normalizar_config([
         'NOME_LOJA' => $nome,
         'CNPJ' => $cnpj,
         'RAZAO_SOCIAL' => $razaoSocial,
         'NICHO' => $nicho,
+        'NIVEL_EXPERIENCIA' => $nivelExp,
+        'NIVEL_EXPERIENCIA_CONFIRMADO' => !empty($dados['nivel_experiencia_confirmado']),
         'REDES' => ['whatsapp' => $whatsapp],
         'WHATSAPP_NUMBER' => $whatsapp,
         'TEMPO_ENTREGA_MIN' => max(10, min(180, $tempoMin)),

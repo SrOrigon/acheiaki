@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0b192c">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Painel Administrativo</title>
     <meta name="robots" content="noindex, nofollow">
@@ -196,15 +197,45 @@
             font-size: 0.85em;
         }
 
-        /* Otimização Mobile Admin */
+        .aki-div-url-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        .aki-div-url-input {
+            flex: 1 1 200px;
+            min-width: 0;
+            width: 100%;
+            font-weight: 600;
+            color: #0b192c;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+        .aki-div-btn-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 195px), 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .aki-div-btn-grid .btn-save-file {
+            width: 100%;
+            justify-content: center;
+            min-height: 46px;
+            padding: 10px 12px;
+            font-size: 0.92rem;
+            text-align: center;
+            white-space: normal;
+        }
+
+        /* Otimização Tablet & Mobile Admin */
         @media (max-width: 768px) {
-            .admin-container { padding: 10px; margin-top: 10px; }
-            .admin-header { flex-direction: column; gap: 15px; text-align: center; }
-            .admin-header div { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+            .admin-container { padding: 10px; margin-top: 8px; }
             .item-row { flex-direction: column; align-items: flex-start; position: relative; }
             .item-img { width: 100%; height: 150px; }
             .item-actions { width: 100%; justify-content: flex-end; margin-top: 10px; }
-            .btn-save-file { width: 100%; justify-content: center; padding: 12px; }
         }
 
         .btn-edit {
@@ -301,14 +332,17 @@
         #container-dias-fechado label { min-height: 48px; padding: 10px 14px !important; font-size: 1rem; }
         /* Tablet (641px–1024px) */
         @media (min-width: 641px) and (max-width: 1024px) {
-            .admin-container { padding: 0 18px; }
+            .admin-container { padding: 0 18px 56px; max-width: 960px; }
+            .admin-card { padding: 20px 18px; min-width: 0; }
             .aki-admin-bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .aki-div-btn-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .grade-admin { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .admin-tabs {
                 flex-wrap: nowrap;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
                 scrollbar-width: none;
-                padding-bottom: 4px;
+                padding-bottom: 6px;
             }
             .admin-tabs::-webkit-scrollbar { display: none; }
             .admin-tabs button { flex: 0 0 auto; white-space: nowrap; }
@@ -317,25 +351,37 @@
         /* Mobile App Shell (<= 640px) */
         @media (max-width: 640px) {
             .admin-container {
-                padding: 0 12px calc(32px + env(safe-area-inset-bottom));
+                padding: 0 10px calc(76px + env(safe-area-inset-bottom));
                 margin-top: 0;
+                max-width: 100%;
+                overflow-x: clip;
             }
-            .admin-card { padding: 16px 14px; border-radius: 14px; margin-bottom: 14px; }
+            .admin-card { padding: 15px 13px; border-radius: 14px; margin-bottom: 12px; min-width: 0; max-width: 100%; }
             .admin-header {
                 flex-direction: column;
                 align-items: stretch;
-                gap: 10px;
+                gap: 8px;
                 padding: 10px 0;
-                margin-bottom: 14px;
+                margin-bottom: 12px;
             }
-            .admin-header h1 { font-size: 1.24rem; margin: 0; }
+            .admin-header h1 { font-size: 1.18rem; margin: 0; }
             #admin-subtitulo-principal { display: none; }
-            .admin-header>div:last-child {
+            .admin-header > div:last-child {
                 width: 100%;
                 display: grid;
                 grid-template-columns: 1fr auto;
                 gap: 8px;
             }
+            .admin-header .btn-save-file {
+                min-height: 44px !important;
+                padding: 10px 14px !important;
+                font-size: 0.94rem !important;
+                justify-content: center;
+            }
+            .aki-div-url-row { flex-direction: column; }
+            .aki-div-url-row .btn-save-file { width: 100%; min-height: 42px; }
+            .aki-div-btn-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+            .aki-div-btn-grid .btn-save-file { font-size: 0.8rem; padding: 9px 7px; min-height: 44px; }
             .aki-admin-bento {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 8px;
@@ -343,13 +389,14 @@
             .aki-bento-btn {
                 flex-direction: column;
                 align-items: flex-start;
-                padding: 12px;
-                gap: 8px;
-                min-height: 92px;
+                padding: 11px;
+                gap: 7px;
+                min-height: 86px;
+                min-width: 0;
             }
-            .aki-bento-ico { width: 34px; height: 34px; font-size: 0.95rem; }
-            .aki-bento-btn strong { font-size: 0.88rem; }
-            .aki-bento-btn small { font-size: 0.74rem; }
+            .aki-bento-ico { width: 32px; height: 32px; font-size: 0.9rem; }
+            .aki-bento-btn strong { font-size: 0.85rem; }
+            .aki-bento-btn small { font-size: 0.72rem; }
             .admin-tabs {
                 flex-wrap: nowrap;
                 overflow-x: auto;
@@ -358,15 +405,16 @@
                 scrollbar-width: none;
                 padding: 2px 0 6px;
                 gap: 6px;
+                max-width: 100%;
             }
             .admin-tabs::-webkit-scrollbar { display: none; }
             .admin-tabs button {
                 flex: 0 0 auto;
                 white-space: nowrap;
                 scroll-snap-align: start;
-                padding: 9px 13px;
-                min-height: 42px;
-                font-size: 0.88rem;
+                padding: 8px 12px;
+                min-height: 40px;
+                font-size: 0.84rem;
             }
 
             .item-row {
@@ -389,14 +437,14 @@
             .btn-save-file {
                 width: 100%;
                 justify-content: center;
-                min-height: 48px !important;
-                font-size: 0.95rem !important;
+                min-height: 46px !important;
+                font-size: 0.92rem !important;
             }
         }
     </style>
 </head>
 
-<body data-pagina="admin" data-modo-admin="facil">
+<body data-pagina="admin" data-modo-admin="basico">
     <div class="admin-container">
         <div class="admin-header">
             <div>
@@ -412,11 +460,23 @@
         </div>
 
         <div class="admin-modo-bar" id="barra-modo-admin">
-            <label>
-                <input type="checkbox" id="chk-modo-completo">
-                Mostrar ferramentas avançadas (Estoque, Caixa/DRE, Equipe, Território)
-            </label>
-            <span class="dica-modo" id="dica-modo-admin">Modo fácil ativo: apenas o essencial grande na sua tela.</span>
+            <div class="pz-niveis-switcher" role="group" aria-label="Nível de uso do painel">
+                <button type="button" class="pz-nivel-btn ativo" data-set-nivel="basico"><i class="fa-solid fa-wand-magic-sparkles"></i> Básico (Com IA)</button>
+                <button type="button" class="pz-nivel-btn" data-set-nivel="avancado"><i class="fa-solid fa-sliders"></i> Avançado (IA + Manual)</button>
+                <button type="button" class="pz-nivel-btn" data-set-nivel="expert"><i class="fa-solid fa-code"></i> Expert (Total)</button>
+            </div>
+            <span class="dica-modo" id="dica-modo-admin">Nível Básico: a IA monta sua página e te ensina a fazer o cardápio passo a passo.</span>
+            <button type="button" id="btn-abrir-escolha-nivel" class="btn-mini" style="background:#f1f5f9;color:#0f172a;font-weight:700;">Comparar níveis</button>
+        </div>
+
+        <div class="admin-card pz-basico-ia-hero" id="card-basico-ia-guia" data-painel-basico="1">
+            <h3 style="margin:0 0 6px;color:#0f766e;"><i class="fa-solid fa-robot"></i> Sua IA constrói sua página e ensina seu cardápio</h3>
+            <p style="margin:0;color:#334155;font-size:0.96rem;">Você está no <strong>Nível Básico</strong>: deixe o trabalho pesado com a nossa IA ou mude para <strong>Avançado</strong> / <strong>Expert</strong> acima quando quiser.</p>
+            <div class="pz-basico-ia-acoes">
+                <button type="button" id="btn-basico-ia-montar" class="btn-save-file" style="width:auto;background:#0d9488;"><i class="fa-solid fa-wand-magic-sparkles"></i> Pedir à IA para montar minha página e cardápio</button>
+                <button type="button" id="btn-basico-ia-ensinar" class="btn-save-file" style="width:auto;background:#0284c7;"><i class="fa-solid fa-graduation-cap"></i> Ensinar como fazer meu cardápio</button>
+                <button type="button" id="btn-basico-ia-auditar" class="btn-save-file" style="width:auto;background:#0f172a;"><i class="fa-solid fa-list-check"></i> Ver o que falta na loja</button>
+            </div>
         </div>
 
         <div class="admin-card" style="padding:20px 22px;">
@@ -452,15 +512,15 @@
                     <p style="margin:4px 0 0;color:#475569;font-size:0.92rem;">Puxe quem já compra de você (WhatsApp, balcão, sacola de entrega e Google Maps) para pedir direto sem pagar comissão:</p>
                 </div>
             </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
-                <input type="text" id="aki-div-url" readonly style="flex:1;min-width:220px;font-weight:600;color:#0b192c;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;" value="Carregando link da loja...">
+            <div class="aki-div-url-row">
+                <input type="text" id="aki-div-url" readonly class="aki-div-url-input" value="Carregando link da loja...">
                 <button type="button" id="aki-div-btn-copiar" class="btn-save-file" style="width:auto;background:#0b192c;min-height:46px;"><i class="fa-regular fa-copy"></i> Copiar Link</button>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:10px;margin-top:10px;">
-                <button type="button" id="aki-div-btn-zap" class="btn-save-file" style="background:#15803d;justify-content:center;min-height:48px;"><i class="fa-brands fa-whatsapp"></i> Enviar no Status / Zap</button>
-                <button type="button" id="aki-div-btn-panfleto" class="btn-save-file" style="background:#0284c7;justify-content:center;min-height:48px;"><i class="fa-solid fa-print"></i> Panfleto Sacola / Balcão</button>
-                <button type="button" id="aki-div-btn-bio" class="btn-save-file" style="background:#334155;justify-content:center;min-height:48px;"><i class="fa-solid fa-map-pin"></i> Texto Bio / Google Maps</button>
-                <button type="button" id="aki-div-btn-cupom" class="btn-save-file" style="background:#b45309;justify-content:center;min-height:48px;"><i class="fa-solid fa-ticket"></i> Criar Cupom DIRETO10</button>
+            <div class="aki-div-btn-grid">
+                <button type="button" id="aki-div-btn-zap" class="btn-save-file" style="background:#15803d;"><i class="fa-brands fa-whatsapp"></i> Enviar no Status / Zap</button>
+                <button type="button" id="aki-div-btn-panfleto" class="btn-save-file" style="background:#0284c7;"><i class="fa-solid fa-print"></i> Panfleto Sacola / Balcão</button>
+                <button type="button" id="aki-div-btn-bio" class="btn-save-file" style="background:#334155;"><i class="fa-solid fa-map-pin"></i> Texto Bio / Google Maps</button>
+                <button type="button" id="aki-div-btn-cupom" class="btn-save-file" style="background:#b45309;"><i class="fa-solid fa-ticket"></i> Criar Cupom DIRETO10</button>
             </div>
             <p id="aki-div-feedback" hidden style="margin:10px 0 0;padding:8px 12px;border-radius:8px;background:#ecfdf5;color:#065f46;font-size:0.88rem;font-weight:600;"></p>
         </div>
@@ -531,22 +591,23 @@
             <button type="button" data-tab="cardapio"><i class="fa-solid fa-utensils"></i> Pratos e preços</button>
             <button type="button" data-tab="identidade"><i class="fa-solid fa-store"></i> Nome e foto</button>
             <button type="button" data-tab="contato"><i class="fa-solid fa-location-dot"></i> WhatsApp e endereço</button>
-            <button type="button" data-tab="frete"><i class="fa-solid fa-motorcycle"></i> Entrega e taxa</button>
             <button type="button" data-tab="pagamentos"><i class="fa-regular fa-credit-card"></i> Pagamentos</button>
             <button type="button" data-tab="conta"><i class="fa-regular fa-calendar-check"></i> Mensalidade</button>
-            <button type="button" data-tab="seguranca"><i class="fa-solid fa-key"></i> Senha e IA</button>
-            <button type="button" data-tab="territorio" data-modo="avancado">Território &amp; Melhorias</button>
-            <button type="button" data-tab="estoque" data-modo="avancado">Estoque &amp; CMV</button>
-            <button type="button" data-tab="financeiro" data-modo="avancado">Caixa &amp; DRE</button>
+            <button type="button" data-tab="frete" data-modo="avancado"><i class="fa-solid fa-motorcycle"></i> Entrega e taxa</button>
+            <button type="button" data-tab="segmento" data-modo="avancado">Categorias (Manual)</button>
+            <button type="button" data-tab="textos" data-modo="avancado">Textos do site</button>
             <button type="button" data-tab="clientes" data-modo="avancado">Clientes &amp; Cupons</button>
             <button type="button" data-tab="entregadores" data-modo="avancado">Entregadores</button>
-            <button type="button" data-tab="equipe" data-modo="avancado">Equipe &amp; Backup</button>
-            <button type="button" data-tab="tutorial" data-modo="avancado">1. Comece aqui</button>
             <button type="button" data-tab="relatorios" data-modo="avancado">O que vendeu</button>
-            <button type="button" data-tab="comandas" data-modo="avancado">Cozinha / comanda</button>
             <button type="button" data-tab="atendimento" data-modo="avancado">Pedido no balcão</button>
-            <button type="button" data-tab="textos" data-modo="avancado">Textos do site</button>
-            <button type="button" data-tab="segmento" data-modo="avancado">Categorias</button>
+            <button type="button" data-tab="seguranca" data-modo="avancado"><i class="fa-solid fa-key"></i> Senha e IA</button>
+            <button type="button" data-tab="territorio" data-modo="expert">Território &amp; Melhorias</button>
+            <button type="button" data-tab="estoque" data-modo="expert">Estoque &amp; CMV</button>
+            <button type="button" data-tab="financeiro" data-modo="expert">Caixa &amp; DRE</button>
+            <button type="button" data-tab="equipe" data-modo="expert">Equipe &amp; Backup</button>
+            <button type="button" data-tab="comandas" data-modo="expert">Cozinha / comanda</button>
+            <button type="button" data-tab="tutorial" data-modo="expert">Textos do sistema &amp; Guia</button>
+            <button type="button" data-tab="expert-dados" data-modo="expert"><i class="fa-solid fa-code"></i> Cadastro &amp; JSON (Expert)</button>
         </nav>
 
         <div class="admin-card" data-painel="visao-geral">
@@ -1135,9 +1196,50 @@
             </div>
         </div>
 
+        <div class="admin-card" data-painel="expert-dados" hidden style="border-left:5px solid #0f172a;">
+            <h3><i class="fa-solid fa-code"></i> Modo Expert — Todas as Informações de Cadastro &amp; Estrutura Técnica</h3>
+            <p class="dica-secao">Acesso total ao cadastro completo da empresa (slug multi-tenant, CNPJ, geolocalização, endpoints e JSON bruto de configuração e cardápio) para customização avançada e integrações.</p>
+            <div id="expert-resumo-grid" class="pz-expert-grid"></div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+                <button type="button" id="btn-expert-recarregar" class="btn-save-file" style="width:auto;background:#334155;"><i class="fa-solid fa-rotate"></i> Atualizar JSON atual</button>
+                <button type="button" id="btn-expert-aplicar" class="btn-save-file" style="width:auto;background:#0284c7;"><i class="fa-solid fa-check-double"></i> Aplicar JSON no painel</button>
+                <button type="button" id="btn-expert-baixar" class="btn-save-file" style="width:auto;background:#0f172a;"><i class="fa-solid fa-download"></i> Exportar pacote completo (.json)</button>
+                <button type="button" id="btn-expert-copiar-api" class="btn-save-file" style="width:auto;background:#0d9488;"><i class="fa-regular fa-copy"></i> Copiar endpoints da API</button>
+            </div>
+            <div class="form-group-admin">
+                <label for="expert-json-config"><strong>config.json completo</strong> (todas as chaves de cadastro, entrega, IA, textos, horários e permissões)</label>
+                <textarea id="expert-json-config" class="pz-expert-json" spellcheck="false"></textarea>
+            </div>
+            <div class="form-group-admin">
+                <label for="expert-json-cardapio"><strong>cardapio.json completo</strong> (categorias e produtos em estrutura JSON)</label>
+                <textarea id="expert-json-cardapio" class="pz-expert-json" spellcheck="false"></textarea>
+            </div>
+        </div>
+
         <div class="admin-card" style="border-left: 5px solid #10b981; background: #f0fdf4;">
             <h3 style="color: #166534;" id="sim-lem-titulo-dom"><i class="fa-solid fa-cloud-check"></i> Não esqueça de Salvar</h3>
             <p style="line-height: 1.6; color: #166534; font-weight: 500; font-size: 1.05rem;" id="sim-lem-texto-dom">O cliente só vê as mudanças depois que você tocar em Salvar no topo.</p>
+        </div>
+    </div>
+
+    <div id="modal-nivel-boas-vindas" class="modal-boas-vindas" hidden role="dialog" aria-modal="true" aria-labelledby="modal-nv-titulo">
+        <div class="caixa" style="max-width:720px;text-align:left;">
+            <h2 id="modal-nv-titulo" style="margin-top:0;color:#0f172a;"><i class="fa-solid fa-layer-group" style="color:#0d9488;"></i> Antes de construir sua página: escolha seu nível</h2>
+            <p style="margin:0 0 12px;color:#475569;">Você pode começar no seu ritmo e <strong>mudar de nível a qualquer momento</strong> na barra superior do painel.</p>
+            <div class="pz-nivel-cards">
+                <button type="button" class="pz-nivel-card" data-escolher-nivel-modal="basico">
+                    <strong><span>🤖 Básico</span><span style="font-size:0.75rem;color:#0d9488;">Recomendado</span></strong>
+                    <small>A IA monta toda a sua página inicial e te ensina passo a passo como fazer o seu cardápio.</small>
+                </button>
+                <button type="button" class="pz-nivel-card" data-escolher-nivel-modal="avancado">
+                    <strong><span>🛠️ Avançado</span><span style="font-size:0.75rem;color:#0284c7;">Híbrido</span></strong>
+                    <small>Mantém a ajuda da IA, mas libera opções manuais para ajustar taxa, textos, cupons e categorias por conta própria.</small>
+                </button>
+                <button type="button" class="pz-nivel-card" data-escolher-nivel-modal="expert">
+                    <strong><span>💻 Expert</span><span style="font-size:0.75rem;color:#0f172a;">Tecnologia</span></strong>
+                    <small>Acesso total a todas as informações do cadastro, financeiro/DRE, estoque, RBAC e editor técnico JSON/APIs.</small>
+                </button>
+            </div>
         </div>
     </div>
 
