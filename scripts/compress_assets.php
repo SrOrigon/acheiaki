@@ -1,7 +1,7 @@
 <?php
 /**
  * Pré-compressão de imagens pesadas em assets/images/ para WebP (alvo <= 100 KB).
- * Executado em build-time no Dockerfile ou via CLI para eliminar egress e CPU no horário de pico.
+ * Executado em build-time no Dockerfile ou via CLI (compatível com Alpine Linux / musl).
  */
 if (PHP_SAPI !== 'cli') {
     http_response_code(403);
@@ -9,18 +9,27 @@ if (PHP_SAPI !== 'cli') {
 }
 
 if (!function_exists('imagecreatefromstring') || !function_exists('imagewebp')) {
-    echo "GD WebP indisponível.\n";
+    echo "GD WebP indisponivel.\n";
     exit(0);
 }
 
 $dir = dirname(__DIR__) . '/assets/images';
-$files = @glob($dir . '/*.{png,PNG,jpg,JPG,jpeg,JPEG}', GLOB_BRACE) ?: [];
+$entries = is_dir($dir) ? (@scandir($dir) ?: []) : [];
 $maxBytes = 100 * 1024; // 100 KB
 
-foreach ($files as $src) {
-    $base = basename($src);
+foreach ($entries as $base) {
+    if ($base === '.' || $base === '..') {
+        continue;
+    }
+    if (!preg_match('/\.(png|jpe?g)$/i', $base)) {
+        continue;
+    }
     if (stripos($base, 'acheiaki-icon') === 0) {
-        continue; // mantém ícone PWA nítido
+        continue;
+    }
+    $src = $dir . '/' . $base;
+    if (!is_file($src)) {
+        continue;
     }
     $raw = @file_get_contents($src);
     if (!is_string($raw) || strlen($raw) < 1024) {
@@ -53,10 +62,10 @@ foreach ($files as $src) {
                 $alvo = $canvas;
                 $criouCanvas = true;
             }
-        } else {
-            imagepalettetotruecolor($alvo);
-            imagealphablending($alvo, true);
-            imagesavealpha($alvo, true);
+        } elseif (function_exists('imagepalettetotruecolor')) {
+            @imagepalettetotruecolor($alvo);
+            @imagealphablending($alvo, true);
+            @imagesavealpha($alvo, true);
         }
 
         foreach ([78, 68, 58, 48] as $q) {
