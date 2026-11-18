@@ -176,13 +176,32 @@
         .resumo-dia strong { font-size: 1.38em; color: #14171f; }
         .alerta-valor { background: #fffbeb; border: 1px solid rgba(217, 119, 6, 0.35); color: #92400e; padding: 8px 10px; border-radius: 8px; font-size: 0.85em; margin-bottom: 10px; }
         .btn-imprimir { background: #f1efe9; color: #14171f; border: 1px solid rgba(20, 23, 31, 0.1); border-radius: 8px; padding: 6px 10px; cursor: pointer; min-width: 44px; min-height: 44px; font-size: 1em; }
+        @keyframes cardAtrasoPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55); border-color: #dc2626; }
+            50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.18); border-color: #ef4444; }
+        }
+        .card-atraso-aceite {
+            border: 2px solid #dc2626 !important;
+            background: #fef2f2 !important;
+            animation: cardAtrasoPulse 1.4s infinite;
+        }
+        .badge-atraso-aceite {
+            display: inline-block; background: #dc2626; color: #fff; font-size: 0.74rem;
+            font-weight: 800; padding: 3px 8px; border-radius: 999px; margin-bottom: 6px;
+        }
+        .conn-badge {
+            display: inline-flex; align-items: center; gap: 5px; font-size: 0.82rem; font-weight: 700;
+            padding: 3px 10px; border-radius: 999px; margin-left: 8px; vertical-align: middle;
+        }
+        .conn-badge.on { background: #dcfce7; color: #166534; }
+        .conn-badge.off { background: #ffedd5; color: #9a3412; }
     </style>
 </head>
 <body data-pagina="painel">
     <div class="header" style="display:block;">
         <h1 class="painel-titulo-pagina" id="painel-titulo-pagina"><i class="fa-solid fa-clipboard-list" style="color:#e85d04;margin-right:6px;"></i> <span data-bind="nome">Nome da Sua Loja</span></h1>
         <p class="painel-intro-grande" id="painel-intro-grande">Cada pedido é um cartão. Use o botão laranja grande em cada cartão para avançar a etapa.</p>
-        <p id="last-update" style="color: #6b7280; font-size: 1rem; margin: 0 0 12px;">Atualizado agora</p>
+        <p style="color: #6b7280; font-size: 1rem; margin: 0 0 12px;"><span id="last-update">Atualizado agora</span> <span id="painel-conn-badge" class="conn-badge on">🟢 Online</span></p>
 
         <div id="painel-turno-bar" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:#fffbeb;border:2px solid #f59e0b;border-radius:14px;padding:12px 14px;margin-bottom:14px;">
             <button id="btn-iniciar-turno" type="button" style="border:none;background:#e85d04;color:#fff;padding:12px 16px;border-radius:10px;font-weight:800;font-size:0.96rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px;">

@@ -23,7 +23,9 @@ const statusText = document.getElementById('status-text');
 const loading = document.getElementById('loading');
 const errorContainer = document.getElementById('error-container');
 let lastTrackHash = '';
+let lastTrackUpdatedAt = '';
 let destinationCoords = null;
+let trackingTimer = null;
 
 async function carregarLoja() {
     try {
@@ -92,13 +94,19 @@ function startTracking() {
             linkLoja.href = 'marketplace.html';
         }
     }
-    fetchLocation();
-    trackingInterval = setInterval(() => {
-        if (window.AcheIAkiRealtime && window.AcheIAkiRealtime.estaConectado && window.AcheIAkiRealtime.estaConectado()) {
-            return; // SSE conectado entrega atualização instantânea sem polling redundante
-        }
-        fetchLocation();
-    }, 12000);
+    fetchLocation(true);
+    function agendarPollRastreio() {
+        clearTimeout(trackingTimer);
+        const espera = 10000 + Math.floor(Math.random() * 4000); // jitter 10s–14s
+        trackingTimer = setTimeout(() => {
+            const sseOk = window.AcheIAkiRealtime && window.AcheIAkiRealtime.estaConectado && window.AcheIAkiRealtime.estaConectado();
+            if (!sseOk && !document.hidden) {
+                fetchLocation(false);
+            }
+            agendarPollRastreio();
+        }, espera);
+    }
+    agendarPollRastreio();
     const navBox = document.getElementById('rastreio-nav');
     if (navBox && window.AcheIAkiRealtime && 'Notification' in window && Notification.permission !== 'granted') {
         const btnPush = document.createElement('button');
@@ -135,17 +143,24 @@ function apiFetch(path, options) {
     return fetch(path, options);
 }
 
-function fetchLocation() {
-    apiFetch(`get_order_status.php?id=${encodeURIComponent(orderId)}&c=${encodeURIComponent(orderCode)}`)
-        .then(res => res.json())
+function fetchLocation(forcarFull) {
+    const sinceQs = (!forcarFull && lastTrackUpdatedAt) ? ('&since=' + encodeURIComponent(lastTrackUpdatedAt)) : '';
+    apiFetch(`get_order_status.php?id=${encodeURIComponent(orderId)}&c=${encodeURIComponent(orderCode)}${sinceQs}`)
+        .then(res => {
+            if (res.status === 304) return { success: true, changed: false };
+            return res.json();
+        })
         .then(data => {
-            if (data.success) {
+            if (!data) return;
+            if (data.updated_at) lastTrackUpdatedAt = String(data.updated_at);
+            if (data.changed === false) return;
+            if (data.success && data.order) {
                 const currentTrackHash = JSON.stringify(data.order);
                 if (currentTrackHash === lastTrackHash) return;
                 lastTrackHash = currentTrackHash;
 
                 const order = data.order;
-                updateStatusUI(order.status);
+                updateStatusUI(order.status, order);
                 mostrarRastreioExterno(order.rastreio_externo);
 
                 // Geocode destination if not already done
@@ -154,7 +169,7 @@ function fetchLocation() {
                 }
 
                 if (order.status === 'concluido' || order.status === 'arquivado') {
-                    clearInterval(trackingInterval);
+                    clearTimeout(trackingTimer);
                 }
 
                 if (order.location) {
@@ -232,7 +247,7 @@ function mostrarRastreioExterno(url) {
     el.href = url;
 }
 
-function updateStatusUI(status) {
+function updateStatusUI(status, orderObj) {
     const steps = ['novo', 'preparo', 'em-rota', 'concluido'];
     const currentIdx = steps.indexOf(status);
     
@@ -255,7 +270,14 @@ function updateStatusUI(status) {
         'concluido': 'Pedido entregue! Bom apetite! 😋',
         'arquivado': 'Este pedido foi finalizado e arquivado.'
     };
-    statusText.innerText = texts[status] || 'Aguardando atualização...';
+    let msgFinal = texts[status] || 'Aguardando atualização...';
+    if (status === 'novo' && orderObj && (orderObj.created_at || orderObj.timestamp)) {
+        const dt = new Date(String(orderObj.created_at || orderObj.timestamp).replace(' ', 'T'));
+        if (!isNaN(dt.getTime()) && ((Date.now() - dt.getTime()) / 60000) >= 6) {
+            msgFinal = '⏳ A loja está com alta demanda para aceitar. Se preferir, fale no WhatsApp abaixo.';
+        }
+    }
+    statusText.innerText = msgFinal;
 
     const mapEl = document.getElementById('map');
     const statusIcon = document.getElementById('status-icon');

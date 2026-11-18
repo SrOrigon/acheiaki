@@ -40,15 +40,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pedidoAntes = Database::findOrder($req['id']);
         $statusAnterior = is_array($pedidoAntes) ? (string) ($pedidoAntes['status'] ?? 'novo') : 'novo';
 
+        $novoStatusNorm = Database::normalizeStatusName($req['status']);
+        if ($novoStatusNorm === '') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Status inválido.']);
+            exit;
+        }
+
         if ($authCozinha && !$autorizadoPainel) {
-            $statusAtual = $statusAnterior;
-            $novoStatus = (string) $req['status'];
-            if ($statusAtual !== 'preparo' || $novoStatus !== 'em-rota') {
+            if ($statusAnterior !== 'preparo' || !in_array($novoStatusNorm, ['em-rota'], true)) {
                 http_response_code(403);
                 echo json_encode(['success' => false, 'message' => 'Na cozinha só é permitido marcar o pedido como pronto para entrega.']);
                 exit;
             }
         }
+
+        $cancelar = in_array(strtolower((string) $req['status']), ['cancelado', 'cancelled'], true) || !empty($req['cancelar']);
+        $statusPersistir = $cancelar ? 'arquivado' : $novoStatusNorm;
+        $roleAtor = $authCozinha && !$autorizadoPainel ? 'cozinha' : (!empty($req['role']) ? (string) $req['role'] : 'painel');
 
         $camposPatch = [];
         if (isset($req['rastreio_externo'])) {
@@ -67,33 +76,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($req['valor_recebido_entrega']) && is_numeric($req['valor_recebido_entrega'])) {
             $camposPatch['valor_recebido_entrega'] = round((float) $req['valor_recebido_entrega'], 2);
         }
-
-        $novoStatus = (string) $req['status'];
-        if (!in_array($novoStatus, ['novo', 'preparo', 'em-rota', 'concluido', 'arquivado', 'cancelado'], true)) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Status inválido.']);
-            exit;
-        }
-
-        $cancelar = ($novoStatus === 'cancelado') || !empty($req['cancelar']);
-        $statusPersistir = $novoStatus === 'cancelado' ? 'arquivado' : $novoStatus;
         if ($cancelar) {
             $camposPatch['cancelado'] = true;
             $camposPatch['motivo_cancelamento'] = pz_limpar_str($req['motivo_cancelamento'] ?? 'Cancelado no painel', 200);
         } elseif ($statusPersistir !== 'arquivado') {
             $camposPatch['cancelado'] = false;
         }
-        if ($statusPersistir === 'em-rota' && empty($pedidoAntes['saiu_em'])) {
-            $camposPatch['saiu_em'] = date('Y-m-d H:i:s');
+
+        $txRes = Database::transitionOrderStatus($req['id'], $req['status'], [
+            'forcar_rollback' => $autorizadoPainel && !empty($req['forcar_rollback']),
+            'role' => $autorizadoPainel ? 'painel_admin' : $roleAtor,
+        ]);
+
+        if (empty($txRes['ok'])) {
+            http_response_code((int) ($txRes['code'] ?? 409));
+            echo json_encode(['success' => false, 'message' => $txRes['message'] ?? 'Transição de status inválida.'], JSON_UNESCAPED_UNICODE);
+            exit;
         }
-        if ($statusPersistir === 'concluido' && empty($pedidoAntes['entregue_em'])) {
-            $camposPatch['entregue_em'] = date('Y-m-d H:i:s');
-        }
+
         if ($camposPatch) {
             Database::patchOrder($req['id'], $camposPatch);
         }
 
-        if (Database::updateOrderStatus($req['id'], $statusPersistir)) {
+        if (true) {
             if ($statusPersistir === 'preparo') {
                 Database::garantirComandaCozinha($req['id']);
             }

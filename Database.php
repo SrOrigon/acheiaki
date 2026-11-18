@@ -217,15 +217,66 @@ class Database
         }
     }
 
-    public static function saveOrder($order)
+    private static function bumpOrdersVersion($slug = null)
+    {
+        $t = $slug !== null ? self::sanitizeTenant($slug) : self::$tenant;
+        $ver = (string) round(microtime(true) * 1000);
+        pz_cache_set('orders_ver_' . $t, $ver, 86400);
+        return $ver;
+    }
+
+    public static function getOrdersVersion($slug = null)
+    {
+        $t = $slug !== null ? self::sanitizeTenant($slug) : self::$tenant;
+        $ver = pz_cache_get('orders_ver_' . $t, null);
+        if (is_string($ver) && $ver !== '') {
+            return $ver;
+        }
+        $anterior = self::$tenant;
+        self::setTenant($t);
+        $orders = self::read('pedidos.json');
+        self::setTenant($anterior);
+        $maxMs = 0;
+        if (is_array($orders)) {
+            foreach ($orders as $o) {
+                if (is_array($o)) {
+                    $m = (int) ($o['updated_ms'] ?? 0);
+                    if ($m > $maxMs) {
+                        $maxMs = $m;
+                    }
+                }
+            }
+        }
+        $ver = $maxMs > 0 ? (string) $maxMs : '1';
+        pz_cache_set('orders_ver_' . $t, $ver, 86400);
+        return $ver;
+    }
+
+    public static function saveOrderAtomic(array $order, $checkoutToken = '')
     {
         if (self::$tenant !== 'default' && !isset($order['tenant'])) {
             $order['tenant'] = self::$tenant;
         }
+        $token = trim((string) $checkoutToken);
+        $agoraIso = date('c');
+        $agoraMs = (int) round(microtime(true) * 1000);
+        $order['checkout_token'] = $token;
+        $order['created_at'] = $order['created_at'] ?? $agoraIso;
+        $order['updated_at'] = $agoraIso;
+        $order['updated_ms'] = $agoraMs;
 
-        return self::mutate('pedidos.json', function (&$orders) use ($order) {
+        $duplicado = null;
+        $ok = self::mutate('pedidos.json', function (&$orders) use ($order, $token, &$duplicado) {
             if (!is_array($orders)) {
                 $orders = [];
+            }
+            if ($token !== '') {
+                foreach ($orders as $existing) {
+                    if (is_array($existing) && (string) ($existing['checkout_token'] ?? '') === $token) {
+                        $duplicado = $existing;
+                        return false;
+                    }
+                }
             }
             array_unshift($orders, $order);
             if (count($orders) > 500) {
@@ -233,6 +284,77 @@ class Database
             }
             return true;
         });
+
+        if ($duplicado !== null) {
+            return ['success' => true, 'deduplicated' => true, 'order' => $duplicado];
+        }
+        if (!$ok) {
+            return ['success' => false, 'deduplicated' => false, 'order' => null];
+        }
+
+        // Espelha em tabela relacional transacional se PDO estiver ativo
+        $pdo = function_exists('pz_pdo') ? pz_pdo() : null;
+        if ($pdo instanceof PDO) {
+            try {
+                $pdo->beginTransaction();
+                $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+                if ($driver === 'pgsql') {
+                    $pdo->exec("CREATE TABLE IF NOT EXISTS pz_orders_tx (
+                        id VARCHAR(64) NOT NULL,
+                        tenant_slug VARCHAR(64) NOT NULL,
+                        checkout_token VARCHAR(96) DEFAULT '',
+                        status VARCHAR(24) NOT NULL,
+                        items_count INTEGER NOT NULL,
+                        total_amount NUMERIC(12,2) NOT NULL,
+                        created_at VARCHAR(40) NOT NULL,
+                        updated_at VARCHAR(40) NOT NULL,
+                        PRIMARY KEY (tenant_slug, id)
+                    )");
+                    $st = $pdo->prepare('INSERT INTO pz_orders_tx (id, tenant_slug, checkout_token, status, items_count, total_amount, created_at, updated_at)
+                        VALUES (?,?,?,?,?,?,?,?)
+                        ON CONFLICT (tenant_slug, id) DO UPDATE SET status = EXCLUDED.status, updated_at = EXCLUDED.updated_at');
+                } else {
+                    $pdo->exec("CREATE TABLE IF NOT EXISTS pz_orders_tx (
+                        id VARCHAR(64) NOT NULL,
+                        tenant_slug VARCHAR(64) NOT NULL,
+                        checkout_token VARCHAR(96) DEFAULT '',
+                        status VARCHAR(24) NOT NULL,
+                        items_count INT NOT NULL,
+                        total_amount DECIMAL(12,2) NOT NULL,
+                        created_at VARCHAR(40) NOT NULL,
+                        updated_at VARCHAR(40) NOT NULL,
+                        PRIMARY KEY (tenant_slug, id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                    $st = $pdo->prepare('INSERT INTO pz_orders_tx (id, tenant_slug, checkout_token, status, items_count, total_amount, created_at, updated_at)
+                        VALUES (?,?,?,?,?,?,?,?)
+                        ON DUPLICATE KEY UPDATE status = VALUES(status), updated_at = VALUES(updated_at)');
+                }
+                $st->execute([
+                    (string) $order['id'],
+                    self::$tenant,
+                    $token,
+                    (string) ($order['status'] ?? 'novo'),
+                    count((array) ($order['itens'] ?? [])),
+                    round((float) ($order['total'] ?? 0), 2),
+                    $agoraIso,
+                    $agoraIso,
+                ]);
+                $pdo->commit();
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+            }
+        }
+
+        self::bumpOrdersVersion();
+        return ['success' => true, 'deduplicated' => false, 'order' => $order];
+    }
+
+    public static function saveOrder($order)
+    {
+        $res = self::saveOrderAtomic(is_array($order) ? $order : [], (string) ($order['checkout_token'] ?? ''));
+        return !empty($res['success']);
     }
 
     public static function patchOrder($id, array $fields)
@@ -240,8 +362,15 @@ class Database
         $permitidos = [
             'rastreio_externo',
             'comanda_impressa_id',
+            'comanda_impressa_em',
             'comanda_id',
             'cozinha_desde',
+            'aceito_em',
+            'em_preparo_em',
+            'pronto_em',
+            'saiu_entrega_em',
+            'cancelado_em',
+            'etapa_detalhada',
             'entregador_id',
             'entregador_nome',
             'saiu_em',
@@ -250,7 +379,7 @@ class Database
             'cancelado',
             'motivo_cancelamento',
         ];
-        return self::mutate('pedidos.json', function (&$orders) use ($id, $fields, $permitidos) {
+        $ok = self::mutate('pedidos.json', function (&$orders) use ($id, $fields, $permitidos) {
             foreach ($orders as &$order) {
                 if ((string) ($order['id'] ?? '') === (string) $id) {
                     foreach ($permitidos as $campo) {
@@ -258,35 +387,160 @@ class Database
                             $order[$campo] = $fields[$campo];
                         }
                     }
+                    $order['updated_at'] = date('c');
+                    $order['updated_ms'] = (int) round(microtime(true) * 1000);
                     return true;
                 }
             }
             unset($order);
             return false;
         });
+        if ($ok) {
+            self::bumpOrdersVersion();
+        }
+        return $ok;
+    }
+
+    public static function normalizeStatusName($raw)
+    {
+        $k = strtolower(trim((string) $raw));
+        $map = [
+            'pendente' => 'novo',
+            'novo' => 'novo',
+            'aceito' => 'preparo',
+            'em_preparo' => 'preparo',
+            'preparo' => 'preparo',
+            'pronto' => 'em-rota',
+            'saiu_entrega' => 'em-rota',
+            'em-rota' => 'em-rota',
+            'entregue' => 'concluido',
+            'concluido' => 'concluido',
+            'cancelado' => 'arquivado',
+            'arquivado' => 'arquivado',
+        ];
+        return $map[$k] ?? '';
+    }
+
+    public static function transitionOrderStatus($id, $rawStatus, array $opts = [])
+    {
+        $novoStatus = self::normalizeStatusName($rawStatus);
+        $rawKey = strtolower(trim((string) $rawStatus));
+        if ($novoStatus === '') {
+            return ['ok' => false, 'code' => 400, 'message' => 'Status inválido.'];
+        }
+
+        $rank = [
+            'novo' => 0,
+            'preparo' => 1,
+            'em-rota' => 2,
+            'concluido' => 3,
+            'arquivado' => 4,
+        ];
+        $allowRollback = !empty($opts['forcar_rollback']);
+        $actorRole = strtolower(trim((string) ($opts['role'] ?? 'painel')));
+        $agoraSql = date('Y-m-d H:i:s');
+        $agoraIso = date('c');
+        $agoraMs = (int) round(microtime(true) * 1000);
+
+        $erroMsg = '';
+        $erroCode = 404;
+        $pedidoFinal = null;
+
+        $ok = self::mutate('pedidos.json', function (&$orders) use ($id, $novoStatus, $rawKey, $rank, $allowRollback, $actorRole, $agoraSql, $agoraIso, $agoraMs, &$erroMsg, &$erroCode, &$pedidoFinal) {
+            foreach ($orders as &$order) {
+                if ((string) ($order['id'] ?? '') !== (string) $id) {
+                    continue;
+                }
+                $anterior = (string) ($order['status'] ?? 'novo');
+                if ($anterior === $novoStatus) {
+                    if ($rawKey === 'pronto' && empty($order['pronto_em'])) {
+                        $order['pronto_em'] = $agoraIso;
+                    }
+                    $order['updated_at'] = $agoraIso;
+                    $order['updated_ms'] = $agoraMs;
+                    $pedidoFinal = $order;
+                    return true;
+                }
+
+                // Trava contra retrocesso acidental por concorrência (cozinha/motoboy vs painel)
+                $rAnt = $rank[$anterior] ?? 0;
+                $rNov = $rank[$novoStatus] ?? 0;
+                if ($rNov < $rAnt) {
+                    if (!$allowRollback || in_array($actorRole, ['cozinha', 'motoboy', 'entregador'], true) || in_array($anterior, ['concluido', 'arquivado'], true) && $actorRole !== 'painel_admin') {
+                        $erroCode = 409;
+                        $erroMsg = 'Transição bloqueada: o pedido #' . $id . ' já está em "' . $anterior . '" e não pode voltar para "' . $novoStatus . '".';
+                        return false;
+                    }
+                }
+                if ($anterior === 'arquivado' && $novoStatus !== 'arquivado' && !$allowRollback) {
+                    $erroCode = 409;
+                    $erroMsg = 'Pedido encerrado/cancelado não pode avançar automaticamente.';
+                    return false;
+                }
+
+                $order['status'] = $novoStatus;
+                $order['etapa_detalhada'] = $rawKey;
+                $order['updated_at'] = $agoraIso;
+                $order['updated_ms'] = $agoraMs;
+
+                if ($novoStatus === 'preparo') {
+                    if (empty($order['aceito_em'])) {
+                        $order['aceito_em'] = $agoraIso;
+                    }
+                    if (empty($order['em_preparo_em'])) {
+                        $order['em_preparo_em'] = $agoraIso;
+                    }
+                    $order['cozinha_desde'] = $order['cozinha_desde'] ?? $agoraSql;
+                    if (empty($order['comanda_id'])) {
+                        $order['comanda_id'] = date('YmdHis') . '-' . substr(bin2hex(random_bytes(3)), 0, 6);
+                        $order['comanda_impressa_id'] = '';
+                    }
+                } elseif ($novoStatus === 'em-rota') {
+                    if (empty($order['aceito_em'])) {
+                        $order['aceito_em'] = $agoraIso;
+                    }
+                    if (empty($order['pronto_em'])) {
+                        $order['pronto_em'] = $agoraIso;
+                    }
+                    if (empty($order['saiu_entrega_em'])) {
+                        $order['saiu_entrega_em'] = $agoraIso;
+                    }
+                    if (empty($order['saiu_em'])) {
+                        $order['saiu_em'] = $agoraSql;
+                    }
+                } elseif ($novoStatus === 'concluido') {
+                    if (empty($order['entregue_em'])) {
+                        $order['entregue_em'] = $agoraSql;
+                    }
+                    unset($order['location']);
+                } elseif ($novoStatus === 'arquivado') {
+                    if (!empty($order['cancelado']) && empty($order['cancelado_em'])) {
+                        $order['cancelado_em'] = $agoraIso;
+                    }
+                    unset($order['location']);
+                }
+
+                $pedidoFinal = $order;
+                return true;
+            }
+            unset($order);
+            $erroCode = 404;
+            $erroMsg = 'Pedido não encontrado.';
+            return false;
+        });
+
+        if ($ok) {
+            self::bumpOrdersVersion();
+            return ['ok' => true, 'code' => 200, 'order' => $pedidoFinal, 'status' => $novoStatus];
+        }
+
+        return ['ok' => false, 'code' => $erroCode, 'message' => $erroMsg ?: 'Não foi possível atualizar o status.'];
     }
 
     public static function updateOrderStatus($id, $status)
     {
-        return self::mutate('pedidos.json', function (&$orders) use ($id, $status) {
-            foreach ($orders as &$order) {
-                if ((string) ($order['id'] ?? '') === (string) $id) {
-                    $anterior = (string) ($order['status'] ?? 'novo');
-                    $order['status'] = $status;
-                    if ($status === 'preparo' && $anterior !== 'preparo') {
-                        $order['cozinha_desde'] = date('Y-m-d H:i:s');
-                        $order['comanda_id'] = date('YmdHis') . '-' . substr(bin2hex(random_bytes(3)), 0, 6);
-                        $order['comanda_impressa_id'] = '';
-                    }
-                    if ($status === 'concluido' || $status === 'arquivado') {
-                        unset($order['location']);
-                    }
-                    return true;
-                }
-            }
-            unset($order);
-            return false;
-        });
+        $res = self::transitionOrderStatus($id, $status, ['forcar_rollback' => true, 'role' => 'painel']);
+        return !empty($res['ok']);
     }
 
     public static function garantirComandaCozinha($id)
@@ -328,7 +582,7 @@ class Database
 
     public static function updateOrderLocation($id, $lat, $lng)
     {
-        return self::mutate('pedidos.json', function (&$orders) use ($id, $lat, $lng) {
+        $ok = self::mutate('pedidos.json', function (&$orders) use ($id, $lat, $lng) {
             foreach ($orders as &$order) {
                 if ((string) ($order['id'] ?? '') === (string) $id) {
                     if (($order['status'] ?? '') === 'concluido' || ($order['status'] ?? '') === 'arquivado') {
@@ -339,12 +593,18 @@ class Database
                         'lng' => $lng,
                         'last_update' => date('Y-m-d H:i:s'),
                     ];
+                    $order['updated_at'] = date('c');
+                    $order['updated_ms'] = (int) round(microtime(true) * 1000);
                     return true;
                 }
             }
             unset($order);
             return false;
         });
+        if ($ok) {
+            self::bumpOrdersVersion();
+        }
+        return $ok;
     }
 
     /**
@@ -352,12 +612,16 @@ class Database
      */
     public static function deleteArchivedOrders()
     {
-        return self::mutate('pedidos.json', function (&$orders) {
+        $ok = self::mutate('pedidos.json', function (&$orders) {
             $orders = array_values(array_filter($orders, function ($p) {
                 return ($p['status'] ?? 'novo') !== 'arquivado';
             }));
             return true;
         });
+        if ($ok) {
+            self::bumpOrdersVersion();
+        }
+        return $ok;
     }
 
     /**

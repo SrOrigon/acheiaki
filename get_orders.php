@@ -17,5 +17,31 @@ if (!pedidozap_autorizado($user, $pass)) {
     exit;
 }
 
+$ordersVer = Database::getOrdersVersion();
+$etagOrders = '"' . sha1(Database::getTenant() . '|' . $ordersVer) . '"';
+header('ETag: ' . $etagOrders);
+header('Cache-Control: no-cache');
+
+if (trim((string) ($_SERVER['HTTP_IF_NONE_MATCH'] ?? '')) === $etagOrders) {
+    http_response_code(304);
+    exit;
+}
+
+$since = trim((string) ($_GET['since'] ?? ''));
+$delta = ($_GET['delta'] ?? '') === '1';
+if ($delta && $since !== '' && $since === $ordersVer) {
+    echo json_encode(['success' => true, 'changed' => false, 'updated_at' => $ordersVer]);
+    exit;
+}
+
 $orders = Database::read('pedidos.json');
+if ($delta) {
+    echo json_encode([
+        'success' => true,
+        'changed' => true,
+        'updated_at' => $ordersVer,
+        'orders' => $orders,
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 echo json_encode($orders);

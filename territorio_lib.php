@@ -168,6 +168,7 @@ function pz_territorio_coletar_lojas($useCache = true)
 
         // Tempo médio operacional e taxa de conclusão
         $tempos = [];
+        $temposPreparo = [];
         $totalPed = 0;
         $concluidos = 0;
         $cancelados = 0;
@@ -182,8 +183,16 @@ function pz_territorio_coletar_lojas($useCache = true)
             } elseif ($st === 'concluido' || $st === 'arquivado') {
                 $concluidos++;
             }
-            $inicio = strtotime((string) ($p['criado_em'] ?? $p['data'] ?? ''));
-            $fim = strtotime((string) ($p['entregue_em'] ?? $p['saiu_em'] ?? ''));
+            $inicio = strtotime((string) ($p['created_at'] ?? $p['criado_em'] ?? $p['timestamp'] ?? $p['data'] ?? ''));
+            $aceitoAt = strtotime((string) ($p['aceito_em'] ?? $p['cozinha_desde'] ?? ''));
+            $prontoAt = strtotime((string) ($p['pronto_em'] ?? $p['saiu_entrega_em'] ?? $p['saiu_em'] ?? ''));
+            if ($aceitoAt && $prontoAt && $prontoAt > $aceitoAt) {
+                $mPrep = ($prontoAt - $aceitoAt) / 60;
+                if ($mPrep >= 2 && $mPrep <= 120) {
+                    $temposPreparo[] = $mPrep;
+                }
+            }
+            $fim = strtotime((string) ($p['entregue_em'] ?? $p['saiu_entrega_em'] ?? $p['saiu_em'] ?? ''));
             if ($inicio && $fim && $fim > $inicio) {
                 $min = ($fim - $inicio) / 60;
                 if ($min >= 3 && $min <= 180) {
@@ -191,6 +200,7 @@ function pz_territorio_coletar_lojas($useCache = true)
                 }
             }
         }
+        $tempoPreparoReal = count($temposPreparo) > 0 ? (int) round(array_sum($temposPreparo) / count($temposPreparo)) : null;
         $tempoReal = count($tempos) > 0
             ? (int) round(array_sum($tempos) / count($tempos))
             : (int) ($cfg['TEMPO_ENTREGA_MIN'] ?? 35);
@@ -343,6 +353,7 @@ function pz_territorio_coletar_lojas($useCache = true)
             'taxa_entrega_base' => round($taxaBase, 2),
             'tempo_medio_min' => $tempoReal,
             'tempo_espera_txt' => (string) ($cfg['TEMPO_ESPERA'] ?? ($tempoReal . ' min')),
+            'tempo_preparo_real_min' => $tempoPreparoReal,
             'aberto' => $aberto && ((int) ($cfg['PAUSADA_ATE'] ?? 0) <= time()),
             'pausada_ate' => (int) ($cfg['PAUSADA_ATE'] ?? 0),
             'cor_primaria' => $cor,

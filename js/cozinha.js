@@ -4,6 +4,33 @@ let textosComanda = {};
 let audioCtx = null;
 const impressoesPendentes = new Set();
 let hashAnterior = '';
+let ultimoUpdatedCozinha = '';
+let cozinhaEstavaOffline = false;
+let timerPollCozinha = null;
+
+function atualizarBadgeConexaoCozinha(online) {
+    const el = document.getElementById('cozinha-conn-badge');
+    if (!el) return;
+    if (online) {
+        el.style.background = '#064e3b';
+        el.style.color = '#6ee7b7';
+        el.textContent = '🟢 Online';
+    } else {
+        el.style.background = '#7c2d12';
+        el.style.color = '#fed7aa';
+        el.textContent = '🟠 Reconectando...';
+    }
+}
+
+function jaImpressaLocal(comandaId) {
+    if (!comandaId) return false;
+    try { return localStorage.getItem(storageCozinha('comanda_imp_' + comandaId)) === '1'; } catch (e) { return false; }
+}
+
+function marcarImpressaLocal(comandaId) {
+    if (!comandaId) return;
+    try { localStorage.setItem(storageCozinha('comanda_imp_' + comandaId), '1'); } catch (e) {}
+}
 
 function storageCozinha(nome) {
     return (typeof TENANT !== 'undefined') ? TENANT.storageKey(nome) : nome;
@@ -132,12 +159,13 @@ async function imprimirPedido(pedido, opcoes) {
     if (!window.ComandaPedidoZap) return;
     const forcar = opcoes && opcoes.forcar;
     const silencioso = opcoes && opcoes.silencioso;
-    if (!forcar && !ComandaPedidoZap.precisaImprimir(pedido)) return;
+    if (!forcar && (!ComandaPedidoZap.precisaImprimir(pedido) || jaImpressaLocal(pedido.comanda_id))) return;
     if (!pedido.comanda_id) return;
 
     const chave = pedido.id + ':' + pedido.comanda_id;
     if (impressoesPendentes.has(chave)) return;
     impressoesPendentes.add(chave);
+    if (!forcar) marcarImpressaLocal(pedido.comanda_id);
 
     const ok = ComandaPedidoZap.imprimir(pedido, {
         modo: 'cozinha',
@@ -280,7 +308,7 @@ function processarNovidades(lista, nomeLoja, cfgComanda) {
     renderizar();
 }
 
-function carregarPedidos() {
+function carregarPedidos(forcarFull) {
     if (!chaveCozinha) {
         const err = document.getElementById('erro-cozinha');
         if (err) {
@@ -291,27 +319,44 @@ function carregarPedidos() {
     }
 
     const incluirNovos = localStorage.getItem(storageCozinha('cozinha_mostrar_novos')) === '1' ? '&incluir_novos=1' : '';
-    fetch(apiUrl('get_cozinha_pedidos.php?k=' + encodeURIComponent(chaveCozinha) + incluirNovos + '&v=' + Date.now() + tenantQuery()))
+    const sinceQs = (!forcarFull && ultimoUpdatedCozinha) ? ('&since=' + encodeURIComponent(ultimoUpdatedCozinha)) : '';
+    fetch(apiUrl('get_cozinha_pedidos.php?k=' + encodeURIComponent(chaveCozinha) + incluirNovos + sinceQs + tenantQuery()))
         .then((r) => {
             if (r.status === 401) throw new Error('auth');
+            if (r.status === 304) return { success: true, changed: false };
             return r.json();
         })
         .then((data) => {
             if (!data.success) throw new Error(data.message || 'erro');
-            const hash = JSON.stringify((data.pedidos || []).map((p) => [p.id, p.status, p.comanda_id, p.comanda_impressa_id]));
-            if (hash !== hashAnterior) {
-                processarNovidades(data.pedidos || [], data.nome_loja, data.comanda);
-            }
+            const voltouOnline = cozinhaEstavaOffline;
+            cozinhaEstavaOffline = false;
+            atualizarBadgeConexaoCozinha(true);
+
+            if (data.updated_at) ultimoUpdatedCozinha = String(data.updated_at);
             const stamp = document.getElementById('atualizado');
+            if (data.changed === false) {
+                if (stamp) stamp.textContent = 'Sincronizado às ' + new Date().toLocaleTimeString('pt-BR');
+                return;
+            }
+            const lista = data.pedidos || [];
+            const hash = JSON.stringify(lista.map((p) => [p.id, p.status, p.comanda_id, p.comanda_impressa_id]));
+            if (hash !== hashAnterior) {
+                processarNovidades(lista, data.nome_loja, data.comanda);
+                if (voltouOnline && lista.some((p) => p.status === 'preparo')) {
+                    tocarNovaComanda();
+                }
+            }
             if (stamp) stamp.textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
         })
         .catch((e) => {
             const err = document.getElementById('erro-cozinha');
-            if (!err) return;
-            if (e.message === 'auth') {
+            if (e && e.message === 'auth' && err) {
                 err.hidden = false;
                 err.textContent = 'Este link expirou ou é inválido. Gere um link novo no painel de pedidos.';
+                return;
             }
+            cozinhaEstavaOffline = true;
+            atualizarBadgeConexaoCozinha(false);
         });
 }
 
@@ -377,14 +422,24 @@ function iniciar() {
     }
 
     document.addEventListener('click', prepararAudio, { once: true });
-    carregarPedidos();
-    let tickCozinha = 0;
-    setInterval(() => {
-        tickCozinha++;
+    carregarPedidos(true);
+    function agendarPollCozinha() {
+        clearTimeout(timerPollCozinha);
         const sseOk = window.AcheIAkiRealtime && window.AcheIAkiRealtime.estaConectado && window.AcheIAkiRealtime.estaConectado();
-        if (sseOk && tickCozinha % 3 !== 0) return; // SSE entrega instantaneamente; backup leve a cada ~21s
-        carregarPedidos();
-    }, 7000);
+        const baseMin = sseOk ? 18000 : 5500;
+        const jitter = sseOk ? 6000 : 3000;
+        const espera = baseMin + Math.floor(Math.random() * jitter);
+        timerPollCozinha = setTimeout(() => {
+            if (!document.hidden) carregarPedidos(false);
+            agendarPollCozinha();
+        }, espera);
+    }
+    agendarPollCozinha();
+    window.addEventListener('online', () => {
+        prepararAudio();
+        carregarPedidos(true);
+    });
+    window.addEventListener('offline', () => atualizarBadgeConexaoCozinha(false));
     if (window.PedidoZapCelulas && window.PedidoZapCelulas.escutar) {
         window.PedidoZapCelulas.escutar((ev) => {
             if (!ev || !ev.tipo) return;

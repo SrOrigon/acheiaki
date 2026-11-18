@@ -35,22 +35,67 @@ function pz_produtos_por_id(array $cardapio)
     return $mapa;
 }
 
+function pz_loja_aberta_backend(array $cfg)
+{
+    if (!empty($cfg['PAUSADA_ATE']) && (int) $cfg['PAUSADA_ATE'] > time()) {
+        return ['aberta' => false, 'motivo' => 'Esta loja pausou pedidos temporariamente por alta demanda.'];
+    }
+    $regras = $cfg['HORARIOS'] ?? null;
+    if (!is_array($regras) || empty($regras)) {
+        return ['aberta' => true];
+    }
+    $diaSemana = (int) date('w');
+    $fechados = array_map('intval', (array) ($regras['FECHADO'] ?? []));
+    if (in_array($diaSemana, $fechados, true)) {
+        return ['aberta' => false, 'motivo' => 'Estabelecimento fechado hoje. Escolha um horário agendado.'];
+    }
+    $ehFds = ($diaSemana === 0 || $diaSemana === 5 || $diaSemana === 6);
+    $janela = $ehFds ? ($regras['FIM_DE_SEMANA'] ?? ($regras['SEMANA'] ?? null)) : ($regras['SEMANA'] ?? ($regras['FIM_DE_SEMANA'] ?? null));
+    if (!is_array($janela)) {
+        return ['aberta' => true];
+    }
+    $parseMin = static function ($v) {
+        if ($v === null || $v === '') {
+            return null;
+        }
+        if (is_numeric($v)) {
+            return (int) $v * 60;
+        }
+        $p = explode(':', (string) $v);
+        return ((int) ($p[0] ?? 0)) * 60 + ((int) ($p[1] ?? 0));
+    };
+    $ini = $parseMin($janela['inicio'] ?? null);
+    $fim = $parseMin($janela['fim'] ?? null);
+    if ($ini === null || $fim === null || $ini === $fim) {
+        return ['aberta' => true];
+    }
+    $agoraMin = ((int) date('G')) * 60 + (int) date('i');
+    $dentro = ($ini < $fim) ? ($agoraMin >= $ini && $agoraMin < $fim) : ($agoraMin >= $ini || $agoraMin < $fim);
+    return $dentro
+        ? ['aberta' => true]
+        : ['aberta' => false, 'motivo' => 'Estabelecimento fechado no momento (' . ($janela['inicio'] ?? '') . ' às ' . ($janela['fim'] ?? '') . ').'];
+}
+
 /**
- * Recalcula o subtotal com os preços do cardápio salvo no servidor.
- * Não bloqueia o pedido: marca divergência para o lojista conferir antes de aceitar.
+ * Recalcula o subtotal e valida esgotados com os preços do cardápio salvo no servidor.
  */
-function pz_conferir_itens(array $itens, array $cardapio)
+function pz_conferir_itens(array &$itens, array $cardapio)
 {
     $produtos = pz_produtos_por_id($cardapio);
     $subtotal = 0.0;
     $problemas = [];
+    $esgotados = [];
 
-    foreach ($itens as $item) {
-        $qtd = (int) ($item['quantidade'] ?? 1);
+    foreach ($itens as $idx => &$item) {
+        $qtd = max(1, (int) ($item['quantidade'] ?? 1));
         $produto = $produtos[(string) ($item['idProduto'] ?? '')] ?? null;
         if (!$produto) {
             $problemas[] = 'Item fora do cardápio: ' . ($item['nome'] ?? '?');
+            $subtotal += round((float) ($item['precoTotal'] ?? $item['precoBase'] ?? 0), 2) * $qtd;
             continue;
+        }
+        if (!empty($produto['esgotado']) || (isset($produto['ativo']) && !$produto['ativo'])) {
+            $esgotados[] = (string) ($produto['nome'] ?? $item['nome'] ?? 'Produto');
         }
 
         $unitario = (float) ($produto['preco'] ?? 0);
@@ -69,26 +114,39 @@ function pz_conferir_itens(array $itens, array $cardapio)
             }
         }
 
-        foreach ((array) ($item['opcionais'] ?? []) as $op) {
-            $nomeOp = (string) ($op['nome'] ?? '');
-            $precoOp = null;
-            foreach ((array) ($produto['opcionais'] ?? []) as $cadastrado) {
-                if (is_array($cadastrado) && strcasecmp((string) ($cadastrado['nome'] ?? ''), $nomeOp) === 0) {
-                    $precoOp = (float) ($cadastrado['preco'] ?? 0);
-                    break;
-                }
+        $mapaOpc = [];
+        foreach ((array) ($produto['opcionais'] ?? []) as $cad) {
+            if (is_array($cad) && !empty($cad['nome'])) {
+                $mapaOpc[strtolower(trim((string) $cad['nome']))] = (float) ($cad['preco'] ?? 0);
             }
-            if ($precoOp === null) {
-                $problemas[] = 'Adicional desconhecido: ' . $nomeOp;
+        }
+        foreach ((array) ($produto['grupos'] ?? []) as $grp) {
+            if (!is_array($grp)) {
                 continue;
             }
-            $unitario += $precoOp;
+            foreach ((array) ($grp['itens'] ?? []) as $cadG) {
+                if (is_array($cadG) && !empty($cadG['nome'])) {
+                    $mapaOpc[strtolower(trim((string) $cadG['nome']))] = (float) ($cadG['preco'] ?? 0);
+                }
+            }
         }
 
-        $subtotal += $unitario * $qtd;
-    }
+        foreach ((array) ($item['opcionais'] ?? []) as $opIdx => $op) {
+            $nomeOp = strtolower(trim((string) ($op['nome'] ?? '')));
+            if (!array_key_exists($nomeOp, $mapaOpc)) {
+                $problemas[] = 'Adicional desconhecido: ' . ($op['nome'] ?? '');
+                continue;
+            }
+            $item['opcionais'][$opIdx]['preco'] = round($mapaOpc[$nomeOp], 2);
+            $unitario += $mapaOpc[$nomeOp];
+        }
 
-    return [round($subtotal, 2), $problemas];
+        $item['precoTotal'] = round($unitario, 2);
+        $subtotal += round($unitario, 2) * $qtd;
+    }
+    unset($item);
+
+    return [round($subtotal, 2), $problemas, $esgotados];
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -206,7 +264,45 @@ if (!$ehRetiradaOuLocal) {
     }
 }
 
-list($subtotalServidor, $problemas) = pz_conferir_itens($itens, Database::readStrict('cardapio.json'));
+$cfgLojaSave = Database::readStrict('config.json');
+if (Database::getTenant() === 'default' && empty($cfgLojaSave)) {
+    $cfgLojaSave = Database::read('config.json');
+}
+require_once 'store_schema.php';
+$cfgLojaSave = pedidozap_normalizar_config(is_array($cfgLojaSave) ? $cfgLojaSave : [], Database::getTenant());
+
+$ehAgendado = stripos((string) ($pedido['entrega'] ?? ''), 'AGENDADO') !== false;
+$emModoAnalise = !empty($pedido['modo_analise']);
+if (strpos($canalPedido, 'atendente') === false && !$ehAgendado && !$emModoAnalise) {
+    $abertaCheck = pz_loja_aberta_backend($cfgLojaSave);
+    if (empty($abertaCheck['aberta'])) {
+        http_response_code(409);
+        echo json_encode([
+            'success' => false,
+            'codigo_erro' => 'loja_fechada_ou_pausada',
+            'message' => $abertaCheck['motivo'] ?? 'Estabelecimento fechado ou pausado no momento.',
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+$checkoutToken = preg_replace('/[^A-Za-z0-9_-]/', '', (string) ($pedido['checkout_token'] ?? ''));
+
+$cardapioServidor = Database::readStrict('cardapio.json');
+if (Database::getTenant() === 'default' && empty($cardapioServidor)) {
+    $cardapioServidor = Database::read('cardapio.json');
+}
+list($subtotalServidor, $problemas, $esgotados) = pz_conferir_itens($itens, is_array($cardapioServidor) ? $cardapioServidor : []);
+if (!empty($esgotados)) {
+    http_response_code(409);
+    echo json_encode([
+        'success' => false,
+        'codigo_erro' => 'item_esgotado',
+        'message' => 'Item esgotado agora: ' . implode(', ', array_slice($esgotados, 0, 3)) . '. Atualize o carrinho.',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 $descontoAplicado = 0.0;
 $cupomInfo = null;
 if ($cupomCodigo !== '') {
@@ -225,19 +321,24 @@ if ($cupomCodigo !== '') {
 
 $totalServidor = max(0.0, round($subtotalServidor + $frete - $descontoAplicado, 2));
 $divergente = $problemas || abs($totalServidor - $totalCliente) > 0.05;
+$totalAutoritativo = empty($problemas) ? $totalServidor : max($totalServidor, $totalCliente);
 
 $registro = [
     'id' => $id,
     'codigo' => $codigo,
+    'checkout_token' => $checkoutToken,
     'tenant' => Database::getTenant(),
     'data' => pz_texto($pedido['data'] ?? '', 40),
     'timestamp' => date('Y-m-d H:i:s'),
+    'created_at' => date('c'),
+    'updated_at' => date('c'),
+    'updated_ms' => (int) round(microtime(true) * 1000),
     'cliente' => pz_texto($pedido['cliente'] ?? '', 80),
     'celular' => $celularLimpo,
     'itens' => $itens,
-    'subtotal' => round((float) ($pedido['subtotal'] ?? $subtotalServidor), 2),
+    'subtotal' => round($subtotalServidor, 2),
     'desconto' => $descontoAplicado,
-    'total' => $totalCliente,
+    'total' => $totalAutoritativo,
     'frete' => $frete,
     'distancia_km' => isset($pedido['distancia_km']) && is_numeric($pedido['distancia_km']) ? round((float) $pedido['distancia_km'], 2) : null,
     'recebimento' => pz_texto($pedido['recebimento'] ?? '', 30),
@@ -248,10 +349,12 @@ $registro = [
     'troco' => pz_texto($pedido['troco'] ?? '', 20),
     'observacao' => pz_texto($pedido['observacao'] ?? '', 500),
     'status' => 'novo',
+    'etapa_detalhada' => 'pendente',
     'canal' => pz_texto($pedido['canal'] ?? '', 40),
     'location' => null,
     'conferencia' => [
         'total_servidor' => $totalServidor,
+        'total_cliente' => $totalCliente,
         'divergente' => (bool) $divergente,
         'problemas' => array_slice($problemas, 0, 10),
     ],
@@ -267,7 +370,22 @@ if ($cupomInfo) {
     $registro['cupom_detalhe'] = $cupomInfo;
 }
 
-if (Database::saveOrder($registro)) {
+$saveTx = Database::saveOrderAtomic($registro, $checkoutToken);
+if (!empty($saveTx['deduplicated']) && is_array($saveTx['order'])) {
+    $dup = $saveTx['order'];
+    echo json_encode([
+        'success' => true,
+        'deduplicated' => true,
+        'id' => $dup['id'] ?? $id,
+        'codigo' => $dup['codigo'] ?? $codigo,
+        'desconto' => $dup['desconto'] ?? 0,
+        'total_servidor' => $dup['total'] ?? $totalServidor,
+        'message' => 'Pedido já registrado (proteção contra duplicidade).',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (!empty($saveTx['success'])) {
     if ($cupomInfo) {
         pz_incrementar_uso_cupom($cupomInfo['codigo']);
     }

@@ -138,6 +138,14 @@ function iniciarVitrine() {
     }
 
     let carrinho = JSON.parse(localStorage.getItem(cartStorageKey)) || [];
+    let checkoutTokenAtual = '';
+    let enviandoPedido = false;
+    function novoCheckoutToken() {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+            return 'chk_' + window.crypto.randomUUID().replace(/-/g, '');
+        }
+        return 'chk_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+    }
     let itemParaCustomizar = null;
     let enderecoCliente = {};
 
@@ -875,8 +883,16 @@ function iniciarVitrine() {
         if (window.PZAlgoritmo && typeof window.PZAlgoritmo.getVisitorId === 'function') {
             pedidoData.visitor_id = window.PZAlgoritmo.getVisitorId();
         }
+        if (!checkoutTokenAtual) checkoutTokenAtual = novoCheckoutToken();
+        pedidoData.checkout_token = checkoutTokenAtual;
+        pedidoData.modo_analise = Boolean(window.PedidoZapApresentacao && window.PedidoZapApresentacao.ativo());
+
+        if (enviandoPedido) return;
+        enviandoPedido = true;
+        if (btnEnviarPedidoFinal) btnEnviarPedidoFinal.disabled = true;
 
         let pedidoSalvoNoServidor = false;
+        let erroServidorMsg = '';
 
         apiFetch('save_order.php', {
             method: 'POST',
@@ -884,9 +900,19 @@ function iniciarVitrine() {
             body: JSON.stringify(pedidoData),
             keepalive: true
         }).then(async (res) => {
-            if (res && res.ok) pedidoSalvoNoServidor = true;
-            return res.json().catch(() => ({}));
+            const payload = await res.json().catch(() => ({}));
+            if (res && res.ok && payload && payload.success) {
+                pedidoSalvoNoServidor = true;
+            } else if (res && (res.status === 409 || res.status === 400)) {
+                erroServidorMsg = (payload && payload.message) || 'Confira o carrinho antes de finalizar.';
+            }
+            return payload;
         }).then((resp) => {
+            if (!pedidoSalvoNoServidor) return;
+            if (resp && resp.id) {
+                localStorage.setItem('ultimoPedidoId', String(resp.id));
+                resumoCelulaPedido.id = resp.id;
+            }
             if (resp && resp.codigo && resp.codigo !== codigoRastreio) {
                 localStorage.setItem('ultimoPedidoCodigo', resp.codigo);
                 resumoCelulaPedido.codigo = resp.codigo;
@@ -894,7 +920,7 @@ function iniciarVitrine() {
                     window.PedidoZapCelulas.registrarPedidoLocal(resumoCelulaPedido);
                 }
             }
-            if (pedidoSalvoNoServidor && window.PedidoZapOfflineCache) {
+            if (window.PedidoZapOfflineCache) {
                 const s = (typeof TENANT !== 'undefined' && TENANT.slug) ? TENANT.slug : 'default';
                 window.PedidoZapOfflineCache.limparPedidoPendente(s).catch(() => {});
             }
@@ -904,6 +930,12 @@ function iniciarVitrine() {
         }).catch(err => {
             console.error("Erro ao salvar no painel:", err);
         }).finally(() => {
+            enviandoPedido = false;
+            if (btnEnviarPedidoFinal) btnEnviarPedidoFinal.disabled = false;
+            if (erroServidorMsg) {
+                showToast(erroServidorMsg, 'erro');
+                return;
+            }
             if (!pedidoSalvoNoServidor && typeof navigator !== 'undefined' && navigator.onLine === false) {
                 const s = (typeof TENANT !== 'undefined' && TENANT.slug) ? TENANT.slug : 'default';
                 if (window.PedidoZapOfflineCache) {
@@ -918,6 +950,7 @@ function iniciarVitrine() {
                 showToast('Você está offline: seu carrinho e pedido ficaram salvos na página para enviar quando voltar a internet!', 'info');
                 return;
             }
+            checkoutTokenAtual = novoCheckoutToken();
             carrinho = [];
             salvarCarrinho();
             setTimeout(() => {
@@ -1130,6 +1163,7 @@ function iniciarVitrine() {
             }
             modalCarrinho.classList.add('escondido');
             modalEndereco.classList.remove('escondido');
+            checkoutTokenAtual = novoCheckoutToken();
         } else {
             showToast("Carrinho vazio!", 'info');
         }

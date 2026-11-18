@@ -1,5 +1,7 @@
 let watchId = null;
 let bgGeoHandle = null;
+let ultimoUpdatedMotoboy = '';
+let timerPollMotoboy = null;
 const btnToggle = document.getElementById('toggle-tracking');
 const statusDisplay = document.getElementById('status-display');
 const orderInput = document.getElementById('order-id');
@@ -46,18 +48,69 @@ function esc(valor) {
     }[c]));
 }
 
-function carregarPedidosAtivos() {
-    apiFetch('get_active_orders.php?' + acessoQuery(''))
+function renderizarFilaProntos(orders) {
+    const filaEl = document.getElementById('motoboy-fila-prontos');
+    if (!filaEl) return;
+    if (!Array.isArray(orders) || !orders.length) {
+        filaEl.innerHTML = '';
+        return;
+    }
+    const prontos = orders.filter((o) => o.status === 'em-rota' || o.status === 'preparo');
+    if (!prontos.length) {
+        filaEl.innerHTML = '';
+        return;
+    }
+    filaEl.innerHTML = '<div style="font-weight:800;font-size:0.92rem;color:#0f172a;margin-bottom:8px;">🛵 Fila de Despacho Cozinha → Entregador (' + prontos.length + ')</div>'
+        + prontos.slice(0, 6).map((p) => {
+            const end = p.endereco || {};
+            const endTxt = [end.rua, end.numero, end.bairro, end.cidade].filter(Boolean).join(', ');
+            const queryMap = encodeURIComponent([end.rua, end.numero, end.bairro, end.cidade, 'Brasil'].filter(Boolean).join(', '));
+            const telDigits = String(p.celular || '').replace(/\D/g, '');
+            const telWa = telDigits.startsWith('55') ? telDigits : ('55' + telDigits);
+            const cobrarTxt = 'R$ ' + Number(p.total || 0).toFixed(2).replace('.', ',') + ' (' + esc(p.pagamento || 'PIX') + (p.troco ? ' · troco p/ ' + esc(p.troco) : '') + ')';
+            const selBadge = p.status === 'em-rota'
+                ? '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:0.74rem;font-weight:800;">PRONTO P/ SAIR</span>'
+                : '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:999px;font-size:0.74rem;font-weight:800;">NA COZINHA</span>';
+            return '<div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:10px 12px;margin-bottom:8px;">'
+                + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px;">'
+                + '<strong style="color:#0b192c;">#' + esc(p.id) + ' · ' + esc(p.cliente) + '</strong>' + selBadge
+                + '</div>'
+                + (endTxt ? '<div style="font-size:0.84rem;color:#334155;margin-bottom:4px;">📍 ' + esc(endTxt) + (end.complemento ? ' (' + esc(end.complemento) + ')' : '') + '</div>' : '')
+                + '<div style="font-size:0.84rem;font-weight:700;color:#059669;margin-bottom:6px;">💵 Cobrar: ' + cobrarTxt + '</div>'
+                + '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
+                + '<button type="button" data-select-entrega="' + esc(p.id) + '" style="border:none;background:#e85d04;color:#fff;padding:6px 10px;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer;">Entregar este</button>'
+                + (endTxt ? '<a href="https://www.google.com/maps/search/?api=1&query=' + queryMap + '" target="_blank" rel="noopener" style="background:#2563eb;color:#fff;padding:6px 10px;border-radius:8px;font-weight:700;font-size:0.8rem;text-decoration:none;">Maps</a>' : '')
+                + (endTxt ? '<a href="https://waze.com/ul?q=' + queryMap + '&navigate=yes" target="_blank" rel="noopener" style="background:#06b6d4;color:#0f172a;padding:6px 10px;border-radius:8px;font-weight:700;font-size:0.8rem;text-decoration:none;">Waze</a>' : '')
+                + (telDigits.length >= 10 ? '<a href="https://wa.me/' + telWa + '" target="_blank" rel="noopener" style="background:#16a34a;color:#fff;padding:6px 10px;border-radius:8px;font-weight:700;font-size:0.8rem;text-decoration:none;">Zap</a>' : '')
+                + '</div></div>';
+        }).join('');
+
+    filaEl.querySelectorAll('[data-select-entrega]').forEach((b) => {
+        b.addEventListener('click', () => {
+            const idSel = b.getAttribute('data-select-entrega');
+            if (!idSel) return;
+            orderInput.value = idSel;
+            if (selectPedido) selectPedido.value = idSel;
+            fetchOrderInfo();
+        });
+    });
+}
+
+function carregarPedidosAtivos(forcarFull) {
+    const sinceQs = (!forcarFull && ultimoUpdatedMotoboy) ? ('&since=' + encodeURIComponent(ultimoUpdatedMotoboy)) : '';
+    apiFetch('get_active_orders.php?' + acessoQuery('') + sinceQs)
         .then(res => res.json())
         .then(data => {
             if (!data.success) {
                 selectPedido.innerHTML = '<option value="">' + esc(data.message || 'Peça à loja o link do entregador.') + '</option>';
                 return;
             }
-            if (data.success) {
+            if (data.updated_at) ultimoUpdatedMotoboy = String(data.updated_at);
+            if (data.changed === false) return;
+            if (data.success && Array.isArray(data.orders)) {
                 const options = data.orders.map(p => {
-                    const statusIcon = p.status === 'em-rota' ? '🛵' : '🔥';
-                    return `<option value="${esc(p.id)}">${statusIcon} #${esc(p.id)} - ${esc(p.cliente)}</option>`;
+                    const statusIcon = p.status === 'em-rota' ? '🛵 Pronto' : (p.status === 'preparo' ? '🔥 Cozinha' : '🆕');
+                    return `<option value="${esc(p.id)}">${statusIcon} #${esc(p.id)} - ${esc(p.cliente)} (R$ ${Number(p.total || 0).toFixed(2).replace('.', ',')})</option>`;
                 });
                 
                 selectPedido.innerHTML = '<option value="">-- Selecione o Pedido --</option>' + options.join('');
@@ -65,11 +118,11 @@ function carregarPedidosAtivos() {
                 if (orderInput.value) {
                     selectPedido.value = orderInput.value;
                 }
+                renderizarFilaProntos(data.orders);
             }
         })
         .catch(err => {
             console.error("Erro ao carregar pedidos ativos:", err);
-            selectPedido.innerHTML = '<option value="">Não achei os pedidos. Toque em voltar.</option>';
         });
 }
 
@@ -108,19 +161,26 @@ function fetchOrderInfo() {
                 
                 const end = order.endereco || {};
                 let itensStr = (order.itens || []).map(it => `• ${esc(it.quantidade)}x ${esc(it.nome)}`).join('<br>');
+                const queryDest = encodeURIComponent(`${end.rua || ''}, ${end.numero || ''}, ${end.bairro || ''}, ${end.cidade || ''}`);
+                const telCli = String(order.celular || '').replace(/\D/g, '');
+                const telWaCli = telCli.startsWith('55') ? telCli : ('55' + telCli);
                 
                 content.innerHTML = `
                     <p style="font-size: 1.1em; color: var(--primary); font-weight: 700; margin-bottom: 5px;">${esc(order.cliente)}</p>
-                    <p><strong>Endereço:</strong><br>${esc(end.rua)}, ${esc(end.numero)}<br>${esc(end.bairro)}</p>
-                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${end.rua || ''}, ${end.numero || ''}, ${end.bairro || ''}`)}" target="_blank" style="display: inline-block; background: #4285F4; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-size: 0.8em; margin-bottom: 10px;"><i class="fa-solid fa-map-location-dot"></i> Abrir no Google Maps</a>
+                    <p><strong>Endereço:</strong><br>${esc(end.rua || '')}, ${esc(end.numero || '')}${end.complemento ? ' (' + esc(end.complemento) + ')' : ''}<br>${esc(end.bairro || '')}${end.cidade ? ' - ' + esc(end.cidade) : ''}</p>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+                        <a href="https://www.google.com/maps/search/?api=1&query=${queryDest}" target="_blank" style="display: inline-block; background: #4285F4; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight:700;"><i class="fa-solid fa-map-location-dot"></i> Google Maps</a>
+                        <a href="https://waze.com/ul?q=${queryDest}&navigate=yes" target="_blank" style="display: inline-block; background: #06b6d4; color: #0f172a; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight:700;"><i class="fa-brands fa-waze"></i> Waze</a>
+                        ${telCli.length >= 10 ? `<a href="https://wa.me/${telWaCli}" target="_blank" style="display: inline-block; background: #16a34a; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight:700;"><i class="fa-brands fa-whatsapp"></i> Chamar Cliente</a>` : ''}
+                    </div>
                     
                     <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 10px;">
                         <p style="margin: 0;"><strong>Itens:</strong><br>${itensStr}</p>
                         <hr style="border:0; border-top:1px solid #e2e8f0; margin:8px 0;">
                         <p style="margin: 0;"><strong>Subtotal:</strong> R$ ${parseFloat(order.subtotal != null ? order.subtotal : order.total).toFixed(2).replace('.', ',')}</p>
                         <p style="margin: 0;"><strong>Entrega:</strong> R$ ${parseFloat(order.frete || 0).toFixed(2).replace('.', ',')} ${order.frete_detalhe ? '(' + esc(order.frete_detalhe) + ')' : ''}</p>
-                        <p style="margin: 0;"><strong>Total:</strong> R$ ${parseFloat(order.total).toFixed(2).replace('.', ',')}</p>
-                        <p style="margin: 0;"><strong>Pagamento:</strong> ${esc(order.pagamento || 'N/A')}</p>
+                        <p style="margin: 4px 0 0;font-size:1.05em;color:#059669;"><strong>Cobrar / Total:</strong> R$ ${parseFloat(order.total).toFixed(2).replace('.', ',')}</p>
+                        <p style="margin: 2px 0 0;"><strong>Pagamento:</strong> ${esc(order.pagamento || 'N/A')}${order.troco ? ` · <strong style="color:#dc2626;">Levar troco p/ R$ ${esc(order.troco)}</strong>` : ''}</p>
                     </div>
                 `;
                 if (order.status === 'concluido' || order.status === 'arquivado') {
@@ -428,10 +488,18 @@ if (window.APP_CONFIG) aplicarAjudaEntregador();
     }
 })();
 
-// Auto-refresh order info
-setInterval(() => {
-    if (orderInput.value) {
-        fetchOrderInfo();
-    }
-    carregarPedidosAtivos();
-}, 10000);
+// Auto-refresh com jitter e delta sync (reduz carga no servidor)
+function agendarPollMotoboy() {
+    clearTimeout(timerPollMotoboy);
+    const sseOk = window.AcheIAkiRealtime && window.AcheIAkiRealtime.estaConectado && window.AcheIAkiRealtime.estaConectado();
+    const base = sseOk ? 18000 : 8000;
+    const jitter = sseOk ? 6000 : 4000;
+    timerPollMotoboy = setTimeout(() => {
+        if (!document.hidden) {
+            if (orderInput.value) fetchOrderInfo();
+            carregarPedidosAtivos(false);
+        }
+        agendarPollMotoboy();
+    }, base + Math.floor(Math.random() * jitter));
+}
+agendarPollMotoboy();

@@ -23,6 +23,16 @@ let tituloOriginal = document.title;
 let piscaTitulo = null;
 let timerAlarmeContinuo = null;
 let turnoAtivo = false;
+let ultimoUpdatedPainel = '';
+let painelEstavaOffline = false;
+let timerPollPainel = null;
+
+function atualizarBadgeConexaoPainel(online) {
+    const el = document.getElementById('painel-conn-badge');
+    if (!el) return;
+    el.className = 'conn-badge ' + (online ? 'on' : 'off');
+    el.textContent = online ? '🟢 Online' : '🟠 Reconectando...';
+}
 
 function esc(valor) {
     return String(valor == null ? '' : valor).replace(/[&<>"']/g, (c) => ({
@@ -273,7 +283,12 @@ async function tentarImprimirComandaPreparo(pedido, comandaId) {
     if (!imprimirPainelAoPreparo() || !pedido || !window.ComandaPedidoZap) return;
     if (comandaId) pedido.comanda_id = comandaId;
     if (!pedido.comanda_id) return;
+    const chaveImp = painelStorage('comanda_imp_' + pedido.comanda_id);
+    try {
+        if (localStorage.getItem(chaveImp) === '1') return;
+    } catch (e) {}
     if (!ComandaPedidoZap.precisaImprimir(pedido)) return;
+    try { localStorage.setItem(chaveImp, '1'); } catch (e) {}
     const ok = ComandaPedidoZap.imprimir(pedido, {
         modo: 'cozinha',
         comanda: textosComandaPainel(),
@@ -394,7 +409,7 @@ function lojaTravada() {
     return !!(window.PedidoZapStore && PedidoZapStore.lojaBloqueada) && sessionStorage.getItem('admin_master') !== '1';
 }
 
-function carregarPedidos() {
+function carregarPedidos(forcarFull) {
     const user = sessionStorage.getItem('admin_user');
     const pass = sessionStorage.getItem('admin_pass');
 
@@ -403,32 +418,58 @@ function carregarPedidos() {
         return;
     }
 
-    fetch(apiUrl(`get_orders.php?user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}&v=${Date.now()}${tenantQuery()}`))
+    const sinceQs = (!forcarFull && ultimoUpdatedPainel) ? ('&since=' + encodeURIComponent(ultimoUpdatedPainel)) : '';
+    fetch(apiUrl(`get_orders.php?delta=1&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}${sinceQs}${tenantQuery()}`))
         .then(response => {
             if (response.status === 401) {
                 sessionStorage.removeItem('admin_user');
                 sessionStorage.removeItem('admin_pass');
                 alert("Sessão expirada ou credenciais incorretas.");
                 location.reload();
-                return;
+                return null;
+            }
+            if (response.status === 304) {
+                return { success: true, changed: false };
             }
             return response.json();
         })
-        .then(data => {
+        .then(res => {
+            if (!res) return;
+            const voltouOnline = painelEstavaOffline;
+            painelEstavaOffline = false;
+            atualizarBadgeConexaoPainel(true);
+
+            if (res.updated_at) ultimoUpdatedPainel = String(res.updated_at);
+            if (res.changed === false) {
+                const lu = document.getElementById('last-update');
+                if (lu) lu.innerText = 'Sincronizado às ' + new Date().toLocaleTimeString();
+                atualizarAlarmeContinuo();
+                return;
+            }
+            const data = Array.isArray(res) ? res : (Array.isArray(res.orders) ? res.orders : null);
             if (!Array.isArray(data)) return;
+
             detectarNovos(data);
             const currentDataHash = JSON.stringify(data);
             if (currentDataHash === lastDataHash) {
                 document.getElementById('last-update').innerText = 'Sincronizado às ' + new Date().toLocaleTimeString();
+                atualizarAlarmeContinuo();
                 return;
             }
 
             lastDataHash = currentDataHash;
             pedidos = data;
             renderizarPainel();
+            if (voltouOnline && data.some((p) => (p.status || 'novo') === 'novo')) {
+                tocarAlerta();
+            }
             document.getElementById('last-update').innerText = 'Atualizado às ' + new Date().toLocaleTimeString();
         })
-        .catch(err => console.error("Erro ao carregar pedidos", err));
+        .catch(err => {
+            console.error("Erro ao carregar pedidos", err);
+            painelEstavaOffline = true;
+            atualizarBadgeConexaoPainel(false);
+        });
 }
 
 function renderizarPainel() {
@@ -491,12 +532,20 @@ function renderizarPainel() {
         card.dataset.status = status;
         card.ondragstart = drag;
 
-        const dataRaw = pedido.timestamp || pedido.data || new Date().toISOString();
+        const dataRaw = pedido.created_at || pedido.timestamp || pedido.data || new Date().toISOString();
         let dataObj = new Date(dataRaw);
         if (isNaN(dataObj.getTime()) && typeof dataRaw === 'string') {
             dataObj = new Date(dataRaw.replace(' ', 'T'));
         }
         const dataFormatada = isNaN(dataObj.getTime()) ? "---" : dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const minutosEspera = !isNaN(dataObj.getTime()) ? Math.max(0, Math.floor((Date.now() - dataObj.getTime()) / 60000)) : 0;
+        const emAtrasoAceite = (status === 'novo' && minutosEspera >= 5);
+        if (emAtrasoAceite) {
+            card.classList.add('card-atraso-aceite');
+        }
+        const badgeAtraso = emAtrasoAceite
+            ? `<div class="badge-atraso-aceite">${minutosEspera >= 8 ? '🚨 ATRASO CRÍTICO' : '⚠️ AGUARDANDO ACEITE'} (${minutosEspera} min)</div>`
+            : '';
 
         card.addEventListener('touchstart', touchStart, { passive: false });
         card.addEventListener('touchmove', touchMove, { passive: false });
@@ -526,6 +575,7 @@ function renderizarPainel() {
             : '';
 
         card.innerHTML = `
+            ${badgeAtraso}
             <div class="card-header">
                 <span>#${esc(pedido.id)}</span>
                 <span>${dataFormatada}</span>
@@ -642,8 +692,11 @@ function renderizarPainel() {
             const id = btn.dataset.id;
             const novoStatus = btn.dataset.status;
             if (id && novoStatus) {
+                const pedAntes = pedidos.find(p => String(p.id) === String(id));
+                const statusAnt = pedAntes ? pedAntes.status : null;
+                const ehVoltar = btn.classList.contains('btn-status-back');
                 aplicarStatusLocal(id, novoStatus);
-                atualizarStatusBackend(id, novoStatus);
+                atualizarStatusBackend(id, novoStatus, statusAnt, null, ehVoltar ? { forcar_rollback: true } : null);
             }
         });
     });
@@ -977,14 +1030,24 @@ window.addEventListener('pz:agente-mutacao', () => {
     if (sessionStorage.getItem('admin_logado')) carregarPedidos();
 });
 if (sessionStorage.getItem('admin_logado')) {
-    let tickPainel = 0;
-    setInterval(() => {
-        if (document.hidden) return;
-        tickPainel++;
+    function agendarPollPainel() {
+        clearTimeout(timerPollPainel);
         const sseOk = window.AcheIAkiRealtime && window.AcheIAkiRealtime.estaConectado && window.AcheIAkiRealtime.estaConectado();
-        if (sseOk && tickPainel % 2 !== 0) return; // com SSE ativo reduz pela metade
-        carregarPedidos();
-    }, 10000);
+        const base = sseOk ? 18000 : 7000;
+        const jitter = sseOk ? 6000 : 4000;
+        const espera = base + Math.floor(Math.random() * jitter);
+        timerPollPainel = setTimeout(() => {
+            if (!document.hidden) carregarPedidos(false);
+            agendarPollPainel();
+        }, espera);
+    }
+    agendarPollPainel();
+    window.addEventListener('online', () => {
+        prepararAudio();
+        atualizarBadgeConexaoPainel(true);
+        carregarPedidos(true);
+    });
+    window.addEventListener('offline', () => atualizarBadgeConexaoPainel(false));
 
     const btnTurno = document.getElementById('btn-iniciar-turno');
     if (btnTurno) {

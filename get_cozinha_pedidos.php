@@ -20,6 +20,26 @@ if (!pz_cozinha_ok($chave) && !$admin) {
 
 $incluirNovos = ($_GET['incluir_novos'] ?? '') === '1';
 $statusOk = $incluirNovos ? ['novo', 'preparo'] : ['preparo'];
+$sinceParam = trim((string) ($_GET['since'] ?? ''));
+$verAtual = Database::getOrdersVersion() . '|' . ($incluirNovos ? '1' : '0');
+$etagCoz = '"' . sha1($verAtual) . '"';
+header('ETag: ' . $etagCoz);
+header('Cache-Control: no-cache');
+
+if (trim((string) ($_SERVER['HTTP_IF_NONE_MATCH'] ?? '')) === $etagCoz) {
+    http_response_code(304);
+    exit;
+}
+
+$ordersVer = Database::getOrdersVersion();
+if ($sinceParam !== '' && $sinceParam === $ordersVer) {
+    echo json_encode([
+        'success' => true,
+        'changed' => false,
+        'updated_at' => $ordersVer,
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $lista = array_filter(Database::read('pedidos.json'), function ($p) use ($statusOk) {
     return is_array($p) && in_array($p['status'] ?? 'novo', $statusOk, true);
@@ -66,6 +86,8 @@ $config = pedidozap_normalizar_config(Database::read('config.json'), Database::g
 
 echo json_encode([
     'success' => true,
+    'changed' => true,
+    'updated_at' => $ordersVer,
     'nome_loja' => $config['NOME_LOJA'] ?? '',
     'comanda' => $config['COMANDA'] ?? [],
     'pedidos' => $saida,
