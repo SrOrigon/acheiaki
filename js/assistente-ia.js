@@ -516,13 +516,14 @@
         }
 
         _ehComandoEstritamenteLocal(entrada) {
-            const n = normalizarTexto(entrada);
+            const n = normalizar(entrada);
             if (this.aguardando) return true;
             if (/^(desfaz|desfazer|ctrl\+z|volta atras|salv(a|ar|e)|publica|salvar tudo)$/.test(n)) return true;
             // Quando o cliente configurou sua IA pessoal, deixa comandos naturais passarem por ela (com fallback local)
             if (global.__pzIaPessoalStatus && global.__pzIaPessoalStatus.ativa) return false;
             if (/painel completo|modo avan|nivel avan|modo expert|nivel expert|nivel basico|modo basico|acesso total|mostrar tudo|todas as abas|modo facil/.test(n)) return true;
             if (/analis(ar)? minha loja|monta(r)? (minha )?(pagina|cardapio)|cardapio inicial|ensina(r)?.*cardapio|como fazer.*cardapio|sugere prato/.test(n)) return true;
+            if (/^(abre|abrir|vai (para|na)|mostra(r)?|ir para)\b/.test(n)) return true;
             if (/^(cadastra|adiciona|coloca|bota|inclui|novo prato|novo produto)\b/.test(n) && !/fornecedor|insumo|estoque|funcionario|entregador|cupom/.test(n)) return true;
             if (/^(muda|altera|troca|pausa|desativa|ativa|reativa|apaga|exclui|remove)\b/.test(n) && !/pedido|cupom|estoque|caixa/.test(n)) return true;
             return false;
