@@ -12,11 +12,13 @@ header('X-Frame-Options: SAMEORIGIN');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Permissions-Policy: geolocation=(self), microphone=(self)');
 
-// Bloqueia acesso direto a arquivos sensíveis, dados internos e configurações
+// Bloqueia acesso direto a arquivos sensíveis, dados internos, scripts CLI e bibliotecas
 $bloqueados = [
     '#^/data(/|$)#i',
+    '#^/scripts(/|$)#i',
     '#^/\.#',
-    '#^/(router\.php|auth_config\.php|verificar_sistema\.php|go_live_smoke\.php|Dockerfile|Procfile|nixpacks\.toml|composer\.(json|lock))$#i',
+    '#^(?:/loja/[a-zA-Z0-9_-]+)?/(router\.php|auth_config\.php|verificar_sistema\.php|go_live_smoke\.php|worker\.php|db_pdo\.php|Database\.php|store_schema\.php|tenant_init\.php|pedido_acesso\.php|.*_lib\.php|Dockerfile|Procfile|railway\.json|nixpacks\.toml|composer\.(json|lock))$#i',
+    '#^/loja/[a-zA-Z0-9_-]+/saas_admin\.php$#i',
     '#\.(md|log|sql|bak|env)$#i',
 ];
 foreach ($bloqueados as $re) {
@@ -55,6 +57,23 @@ $akiServeHtmlWithSeo = static function (string $filePath) {
             $meta = '<meta name="google-site-verification" content="' . htmlspecialchars($gsc, ENT_QUOTES, 'UTF-8') . '">' . "\n</head>";
             $html = preg_replace('/<\/head>/i', $meta, $html, 1) ?? $html;
         }
+        $dpo = trim((string) ($saas['dpo_email'] ?? '')) ?: 'privacidade@acheiaki.com.br';
+        $cnpjPlat = trim((string) ($saas['cnpj_plataforma'] ?? ''));
+        $nomePlat = trim((string) ($saas['nome_plataforma'] ?? '')) ?: 'AcheIAki';
+        $zapPlat = preg_replace('/\D/', '', (string) ($saas['suporte_whatsapp'] ?? ''));
+        if (strpos($html, '<!--AKI_DPO_EMAIL-->') !== false) {
+            $html = str_replace('<!--AKI_DPO_EMAIL-->privacidade@acheiaki.com.br<!--/AKI_DPO_EMAIL-->', htmlspecialchars($dpo, ENT_QUOTES, 'UTF-8'), $html);
+        }
+        if (strpos($html, '<!--AKI_IDENTIFICACAO_PLATAFORMA-->') !== false) {
+            $partesId = ['<strong>Plataforma:</strong> ' . htmlspecialchars($nomePlat, ENT_QUOTES, 'UTF-8')];
+            $partesId[] = '<strong>CNPJ:</strong> ' . ($cnpjPlat !== '' ? htmlspecialchars($cnpjPlat, ENT_QUOTES, 'UTF-8') : 'Cadastro empresarial informado mediante solicitação formal ao DPO');
+            $partesId[] = '<strong>Encarregado (DPO / LGPD):</strong> ' . htmlspecialchars($dpo, ENT_QUOTES, 'UTF-8');
+            if ($zapPlat !== '') {
+                $partesId[] = '<strong>WhatsApp Suporte:</strong> ' . htmlspecialchars($zapPlat, ENT_QUOTES, 'UTF-8');
+            }
+            $blocoId = '<div class="aviso-box"><strong>Identificação do Controlador / Intermediador:</strong> ' . implode(' · ', $partesId) . '.</div>';
+            $html = str_replace('<!--AKI_IDENTIFICACAO_PLATAFORMA-->', $blocoId, $html);
+        }
     } catch (Throwable $e) {
         // segue normalmente sem bloquear o HTML
     }
@@ -67,7 +86,7 @@ if ($decodedPath === '/' || $decodedPath === '') {
     $akiServeHtmlWithSeo(__DIR__ . '/marketplace.html');
     return true;
 }
-if ($decodedPath === '/marketplace.html' || $decodedPath === '/cadastro.html') {
+if ($decodedPath === '/marketplace.html' || $decodedPath === '/cadastro.html' || $decodedPath === '/termos.html' || $decodedPath === '/privacidade.html') {
     $akiServeHtmlWithSeo(__DIR__ . $decodedPath);
     return true;
 }
@@ -213,9 +232,8 @@ if (preg_match('#^/loja/([a-zA-Z0-9_-]+)(?:/([A-Za-z0-9_-]+\.html)?)?$#i', $deco
     $htmlName = !empty($m[2]) ? $m[2] : 'index.html';
     $htmlFile = __DIR__ . '/' . $htmlName;
     if (is_file($htmlFile)) {
-        header('Content-Type: text/html; charset=utf-8');
         header('Cache-Control: no-cache, no-store, must-revalidate');
-        readfile($htmlFile);
+        $akiServeHtmlWithSeo($htmlFile);
         return true;
     }
     http_response_code(404);

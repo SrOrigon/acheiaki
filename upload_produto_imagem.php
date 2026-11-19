@@ -54,8 +54,44 @@ if (strlen($bytes) > 4 * 1024 * 1024) {
     exit;
 }
 
+$imgInfo = @getimagesizefromstring($bytes);
+$tiposValidos = [
+    IMAGETYPE_JPEG => 'jpg',
+    IMAGETYPE_PNG => 'png',
+    IMAGETYPE_WEBP => 'webp',
+    IMAGETYPE_GIF => 'gif',
+];
+if (!is_array($imgInfo) || empty($imgInfo[0]) || empty($imgInfo[1]) || !isset($tiposValidos[$imgInfo[2]])) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Arquivo não é uma imagem válida (JPG, PNG, WebP ou GIF).'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+if ((int) $imgInfo[0] > 6000 || (int) $imgInfo[1] > 6000) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Dimensão máxima excedida (até 6000x6000 px).'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+$ext = $tiposValidos[$imgInfo[2]];
+if (function_exists('finfo_open')) {
+    $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+    $realMime = $finfo ? @finfo_buffer($finfo, $bytes) : '';
+    if ($finfo) {
+        @finfo_close($finfo);
+    }
+    if (is_string($realMime) && $realMime !== '' && !in_array($realMime, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], true)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Tipo MIME de imagem não permitido.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
 if ($ext !== 'gif' && function_exists('imagecreatefromstring') && function_exists('imagesx')) {
     $img = @imagecreatefromstring($bytes);
+    if ($img === false) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Imagem corrompida ou formato não suportado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     if ($img !== false) {
         $w = imagesx($img);
         $h = imagesy($img);

@@ -886,6 +886,15 @@ function iniciarVitrine() {
         if (!checkoutTokenAtual) checkoutTokenAtual = novoCheckoutToken();
         pedidoData.checkout_token = checkoutTokenAtual;
         pedidoData.modo_analise = Boolean(window.PedidoZapApresentacao && window.PedidoZapApresentacao.ativo());
+        if (canalAtendente || pedidoData.modo_analise) {
+            try {
+                const uAuth = sessionStorage.getItem('admin_user') || '';
+                const pAuth = sessionStorage.getItem('admin_pass') || '';
+                if (uAuth && pAuth) {
+                    pedidoData.auth = { user: uAuth, pass: pAuth };
+                }
+            } catch (e) { }
+        }
 
         if (enviandoPedido) return;
         enviandoPedido = true;
@@ -903,7 +912,7 @@ function iniciarVitrine() {
             const payload = await res.json().catch(() => ({}));
             if (res && res.ok && payload && payload.success) {
                 pedidoSalvoNoServidor = true;
-            } else if (res && (res.status === 409 || res.status === 400)) {
+            } else if (res && (res.status === 409 || res.status === 400 || res.status === 422)) {
                 erroServidorMsg = (payload && payload.message) || 'Confira o carrinho antes de finalizar.';
             }
             return payload;
@@ -1972,11 +1981,13 @@ function iniciarVitrine() {
                 const ruaEl = document.getElementById('input-rua');
                 if (ruaEl && ruaEl.value.trim().length >= 3) return;
                 try {
+                    const tokComp = localStorage.getItem('pz_comprador_token') || '';
                     const resp = await apiFetch('comprador_api.php?action=vincular_rapido', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             telefone: digits,
+                            token: tokComp,
                             tenant: (typeof TENANT !== 'undefined' && TENANT.slug) ? TENANT.slug : 'default'
                         })
                     });
@@ -1993,6 +2004,8 @@ function iniciarVitrine() {
                             fill('input-cidade', d.perfil.endereco.cidade);
                         }
                         showToast('WhatsApp reconhecido! Dados preenchidos automaticamente.', 'sucesso');
+                    } else if (d && d.success && d.requer_login) {
+                        showToast('WhatsApp já cadastrado! Entre na sua conta para preencher o endereço salvo.', 'info');
                     }
                 } catch (e) { }
             });

@@ -1,5 +1,6 @@
 <?php
 require_once 'tenant_init.php';
+require_once 'auth_lib.php';
 require_once 'saas_lib.php';
 require_once 'gestao_lib.php';
 require_once 'algoritmo_lib.php';
@@ -271,9 +272,14 @@ if (Database::getTenant() === 'default' && empty($cfgLojaSave)) {
 require_once 'store_schema.php';
 $cfgLojaSave = pedidozap_normalizar_config(is_array($cfgLojaSave) ? $cfgLojaSave : [], Database::getTenant());
 
+$userAuthOrd = $_GET['user'] ?? $pedido['auth']['user'] ?? '';
+$passAuthOrd = $_GET['pass'] ?? $pedido['auth']['pass'] ?? '';
+$equipeAuthOk = ($userAuthOrd !== '' || $passAuthOrd !== '') && (pedidozap_autorizado($userAuthOrd, $passAuthOrd) !== false);
+
 $ehAgendado = stripos((string) ($pedido['entrega'] ?? ''), 'AGENDADO') !== false;
-$emModoAnalise = !empty($pedido['modo_analise']);
-if (strpos($canalPedido, 'atendente') === false && !$ehAgendado && !$emModoAnalise) {
+$emModoAnalise = $equipeAuthOk && !empty($pedido['modo_analise']);
+$ehAtendenteAuth = $equipeAuthOk && strpos($canalPedido, 'atendente') !== false;
+if (!$ehAtendenteAuth && !$ehAgendado && !$emModoAnalise) {
     $abertaCheck = pz_loja_aberta_backend($cfgLojaSave);
     if (empty($abertaCheck['aberta'])) {
         http_response_code(409);
@@ -299,6 +305,16 @@ if (!empty($esgotados)) {
         'success' => false,
         'codigo_erro' => 'item_esgotado',
         'message' => 'Item esgotado agora: ' . implode(', ', array_slice($esgotados, 0, 3)) . '. Atualize o carrinho.',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+if (!empty($problemas)) {
+    http_response_code(422);
+    echo json_encode([
+        'success' => false,
+        'codigo_erro' => 'itens_divergentes',
+        'message' => 'Alguns itens ou adicionais do carrinho foram atualizados pela loja. Revise seu pedido.',
+        'detalhes' => array_slice($problemas, 0, 5),
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -407,7 +423,7 @@ if (!empty($saveTx['success'])) {
                 'tenant' => Database::getTenant(),
                 'nicho' => $nichoLojaAlg,
                 'produto_nome' => $nomesItens,
-                'preco' => $totalCliente,
+                'preco' => $totalAutoritativo,
             ]);
         }
     }
@@ -415,7 +431,7 @@ if (!empty($saveTx['success'])) {
     pz_realtime_publicar($slugSalvo, 'pedido_criado', [
         'id' => $id,
         'cliente' => $registro['cliente'],
-        'total' => $totalCliente,
+        'total' => $totalAutoritativo,
         'status' => 'novo',
     ]);
     pz_pdv_enfileirar_evento($slugSalvo, 'order.created', $registro);

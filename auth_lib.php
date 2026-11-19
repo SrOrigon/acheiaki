@@ -47,15 +47,7 @@ function pedidozap_senha_confere($pass, $hash)
     if ($hash === '') {
         return false;
     }
-    if (password_verify($pass, $hash)) {
-        return true;
-    }
-    foreach (['Admin', 'admin', 'ADMIN'] as $variante) {
-        if (strcasecmp($pass, $variante) === 0 && password_verify($variante, $hash)) {
-            return true;
-        }
-    }
-    return false;
+    return password_verify($pass, $hash);
 }
 
 function pedidozap_salvar_credenciais($user, $pass)

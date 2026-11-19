@@ -16,6 +16,7 @@ if (!pedidozap_autorizado($user, $pass)) {
     echo json_encode(['success' => false, 'message' => 'Não autorizado.']);
     exit;
 }
+pedidozap_recusar_loja_bloqueada($user, $pass);
 
 $ordersVer = Database::getOrdersVersion();
 $etagOrders = '"' . sha1(Database::getTenant() . '|' . $ordersVer) . '"';

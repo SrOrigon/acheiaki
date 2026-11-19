@@ -6,6 +6,7 @@
  */
 require_once __DIR__ . '/tenant_init.php';
 require_once __DIR__ . '/auth_lib.php';
+require_once __DIR__ . '/saas_lib.php';
 require_once __DIR__ . '/store_schema.php';
 require_once __DIR__ . '/integracoes_lib.php';
 
@@ -559,6 +560,11 @@ if ($acao === 'cadastrar') {
 }
 
 if ($acao === 'vincular_rapido') {
+    if (function_exists('pedidozap_limite_requisicao') && !pedidozap_limite_requisicao('vincular_rapido', 25, 60)) {
+        http_response_code(429);
+        echo json_encode(['success' => false, 'message' => 'Muitas tentativas em sequência. Aguarde um instante.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $tel = pz_comprador_normalizar_tel($body['telefone'] ?? ($_GET['telefone'] ?? ''));
     $tenantSlug = preg_replace('/[^a-z0-9_-]/i', '', (string) ($body['tenant'] ?? ($_GET['tenant'] ?? 'default'))) ?: 'default';
     if (strlen($tel) < 10) {
@@ -567,20 +573,28 @@ if ($acao === 'vincular_rapido') {
         exit;
     }
 
+    $tokRapido = (string) ($body['token'] ?? $_GET['token'] ?? '');
+    $telAuthRapido = $tokRapido !== '' ? (string) (pz_comprador_validar_token($tokRapido) ?? '') : '';
+    $autorizadoProprio = ($telAuthRapido !== '' && $telAuthRapido === $tel);
+
+    $existe = false;
     $perfil = null;
     foreach (Database::read('compradores_mkt.json') as $c) {
         if (is_array($c) && pz_comprador_normalizar_tel($c['telefone'] ?? '') === $tel) {
-            $ends = is_array($c['enderecos'] ?? null) ? $c['enderecos'] : [];
-            $perfil = [
-                'nome' => (string) ($c['nome'] ?? ''),
-                'telefone' => $tel,
-                'endereco' => $ends[0] ?? null,
-            ];
+            $existe = true;
+            if ($autorizadoProprio) {
+                $ends = is_array($c['enderecos'] ?? null) ? $c['enderecos'] : [];
+                $perfil = [
+                    'nome' => (string) ($c['nome'] ?? ''),
+                    'telefone' => $tel,
+                    'endereco' => $ends[0] ?? null,
+                ];
+            }
             break;
         }
     }
 
-    if (!$perfil) {
+    if (!$perfil && $autorizadoProprio) {
         $antT = Database::getTenant();
         Database::setTenant($tenantSlug);
         $clientesLoja = Database::read('clientes.json');
@@ -588,6 +602,7 @@ if ($acao === 'vincular_rapido') {
         if (is_array($clientesLoja)) {
             foreach ($clientesLoja as $cl) {
                 if (is_array($cl) && substr(pz_comprador_normalizar_tel($cl['celular'] ?? $cl['telefone'] ?? ''), -8) === substr($tel, -8)) {
+                    $existe = true;
                     $perfil = [
                         'nome' => (string) ($cl['nome'] ?? ''),
                         'telefone' => $tel,
@@ -602,6 +617,7 @@ if ($acao === 'vincular_rapido') {
     echo json_encode([
         'success' => true,
         'encontrado' => $perfil !== null,
+        'requer_login' => ($existe && !$autorizadoProprio),
         'perfil' => $perfil,
     ], JSON_UNESCAPED_UNICODE);
     exit;
@@ -625,10 +641,7 @@ if ($acao === 'login') {
         }
     }
     $hashAtual = (string) ($achou['senha_hash'] ?? '');
-    $okSenha = $achou && (
-        ($hashAtual !== '' && password_verify($senha, $hashAtual))
-        || ($hashAtual === '' && $senha === '' && !empty($body['sem_senha_google']))
-    );
+    $okSenha = $achou && $hashAtual !== '' && password_verify($senha, $hashAtual);
     if (!$okSenha) {
         http_response_code(401);
         $msg = ($achou && $hashAtual === '')

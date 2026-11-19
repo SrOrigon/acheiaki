@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Notificações do Mercado Pago (assinaturas). O corpo recebido serve só como aviso:
  * o status real é sempre consultado de novo na API com o token do servidor.
@@ -9,7 +10,14 @@ require_once __DIR__ . '/queue_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-$body = json_decode(file_get_contents('php://input') ?: '', true);
+if (!pedidozap_limite_requisicao('mp_webhook', 60, 60)) {
+    http_response_code(429);
+    echo json_encode(['success' => false, 'message' => 'Limite de requisições excedido.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$rawBody = file_get_contents('php://input') ?: '';
+$body = json_decode($rawBody, true);
 if (!is_array($body)) {
     $body = [];
 }
@@ -17,6 +25,40 @@ if (!is_array($body)) {
 $tipo = (string) ($body['type'] ?? $body['topic'] ?? $_GET['type'] ?? $_GET['topic'] ?? '');
 $id = (string) ($body['data']['id'] ?? $_GET['data_id'] ?? $_GET['id'] ?? '');
 $id = preg_replace('/[^A-Za-z0-9_-]/', '', $id);
+
+$webhookSecret = function_exists('pz_db_env_val') ? trim((string) pz_db_env_val('ACHEIAKI_MP_WEBHOOK_SECRET')) : trim((string) (getenv('ACHEIAKI_MP_WEBHOOK_SECRET') ?: ''));
+if ($webhookSecret !== '') {
+    $sigHeader = trim((string) ($_SERVER['HTTP_X_SIGNATURE'] ?? ''));
+    $reqIdHeader = trim((string) ($_SERVER['HTTP_X_REQUEST_ID'] ?? ''));
+    $sigOk = false;
+    if ($sigHeader !== '') {
+        $ts = '';
+        $v1 = '';
+        foreach (explode(',', $sigHeader) as $parte) {
+            $kv = explode('=', trim($parte), 2);
+            if (count($kv) === 2) {
+                if (strtolower($kv[0]) === 'ts') {
+                    $ts = trim($kv[1]);
+                } elseif (strtolower($kv[0]) === 'v1') {
+                    $v1 = strtolower(trim($kv[1]));
+                }
+            }
+        }
+        if ($ts !== '' && $v1 !== '') {
+            $manifest = "id:{$id};request-id:{$reqIdHeader};ts:{$ts};";
+            $calcMp = hash_hmac('sha256', $manifest, $webhookSecret);
+            $sigOk = hash_equals($calcMp, $v1);
+        } elseif (preg_match('/^[a-f0-9]{64}$/i', $sigHeader)) {
+            $calcRaw = hash_hmac('sha256', $rawBody, $webhookSecret);
+            $sigOk = hash_equals($calcRaw, strtolower($sigHeader));
+        }
+    }
+    if (!$sigOk) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Assinatura de webhook inválida.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
 
 Database::setTenant('default');
 $resultado = ['success' => true, 'ignorado' => true];
