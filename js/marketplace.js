@@ -609,9 +609,9 @@
                 + '</div></div></div>';
         } else {
             col1 = '<div class="mkt-radar-col">'
-                + '<h3><i class="fa-solid fa-utensils" style="color:#fb923c;"></i> Sugestões pra você agora</h3>'
+                + '<h3><i class="fa-solid fa-star" style="color:#fb923c;"></i> Sugestões pra você agora</h3>'
                 + '<p>Momento atual: <strong>' + esc(algRes.turno_rotulo || 'Para Você') + '</strong>. '
-                + (necessidades.length ? esc(necessidades.join(' · ')) : 'Veja os pratos que mais combinam com você.') + '</p>'
+                + (necessidades.length ? esc(necessidades.join(' · ')) : 'Veja os produtos e ofertas que mais combinam com você.') + '</p>'
                 + '</div>';
         }
 
@@ -1638,6 +1638,38 @@
                 cep: $('mkt-ne-cep')
             });
         });
+
+        if ($('mkt-btn-demo-admin')) {
+            $('mkt-btn-demo-admin').addEventListener('click', async () => {
+                const btn = $('mkt-btn-demo-admin');
+                btn.disabled = true;
+                try {
+                    const r = await fetch('login.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user: 'demo',
+                            pass: 'Demo@2026',
+                            tenant: 'loja-demonstracao-acheiaki'
+                        })
+                    });
+                    const d = await r.json();
+                    if (d && d.success) {
+                        sessionStorage.setItem('admin_logado', 'true');
+                        sessionStorage.setItem('admin_user', d.user || 'demo');
+                        sessionStorage.setItem('admin_pass', d.token || 'Demo@2026');
+                        sessionStorage.setItem('admin_role', d.role || 'lojista');
+                        sessionStorage.setItem('admin_nome', d.nome || 'Loja Demonstração AcheIAki');
+                        sessionStorage.setItem('pedidozap_tenant_slug', 'loja-demonstracao-acheiaki');
+                        try { sessionStorage.setItem('admin_permissoes', JSON.stringify(d.permissoes || {})); } catch (err) {}
+                        window.location.href = 'loja/loja-demonstracao-acheiaki/admin.html?tab=cardapio';
+                        return;
+                    }
+                } catch (err) { /* fallback */ }
+                btn.disabled = false;
+                window.location.href = 'cadastro.html?modo=entrar';
+            });
+        }
 
         // Login ("Já tenho conta": empresa por usuário/nome da empresa + senha, ou comprador com senha)
         if ($('mkt-form-login')) $('mkt-form-login').addEventListener('submit', async (e) => {

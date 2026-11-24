@@ -430,6 +430,23 @@ async function iniciarAdmin() {
     const btnGerarArquivo = document.getElementById('btn-gerar-arquivo');
     const btnLogout = document.getElementById('btn-logout');
 
+    const tenantAtualBoot = (typeof TENANT !== 'undefined' && TENANT.slug) ? TENANT.slug : 'default';
+    if (tenantAtualBoot === 'loja-demonstracao-acheiaki' && !document.getElementById('aki-demo-admin-guia')) {
+        const guiaDemo = document.createElement('div');
+        guiaDemo.id = 'aki-demo-admin-guia';
+        guiaDemo.style.cssText = 'margin:0 0 14px;padding:14px 16px;border-radius:14px;background:linear-gradient(90deg,#ecfdf5,#fff7ed);border:1px solid #86efac;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;';
+        guiaDemo.innerHTML = '<div style="flex:1;min-width:240px;">'
+            + '<strong style="color:#14532d;font-size:0.98rem;">🎯 Loja Demonstração Interativa (Painel do Dono)</strong><br>'
+            + '<span style="font-size:0.86rem;color:#334155;">Teste à vontade: suba fotos de produtos em <strong>Meus Produtos</strong>, mude cores/logo em <strong>Nome e Foto</strong> ou simule clientes em <strong>WhatsApp e Horário</strong>.</span>'
+            + '</div>'
+            + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+            + '<button type="button" onclick="var t=document.querySelector(\'#admin-tabs [data-tab=cardapio]\');if(t)t.click();" style="background:#ea580c;color:#fff;border:none;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer;font-size:0.84rem;">📸 Cadastrar Produto c/ Foto</button>'
+            + '<a href="' + (window.location.pathname.indexOf('/loja/') !== -1 ? '../../cadastro.html?modo=cadastrar' : 'cadastro.html?modo=cadastrar') + '" style="background:#15803d;color:#fff;border-radius:9px;padding:8px 14px;font-weight:700;text-decoration:none;font-size:0.84rem;display:inline-flex;align-items:center;">🚀 Criar Minha Loja Oficial</a>'
+            + '</div>';
+        const headerEl = document.querySelector('.admin-header');
+        if (headerEl && headerEl.parentNode) headerEl.parentNode.insertBefore(guiaDemo, headerEl.nextSibling);
+    }
+
     // --- DATA ---
     const dadosSalvosPreview = localStorage.getItem(adminPreviewKey('dados_cardapio_preview'));
     const configSalvaPreview = localStorage.getItem(adminPreviewKey('config_preview'));

@@ -191,6 +191,14 @@
             </div>
             <p id="entrar-empresa-erro" class="erro" hidden></p>
             <button type="submit" id="btn-entrar-empresa" style="width:100%;min-height:52px;font-size:1.05rem;background:#e85d04;">Entrar no painel da loja <i class="fa-solid fa-arrow-right"></i></button>
+            <div style="margin-top:16px;padding:14px;border-radius:12px;background:#ecfdf5;border:1px solid #bbf7d0;">
+                <strong style="display:block;color:#14532d;font-size:0.95rem;margin-bottom:4px;">🎯 Quer testar primeiro na Loja Demonstração?</strong>
+                <p style="margin:0 0 10px;font-size:0.86rem;color:#166534;">Entre com 1 clique para ver como cadastrar produtos com fotos, mudar logo/cores e testar a IA (ou digite Usuário: <code>demo</code> · Senha: <code>Demo@2026</code>).</p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button type="button" id="btn-entrar-demo-apresentacao" style="margin:0;flex:1;min-width:210px;min-height:44px;background:#15803d;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;"><i class="fa-solid fa-key"></i> Entrar na Loja Demo (1 clique)</button>
+                    <a href="loja/loja-demonstracao-acheiaki/" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;padding:0 14px;min-height:44px;background:#fff;color:#14532d;border:1px solid #86efac;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.88rem;">Ver Vitrine Demo</a>
+                </div>
+            </div>
         </form>
 
         <section id="secao-assistente-cadastro" class="cadastro-assistente" hidden>
@@ -532,6 +540,20 @@
                     } finally {
                         btnSub.disabled = false;
                         btnSub.textContent = 'Entrar no painel da loja';
+                    }
+                });
+            }
+
+            const btnDemoEntrar = document.getElementById('btn-entrar-demo-apresentacao');
+            if (btnDemoEntrar) {
+                btnDemoEntrar.addEventListener('click', function () {
+                    const uEl = document.getElementById('entrar-empresa-user');
+                    const pEl = document.getElementById('entrar-empresa-pass');
+                    if (uEl) uEl.value = 'demo';
+                    if (pEl) pEl.value = 'Demo@2026';
+                    if (formEntrar) {
+                        if (typeof formEntrar.requestSubmit === 'function') formEntrar.requestSubmit();
+                        else formEntrar.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
                     }
                 });
             }

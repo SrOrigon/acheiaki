@@ -34,6 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 pedidozap_bootstrap_tenant();
 $tenant = Database::getTenant();
 
+if ($tenant === 'loja-demonstracao-acheiaki') {
+    require_once __DIR__ . '/demo_seed_lib.php';
+    pedidozap_garantir_loja_demo();
+}
+
 if ($tenant !== 'default' && !Database::tenantDataExists($tenant)) {
     http_response_code(404);
     echo json_encode([

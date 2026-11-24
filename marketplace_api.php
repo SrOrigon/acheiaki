@@ -33,6 +33,10 @@ if (!pedidozap_limite_requisicao('marketplace_' . $acao, 120, 60)) {
 }
 
 if ($acao === 'listar_lojas') {
+    if (is_file(__DIR__ . '/demo_seed_lib.php')) {
+        require_once __DIR__ . '/demo_seed_lib.php';
+        pedidozap_garantir_loja_demo();
+    }
     $cidadeFiltro = pz_territorio_norm($_GET['cidade'] ?? $body['cidade'] ?? '');
     $bairroFiltro = pz_territorio_norm($_GET['bairro'] ?? $body['bairro'] ?? '');
     $nichoFiltro = pz_territorio_norm($_GET['nicho'] ?? $body['nicho'] ?? '');

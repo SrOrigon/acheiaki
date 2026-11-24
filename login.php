@@ -33,6 +33,11 @@ $pass = (string) ($data['pass'] ?? $_POST['pass'] ?? '');
 $tenantInformado = trim((string) ($data['tenant'] ?? $_GET['tenant'] ?? ''));
 $globalLogin = !empty($data['global_login']) || $tenantInformado === '';
 
+if ($tenantInformado === 'loja-demonstracao-acheiaki' || strcasecmp($user, 'demo') === 0) {
+    require_once __DIR__ . '/demo_seed_lib.php';
+    pedidozap_garantir_loja_demo();
+}
+
 if ($user !== '' && pedidozap_verificar_master($user, $pass)) {
     pedidozap_limite_login(false, true);
     echo json_encode([

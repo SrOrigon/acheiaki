@@ -711,23 +711,57 @@
 
     function aplicarDemonstracao(config) {
         const slug = (global.TENANT && global.TENANT.slug) || config.TENANT_SLUG || 'default';
-        if (slug !== 'default') {
+        const ehDemoTenant = slug === 'default' || slug === 'loja-demonstracao-acheiaki';
+        if (!ehDemoTenant) {
             const antigo = document.getElementById('pz-banner-demo');
             if (antigo) antigo.remove();
             return;
         }
-        const host = (global.location.hostname || '').toLowerCase();
-        const ehDemo = host.endsWith('.up.railway.app') || host.endsWith('.railway.app');
-        if (!ehDemo) return;
         if (document.getElementById('pz-banner-demo')) return;
+        const rootBase = location.pathname.indexOf('/loja/') !== -1 ? '../../' : '';
         const el = document.createElement('div');
         el.id = 'pz-banner-demo';
         el.setAttribute('role', 'status');
-        el.style.cssText = 'background:#0f766e;color:#fff;text-align:center;padding:12px 16px;font-size:1rem;line-height:1.45;';
-        el.innerHTML = 'Esta é uma vitrine de demonstração. <a href="cadastro.html" style="color:#fff;font-weight:800;text-decoration:underline;">Crie sua loja grátis</a> ou abra pelo link <strong>/loja/nome-da-loja/</strong> após cadastrar.';
+        el.style.cssText = 'background:linear-gradient(90deg,#14532d,#0f766e);color:#fff;padding:12px 16px;font-size:0.93rem;line-height:1.45;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;text-align:center;';
+        el.innerHTML = '<span><strong>🎯 Loja Demonstração AcheIAki</strong> · Veja como cadastrar produtos com fotos e testar o painel:</span>'
+            + '<button type="button" id="aki-btn-demo-painel" style="background:#ea580c;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-weight:800;cursor:pointer;font-size:0.86rem;">🔑 Testar Painel do Dono (1 clique)</button>'
+            + '<a href="' + rootBase + 'cadastro.html?modo=cadastrar" style="background:#fff;color:#14532d;border-radius:8px;padding:7px 14px;font-weight:800;text-decoration:none;font-size:0.86rem;">🚀 Criar Minha Loja Grátis</a>'
+            + '<span style="font-size:0.8rem;opacity:0.92;">(Login demo: <code>demo</code> · Senha: <code>Demo@2026</code>)</span>';
         const body = document.body;
         if (body && body.firstChild) body.insertBefore(el, body.firstChild);
         else if (body) body.appendChild(el);
+
+        const btnDemo = document.getElementById('aki-btn-demo-painel');
+        if (btnDemo) {
+            btnDemo.addEventListener('click', async function () {
+                btnDemo.disabled = true;
+                btnDemo.textContent = 'Abrindo Painel Demo...';
+                try {
+                    const r = await fetch(rootBase + 'login.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user: 'demo',
+                            pass: 'Demo@2026',
+                            tenant: 'loja-demonstracao-acheiaki'
+                        })
+                    });
+                    const d = await r.json();
+                    if (d && d.success) {
+                        sessionStorage.setItem('admin_logado', 'true');
+                        sessionStorage.setItem('admin_user', d.user || 'demo');
+                        sessionStorage.setItem('admin_pass', d.token || 'Demo@2026');
+                        sessionStorage.setItem('admin_role', d.role || 'lojista');
+                        sessionStorage.setItem('admin_nome', d.nome || 'Loja Demonstração AcheIAki');
+                        sessionStorage.setItem('pedidozap_tenant_slug', 'loja-demonstracao-acheiaki');
+                        try { sessionStorage.setItem('admin_permissoes', JSON.stringify(d.permissoes || {})); } catch (e) {}
+                        window.location.href = rootBase + 'loja/loja-demonstracao-acheiaki/admin.html?tab=cardapio';
+                        return;
+                    }
+                } catch (e) { /* fallback abaixo */ }
+                window.location.href = rootBase + 'cadastro.html?modo=entrar';
+            });
+        }
     }
 
     function aplicarCategorias(config, cardapio) {
