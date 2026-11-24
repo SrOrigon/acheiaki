@@ -318,7 +318,7 @@
                                         $('mkt-cad-email').value = d.google_perfil.email || '';
                                         if (d.google_perfil.nome && !$('mkt-cad-nome').value) $('mkt-cad-nome').value = d.google_perfil.nome;
                                         if (msg) {
-                                            msg.style.color = '#0369a1';
+                                            msg.style.color = '#c2410c';
                                             msg.textContent = 'Conta Google conectada! Agora digite seu WhatsApp com DDD para concluir.';
                                         }
                                         if ($('mkt-cad-tel')) $('mkt-cad-tel').focus();
@@ -599,19 +599,19 @@
                 ? (hab.compras_cliente + ' pedido(s) feitos · ' + (hab.aberto ? 'Aberta agora' : 'Fechada no momento'))
                 : ('Sua favorita · ' + (hab.aberto ? 'Aberta agora' : 'Fechada no momento'));
             col1 = '<div class="mkt-radar-col">'
-                + '<h3><i class="fa-solid fa-heart-circle-check" style="color:#00d4ff;"></i> Onde você mais costuma pedir</h3>'
-                + '<p>Nossa IA identificou sua loja habitual para facilitar seu próximo pedido:</p>'
+                + '<h3><i class="fa-solid fa-heart-circle-check" style="color:#fb923c;"></i> Onde você mais pede</h3>'
+                + '<p>Toque para abrir rápido a loja que você já conhece:</p>'
                 + '<div class="mkt-radar-loja">'
                 + '<div><strong>' + esc(hab.nome) + '</strong><small>' + esc(subHab) + (hab.distancia_km != null ? ' · ' + hab.distancia_km + ' km' : '') + '</small></div>'
                 + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
-                + '<button type="button" class="mkt-radar-chip" data-radar-ver="' + esc(hab.slug) + '">Ver página</button>'
+                + '<button type="button" class="mkt-radar-chip" data-radar-ver="' + esc(hab.slug) + '">Ver detalhes</button>'
                 + '<a href="' + esc(hab.url_loja) + '" class="mkt-banner-btn-rastreio" style="padding:7px 12px;font-size:0.82rem;">Pedir de novo →</a>'
                 + '</div></div></div>';
         } else {
             col1 = '<div class="mkt-radar-col">'
-                + '<h3><i class="fa-solid fa-brain" style="color:#00d4ff;"></i> Radar Inteligente AcheIAki</h3>'
-                + '<p>Turno atual: <strong>' + esc(algRes.turno_rotulo || 'Para Você') + '</strong>. '
-                + (necessidades.length ? esc(necessidades.join(' · ')) : 'Continue navegando para aprender seus gostos.') + '</p>'
+                + '<h3><i class="fa-solid fa-utensils" style="color:#fb923c;"></i> Sugestões pra você agora</h3>'
+                + '<p>Momento atual: <strong>' + esc(algRes.turno_rotulo || 'Para Você') + '</strong>. '
+                + (necessidades.length ? esc(necessidades.join(' · ')) : 'Veja os pratos que mais combinam com você.') + '</p>'
                 + '</div>';
         }
 
@@ -620,9 +620,9 @@
         const todosChips = chipsBusca.concat(chipsInteresse);
 
         const col2 = '<div class="mkt-radar-col">'
-            + '<h3><i class="fa-solid fa-magnifying-glass-chart" style="color:#00d4ff;"></i> O que você mais pesquisa e gosta</h3>'
-            + '<p>' + (necessidades.length ? esc(necessidades.join(' · ')) : 'Toque em um termo para buscar ofertas parecidas agora:') + '</p>'
-            + (todosChips.length ? '<div class="mkt-radar-chips">' + todosChips.join('') + '</div>' : '<small style="color:#94a3b8;">Suas próximas buscas aparecerão aqui.</small>')
+            + '<h3><i class="fa-solid fa-fire-flame-curved" style="color:#fb923c;"></i> O que você costuma buscar</h3>'
+            + '<p>' + (necessidades.length ? esc(necessidades.join(' · ')) : 'Toque em um botão para procurar na hora:') + '</p>'
+            + (todosChips.length ? '<div class="mkt-radar-chips">' + todosChips.join('') + '</div>' : '<small style="color:#d6d3d1;">Suas buscas aparecerão aqui.</small>')
             + '</div>';
 
         box.innerHTML = col1 + col2;
@@ -662,7 +662,7 @@
                 + '<div class="mkt-prato-body">'
                 + '<div class="mkt-prato-nome">' + esc(p.nome) + '</div>'
                 + '<div class="mkt-prato-loja">' + esc(p.loja_nome) + (p.distancia_km != null ? ' · ' + p.distancia_km + ' km' : '') + '</div>'
-                + '<div class="mkt-prato-foot"><span>' + brl(p.preco) + '</span><span style="font-size:0.76rem;color:#0284c7;">Ver loja →</span></div>'
+                + '<div class="mkt-prato-foot"><span>' + brl(p.preco) + '</span><span style="font-size:0.78rem;color:#ea580c;">Pedir →</span></div>'
                 + '</div></div>';
         }).join('');
 
@@ -699,12 +699,12 @@
             badges.push('<span class="mkt-tag habitual"><i class="fa-solid fa-heart"></i> Sua preferida</span>');
         }
         if (loja.match_pct >= 60) {
-            badges.push('<span class="mkt-tag ia-match"><i class="fa-solid fa-wand-magic-sparkles"></i> ' + loja.match_pct + '% match IA</span>');
+            badges.push('<span class="mkt-tag ia-match"><i class="fa-solid fa-star"></i> Combina com você</span>');
         }
         if (loja.economia_vs_segmento_pct >= 5) {
-            badges.push('<span class="mkt-tag eco"><i class="fa-solid fa-tag"></i> ' + loja.economia_vs_segmento_pct + '% abaixo da média do segmento</span>');
+            badges.push('<span class="mkt-tag eco"><i class="fa-solid fa-tag"></i> ' + loja.economia_vs_segmento_pct + '% mais barato</span>');
         } else if (loja.melhor_preco_segmento) {
-            badges.push('<span class="mkt-tag eco"><i class="fa-solid fa-award"></i> Melhor preço no segmento</span>');
+            badges.push('<span class="mkt-tag eco"><i class="fa-solid fa-award"></i> Melhor preço da região</span>');
         }
         if (loja.entrega_estendida) {
             badges.push('<span class="mkt-tag estendida"><i class="fa-solid fa-truck-fast"></i> Entrega regional até ' + loja.raio_entrega_km + ' km</span>');
@@ -752,8 +752,8 @@
             + '</div>'
             + quoteHtml
             + '<div class="mkt-card-actions">'
-            + '<button type="button" class="mkt-btn-outline" data-ver-loja="' + esc(loja.slug) + '"><i class="fa-solid fa-store"></i> Ver página completa</button>'
-            + '<a class="mkt-btn-go" href="' + esc(loja.url_loja) + '" data-open-loja="' + esc(loja.slug) + '">Pedir agora →</a>'
+            + '<button type="button" class="mkt-btn-outline" data-ver-loja="' + esc(loja.slug) + '"><i class="fa-solid fa-circle-info"></i> Detalhes e notas</button>'
+            + '<a class="mkt-btn-go" href="' + esc(loja.url_loja) + '" data-open-loja="' + esc(loja.slug) + '">Ver cardápio e pedir →</a>'
             + '</div></div></article>';
     }
 
@@ -774,7 +774,7 @@
         if (!gridEl) return;
         const resumo = $('mkt-lojas-resumo');
         if (gridEl === $('mkt-grid-lojas') && resumo) {
-            resumo.textContent = lojas.length + ' empresa(s) encontrada(s) • ordenação inteligente';
+            resumo.textContent = lojas.length + ' loja(s) perto de você';
         }
         if (!lojas.length) {
             // Aba Favoritos vazia
@@ -1165,14 +1165,14 @@
             + '<div class="mkt-loja-hero-inner">' + logoHtml
             + '<div>'
             + '<span class="mkt-status ' + (loja.aberto ? 'on' : 'off') + '">' + (loja.aberto ? 'Aberta agora' : 'Fechada no momento') + '</span> '
-            + (loja.cnpj_verificado ? '<span class="mkt-status" style="background:#dbeafe;color:#1e40af;">CNPJ Verificado: ' + esc(fmtCnpj(loja.cnpj)) + '</span>' : '')
+            + (loja.cnpj_verificado ? '<span class="mkt-status" style="background:#ecfdf5;color:#15803d;">✔ Loja Verificada (CNPJ)</span>' : '')
             + '<h2>' + esc(loja.hero_titulo || loja.nome) + '</h2>'
             + '<p>' + esc(loja.hero_subtitulo || loja.slogan || loja.nicho_rotulo) + '</p>'
             + '</div></div></div>'
             + '<div class="mkt-loja-body">'
             + '<div class="mkt-loja-info-grid">'
             + '<div class="mkt-info-pill"><strong>Razão Social &amp; CNPJ</strong>' + esc(loja.razao_social || loja.nome) + '<br>' + esc(loja.cnpj ? fmtCnpj(loja.cnpj) : 'CNPJ não informado') + '</div>'
-            + '<div class="mkt-info-pill"><strong>Endereço &amp; Alcance</strong>' + esc(endLinha || 'Endereço não cadastrado') + '<br><span style="color:#0284c7;font-weight:700;">' + esc(distInfo) + '</span></div>'
+            + '<div class="mkt-info-pill"><strong>Endereço &amp; Distância</strong>' + esc(endLinha || 'Endereço não cadastrado') + '<br><span style="color:#ea580c;font-weight:700;">' + esc(distInfo) + '</span></div>'
             + '<div class="mkt-info-pill"><strong>Horários &amp; Entrega</strong>' + esc((loja.horarios && loja.horarios.TEXTO) || loja.tempo_espera_txt) + '<br>Frete base: ' + (Number(loja.taxa_entrega_base || 0) === 0 ? 'Grátis' : brl(loja.taxa_entrega_base)) + ' · ' + esc(loja.tempo_espera_txt) + '</div>'
             + '<div class="mkt-info-pill"><strong>Pagamentos &amp; Preço IA</strong>' + esc(pagamentosLista) + '<br><span style="color:#15803d;font-weight:700;">' + esc(compSegTxt) + '</span></div>'
             + '</div>'
@@ -1887,10 +1887,10 @@
             }
             const lgpdMsg = $('mkt-lgpd-msg');
             if (lgpdMsg) {
-                lgpdMsg.style.color = '#0369a1';
+                lgpdMsg.style.color = '#c2410c';
                 lgpdMsg.textContent = ativo
-                    ? 'Permissão para IA ativada. O algoritmo continuará recomendando melhores preços na sua região.'
-                    : 'Coleta de IA desativada e perfil comportamental removido conforme LGPD.';
+                    ? 'Permissão ativada. Vamos mostrar melhores preços e ofertas na sua região.'
+                    : 'Recomendações personalizadas desativadas conforme a LGPD.';
             }
         });
 

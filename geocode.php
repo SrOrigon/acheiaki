@@ -3,16 +3,17 @@
  * Proxy de geocodificação (Nominatim) para o checkout.
  * Evita bloqueio de CORS e envia um User-Agent identificável.
  */
+require_once __DIR__ . '/tenant_init.php';
+require_once __DIR__ . '/store_schema.php';
+
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
+pz_cors_same_origin('GET, OPTIONS', 'Content-Type');
 header('Cache-Control: no-store');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
-
-require_once __DIR__ . '/store_schema.php';
 
 $q = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
 $geo = pedidozap_geocode_query($q);

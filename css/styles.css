@@ -1740,7 +1740,7 @@ img, video, svg {
         gap: 10px;
         padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
         border-radius: 18px 18px 0 0;
-        box-shadow: 0 -8px 26px rgba(11, 25, 44, 0.22);
+        box-shadow: 0 -8px 26px rgba(35, 25, 21, 0.22);
     }
 
     .carrinho-info {
@@ -1858,7 +1858,7 @@ img, video, svg {
     cursor: pointer;
 }
 .pz-vrep-filtro-btn.ativo { background: #14171f; color: #fff; border-color: #14171f; }
-.pz-vrep-tag { background: #eff6ff; color: #1d4ed8; font-size: 0.76rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+.pz-vrep-tag { background: #fff7ed; color: #c2410c; font-size: 0.76rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
 .pz-vrep-verif { background: #dcfce7; color: #166534; font-size: 0.72rem; font-weight: 800; padding: 2px 7px; border-radius: 999px; margin-left: 6px; }
 .pz-vrep-reply {
     margin-top: 10px;

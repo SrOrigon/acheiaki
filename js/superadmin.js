@@ -25,26 +25,48 @@
         }[c]));
     }
 
+    function fmtBrl(v) {
+        return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function rotuloStatusLoja(loja) {
+        if (loja.status_efetivo === 'atrasado') return 'atraso ' + (loja.dias_atraso || 1) + '/2d';
+        if (loja.status_efetivo === 'bloqueado') {
+            if (loja.motivo === 'teste_encerrado') return 'teste acabou (shadowban)';
+            if (loja.motivo === 'vencido') return 'shadowban (>2d)';
+            return 'bloqueada';
+        }
+        return loja.status || 'ativo';
+    }
+
     function desenhar() {
         const filtro = document.getElementById('filtro-status').value;
-        const linhas = lojas.filter((loja) => !filtro || loja.status === filtro || loja.status_efetivo === filtro);
+        const linhas = lojas.filter((loja) => !filtro || loja.status_efetivo === filtro || loja.status === filtro);
         document.getElementById('tabela-lojas').innerHTML = linhas.map((loja) => {
+            const stEf = loja.status_efetivo || loja.status || 'ativo';
+            const temZap = String(loja.whatsapp || '').replace(/\D/g, '').length >= 10;
+            const precisaCobrar = stEf === 'atrasado' || stEf === 'bloqueado' || (loja.dias_restantes !== null && loja.dias_restantes <= 2);
             return '<tr>'
                 + '<td><strong>' + escapar(loja.nome_empresa) + '</strong><br><code>' + escapar(loja.slug) + '</code><br>'
                 + escapar(loja.nicho || '') + (loja.login ? '<br>Login: ' + escapar(loja.login) : '') + '</td>'
-                + '<td>' + escapar(loja.plano || 'basico') + '<br>' + escapar(loja.vencimento || 'sem data') + '</td>'
-                + '<td><span class="pill ' + escapar(loja.status_efetivo || loja.status) + '">'
-                + escapar(loja.motivo === 'vencido' ? 'venceu' : (loja.status || 'ativo')) + '</span>'
-                + (loja.em_teste ? '<br>teste' : '')
-                + (loja.assinatura_status === 'authorized' ? '<br>💳 assinatura ativa' : (loja.assinatura_status ? '<br>💳 ' + escapar(loja.assinatura_status) : ''))
+                + '<td><strong>' + escapar(loja.plano || 'Essencial') + '</strong>' + (loja.ciclo_cobranca === 'anual' ? ' (anual)' : '')
+                + (loja.grupo_rede ? '<br><small>Rede: ' + escapar(loja.grupo_rede) + '</small>' : '')
+                + '<br>Venc.: ' + escapar(loja.vencimento || 'sem data')
+                + (loja.encargo_reativacao_ativo ? '<br><small style="color:#b91c1c;font-weight:700;">Reativação (+10%): ' + fmtBrl(loja.valor_total_cobrar) + '</small>' : '')
+                + '</td>'
+                + '<td><span class="pill ' + escapar(stEf) + '">' + escapar(rotuloStatusLoja(loja)) + '</span>'
+                + (loja.em_teste ? '<br>teste 7d' : '')
+                + (loja.assinatura_status === 'authorized' ? '<br>💳 automática ativa' : '<br>⚡ ' + escapar(loja.modo_cobranca_preferido === 'recorrente' ? 'recorrente' : 'avulso'))
                 + (loja.ultimo_pagamento ? '<br>pago em ' + escapar(loja.ultimo_pagamento) : '') + '</td>'
                 + '<td class="acoes">'
                 + '<button type="button" data-acao="entrar" data-slug="' + escapar(loja.slug) + '">Acessar painel</button>'
+                + (temZap && precisaCobrar ? '<button type="button" class="sec" data-acao="cobrar" data-slug="' + escapar(loja.slug) + '">💬 Cobrar WhatsApp</button>' : '')
+                + '<button type="button" class="sec" data-acao="plano" data-slug="' + escapar(loja.slug) + '">Trocar plano</button>'
                 + '<button type="button" class="sec" data-acao="destaque" data-slug="' + escapar(loja.slug) + '">'
                 + (loja.destaque ? '★ Destacada' : '☆ Destacar Mkt') + '</button>'
                 + '<button type="button" class="sec" data-acao="senha" data-slug="' + escapar(loja.slug) + '">Nova senha</button>'
-                + '<button type="button" class="' + (loja.status_efetivo === 'bloqueado' ? 'sec' : 'perigo') + '" data-acao="bloquear" data-slug="' + escapar(loja.slug) + '">'
-                + (loja.status_efetivo === 'bloqueado' ? 'Reativar por 30 dias' : 'Bloquear') + '</button>'
+                + '<button type="button" class="' + (stEf === 'bloqueado' ? 'sec' : 'perigo') + '" data-acao="bloquear" data-slug="' + escapar(loja.slug) + '">'
+                + (stEf === 'bloqueado' ? 'Reativar por 30 dias' : 'Bloquear') + '</button>'
                 + '</td></tr>';
         }).join('') || '<tr><td colspan="4">Nenhuma loja neste filtro.</td></tr>';
     }
@@ -130,18 +152,25 @@
     }
 
     function mostrarCobranca(saas) {
-        const valor = document.getElementById('saas-mensalidade');
-        if (!valor) return;
-        valor.value = saas.mensalidade_valor ? String(saas.mensalidade_valor).replace('.', ',') : '';
+        const precos = saas.planos_precos || {};
+        const fmt = (v, def) => String((v && Number(v) > 0) ? v : def).replace('.', ',');
+        const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+        setVal('saas-preco-essencial', fmt(precos.essencial, 79.9));
+        setVal('saas-preco-pro', fmt(precos.pro, 149.9));
+        setVal('saas-preco-enterprise', fmt(precos.enterprise, 249.9));
+        setVal('saas-desc-anual', saas.desconto_anual_pct != null ? saas.desconto_anual_pct : 20);
+        setVal('saas-dias-teste', Math.min(7, Math.max(1, Number(saas.dias_teste_gratis != null ? saas.dias_teste_gratis : 7))));
+        setVal('saas-tolerancia-dias', Math.min(2, Math.max(0, Number(saas.tolerancia_atraso_dias != null ? saas.tolerancia_atraso_dias : 2))));
+        setVal('saas-multa-reativacao', Math.min(10, Math.max(0, Number(saas.multa_reativacao_pct != null ? saas.multa_reativacao_pct : 10))));
+
         document.getElementById('saas-mp-token').value = '';
         document.getElementById('saas-mp-token').placeholder = saas.mp_configurado
             ? 'Token salvo (termina em ' + saas.mp_token_final + '). Deixe vazio para manter.'
             : 'APP_USR-...';
         document.getElementById('saas-webhook').textContent = saas.webhook_url || '';
-        let texto = saas.mp_configurado
-            ? 'Mercado Pago conectado' + (saas.mp_modo_teste ? ' (MODO TESTE: cobranças não são reais)' : '') + '.'
-            : 'Mercado Pago ainda não conectado: os lojistas não verão o botão de pagamento.';
-        if (saas.mp_configurado && !saas.mensalidade_valor) texto += ' Defina o valor da mensalidade.';
+        const texto = saas.mp_configurado
+            ? 'Mercado Pago conectado' + (saas.mp_modo_teste ? ' (MODO TESTE: cobranças não são reais)' : '') + ' — cobrança ativa para os 3 planos (Essencial, Pro e Enterprise).'
+            : 'Mercado Pago ainda não conectado: os lojistas verão a tabela de planos, mas sem botão de pagamento online.';
         document.getElementById('saas-mp-status').textContent = texto;
     }
 
@@ -164,6 +193,7 @@
             login: document.getElementById('novo-login').value.trim(),
             senha: document.getElementById('novo-senha').value,
             plano: document.getElementById('novo-plano').value,
+            grupo_rede: ((document.getElementById('novo-grupo-rede') || {}).value || '').trim(),
             vencimento: document.getElementById('novo-vencimento').value
         }).then((data) => {
             if (!data.success) {
@@ -232,7 +262,15 @@
                 google_site_verification: ((document.getElementById('saas-gsc-token') || {}).value || '').trim(),
                 dpo_email: ((document.getElementById('saas-dpo-email') || {}).value || '').trim(),
                 cnpj_plataforma: ((document.getElementById('saas-cnpj') || {}).value || '').trim(),
-                mensalidade_valor: (document.getElementById('saas-mensalidade') || {}).value || '',
+                planos_precos: {
+                    essencial: ((document.getElementById('saas-preco-essencial') || {}).value || '79,90').trim(),
+                    pro: ((document.getElementById('saas-preco-pro') || {}).value || '149,90').trim(),
+                    enterprise: ((document.getElementById('saas-preco-enterprise') || {}).value || '249,90').trim()
+                },
+                desconto_anual_pct: Number(((document.getElementById('saas-desc-anual') || {}).value || 20)),
+                dias_teste_gratis: Math.min(7, Math.max(1, Number(((document.getElementById('saas-dias-teste') || {}).value || 7)))),
+                tolerancia_atraso_dias: Math.min(2, Math.max(0, Number(((document.getElementById('saas-tolerancia-dias') || {}).value != null ? document.getElementById('saas-tolerancia-dias').value : 2)))),
+                multa_reativacao_pct: Math.min(10, Math.max(0, Number(((document.getElementById('saas-multa-reativacao') || {}).value != null ? document.getElementById('saas-multa-reativacao').value : 10)))),
                 mp_access_token: ((document.getElementById('saas-mp-token') || {}).value || '').trim()
             }
         }).then((data) => {
@@ -250,6 +288,40 @@
         if (botao.dataset.acao === 'entrar') {
             sessionStorage.setItem('pedidozap_tenant_slug', slug);
             window.location.href = 'admin.html?tenant=' + encodeURIComponent(slug);
+            return;
+        }
+        if (botao.dataset.acao === 'cobrar') {
+            const num = String(loja.whatsapp || '').replace(/\D/g, '');
+            const zapNum = num.startsWith('55') ? num : ('55' + num);
+            const urlPainelLoja = window.location.origin + '/loja/' + encodeURIComponent(slug) + '/admin.html';
+            let msgCob = 'Olá, equipe ' + (loja.nome_empresa || slug) + '! Aqui é do suporte AcheIAki. ';
+            if (loja.status_efetivo === 'bloqueado') {
+                msgCob += 'Sua loja entrou em bloqueio/shadowban (vitrine oculta para compradores, mas todos os seus dados continuam 100% salvos). ';
+                if (loja.encargo_reativacao_ativo) {
+                    msgCob += 'Valor de reativação (+10% após 2 dias de atraso): ' + fmtBrl(loja.valor_total_cobrar) + '. ';
+                }
+                msgCob += 'Acesse a aba Mensalidade para regularizar na hora: ' + urlPainelLoja;
+            } else if (loja.status_efetivo === 'atrasado') {
+                msgCob += 'Identificamos pagamento vencido em ' + (loja.vencimento || '') + ' (dia ' + (loja.dias_atraso || 1) + ' de 2 da tolerância máxima). Regularize pelo valor normal (' + fmtBrl(loja.valor_normal) + ') antes de ' + (loja.data_bloqueio_prevista || '') + ' para evitar shadowban e acréscimo de 10%: ' + urlPainelLoja;
+            } else {
+                msgCob += 'Lembrete amigo: seu plano/teste vence em ' + (loja.vencimento || '') + '. Garanta a renovação ou ative o pagamento automático em: ' + urlPainelLoja;
+            }
+            window.open('https://wa.me/' + zapNum + '?text=' + encodeURIComponent(msgCob), '_blank', 'noopener');
+            return;
+        }
+        if (botao.dataset.acao === 'plano') {
+            const novoP = prompt('Informe o novo plano para ' + loja.nome_empresa + ':\nessencial | pro | enterprise', loja.plano_slug || 'pro');
+            if (!novoP) return;
+            const novoGrupo = novoP.trim().toLowerCase() === 'enterprise'
+                ? (prompt('Identificador do Grupo de Rede (deixe igual em todas as filiais desta empresa):', loja.grupo_rede || loja.slug) || '')
+                : (loja.grupo_rede || '');
+            api({ acao: 'atualizar', slug: slug, plano: novoP.trim().toLowerCase(), grupo_rede: novoGrupo.trim() }).then((data) => {
+                if (data.success) {
+                    lojas = data.lojas || lojas;
+                    desenhar();
+                    alert('Plano atualizado com sucesso.');
+                }
+            });
             return;
         }
         if (botao.dataset.acao === 'destaque') {

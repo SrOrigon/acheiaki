@@ -11,24 +11,24 @@
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #f7f6f2; color: #14171f; line-height: 1.7; }
-        header { background: #0b192c; color: #fff; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        header { background: #231915; color: #fff; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
         .head-inner { max-width: 820px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
         .brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 800; font-size: 1.25rem; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
         .brand img { width: 36px; height: 36px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.2); object-fit: cover; }
-        .brand span.ia { color: #38bdf8; }
+        .brand span.ia { color: #fb923c; }
         .nav-links { display: flex; gap: 8px; flex-wrap: wrap; }
-        .nav-links a { color: #e2e8f0; text-decoration: none; font-weight: 600; font-size: 0.88rem; padding: 7px 13px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.06); }
-        .nav-links a:hover { background: rgba(255,255,255,0.14); }
+        .nav-links a { color: #f5f5f4; text-decoration: none; font-weight: 600; font-size: 0.88rem; padding: 7px 13px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.08); }
+        .nav-links a:hover { background: rgba(255,255,255,0.16); }
         main { max-width: 820px; margin: 28px auto 56px; padding: 0 18px; }
         .doc-card { background: #fff; border-radius: 18px; padding: 32px 30px 38px; box-shadow: 0 1px 2px rgba(20,23,31,0.04), 0 8px 24px -8px rgba(20,23,31,0.07); border: 1px solid rgba(20,23,31,0.09); }
         h1 { margin: 0 0 6px; color: #14171f; font-size: 1.8rem; }
         .meta { color: #6b7280; font-size: 0.9rem; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid rgba(20,23,31,0.08); }
-        h2 { color: #14171f; font-size: 1.18rem; margin: 26px 0 8px; border-left: 3px solid #0284c7; padding-left: 12px; }
+        h2 { color: #14171f; font-size: 1.18rem; margin: 26px 0 8px; border-left: 3px solid #ea580c; padding-left: 12px; }
         p, li { color: #374151; font-size: 0.98rem; }
         ul { padding-left: 20px; }
-        .aviso-box { background: #f7f6f2; border: 1px solid rgba(20,23,31,0.1); border-radius: 12px; padding: 14px 16px; margin: 16px 0; color: #14171f; }
+        .aviso-box { background: #faf7f2; border: 1px solid rgba(20,23,31,0.1); border-radius: 12px; padding: 14px 16px; margin: 16px 0; color: #14171f; }
         footer { text-align: center; color: #6b7280; font-size: 0.88rem; margin-top: 24px; }
-        footer a { color: #0284c7; font-weight: 600; text-decoration: none; }
+        footer a { color: #c2410c; font-weight: 600; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -81,12 +81,15 @@
             <h2>4. Funcionamento dos Pedidos, Pagamentos e Zero Comissão</h2>
             <p>Os pedidos realizados através do AcheIAki são encaminhados diretamente ao painel e/ou WhatsApp da loja escolhida. Os pagamentos combinados na entrega ou via PIX direto para a chave do estabelecimento ocorrem diretamente entre Comprador e Empresa Parceira, sem intermediação financeira pela plataforma AcheIAki sobre o valor dos pratos.</p>
 
-            <h2>5. Planos, Teste Grátis e Assinatura de Lojistas</h2>
+            <h2>5. Planos, Teste Grátis, Prazos de Cobrança, Shadowban e Reativação</h2>
             <ul>
-                <li>Novas empresas podem usufruir de período de teste gratuito de <strong>7 (sete) dias</strong>, sem fidelidade obrigatória.</li>
-                <li>Após o período de teste, a continuidade do uso depende do plano de mensalidade fixa vigente escolhido pelo lojista, sem cobrança de comissão percentual por pedido.</li>
-                <li>O atraso ou falta de pagamento pode ocasionar a suspensão temporária da vitrine pública da loja no Marketplace até a regularização, preservando-se os dados pelo prazo legal mínimo.</li>
-                <li>Em contratações realizadas à distância por lojistas consumidores finais nos termos aplicáveis da lei, respeita-se o direito de arrependimento no prazo de 7 dias previsto no Art. 49 do CDC.</li>
+                <li><strong>Período de teste de 7 dias:</strong> novas empresas podem usufruir de período de teste gratuito de no máximo <strong>7 (sete) dias</strong>, sem fidelidade obrigatória e sem cobrança automática durante o teste. Ao término dos 7 dias, caso não seja contratado um plano pago, a vitrine pública da loja é suspensa para compradores (mantendo todo o cadastro e cardápio salvos até a contratação).</li>
+                <li><strong>Planos fixos sem comissão:</strong> após o teste, a continuidade do uso depende da contratação de um dos planos vigentes (<strong>Essencial</strong>, <strong>Pro</strong> ou <strong>Enterprise / Rede</strong>), sem cobrança de comissão percentual por pedido.</li>
+                <li><strong>Modalidades de pagamento (Automático Recorrente ou Avulso):</strong> a empresa contratante escolhe livremente, no próprio painel administrativo, entre: <strong>(a) Pagamento Automático e Recorrente</strong> via Mercado Pago (com autorização expressa de renovação mensal ou anual, cancelável a qualquer momento com 1 clique antes da próxima fatura sem multa contratual), ou <strong>(b) Pagamento Avulso por Ciclo</strong> via PIX, Cartão ou Boleto (sem débito automático nos ciclos seguintes).</li>
+                <li><strong>Avisos de prazo:</strong> a plataforma exibe avisos preventivos no painel antes do encerramento do teste ou do vencimento do plano, bem como alertas imediatos em caso de atraso.</li>
+                <li><strong>Tolerância máxima de 2 (dois) dias e Shadowban:</strong> após o vencimento da mensalidade contratada, concede-se prazo máximo de tolerância de <strong>2 (dois) dias corridos</strong> para pagamento pelo valor normal do plano. Ultrapassados os 2 dias sem compensação do pagamento (a partir do 3º dia de atraso), aplicam-se automaticamente: <strong>(i) bloqueio operacional de novos pedidos</strong> e <strong>(ii) ocultação da página pública da empresa aos compradores (<em>shadowban</em>)</strong> no Marketplace, nas buscas e no link direto, <strong>preservando-se integralmente todo o cadastro, cardápio, fotos, histórico de pedidos e base de clientes sem exclusão de dados</strong> enquanto perdurar a suspensão ou pelo prazo legal aplicável.</li>
+                <li><strong>Encargo contratual de reativação após 2 dias (10%):</strong> tratando-se de relação empresarial (B2B) regida pelos arts. 408 a 416 do Código Civil Brasileiro, caso a empresa contratante ultrapasse o prazo máximo de 2 dias de tolerância após o vencimento, a reativação da vitrine e retirada do <em>shadowban</em> exigirá a quitação do valor normal do plano contratado acrescido de <strong>encargo contratual de reativação de 10% (dez por cento)</strong> incidente uma única vez sobre o valor da mensalidade devida. Confirmado o pagamento, a loja retorna automaticamente ao ar, e eventual assinatura recorrente futura volta a ser cobrada pelo valor normal do plano.</li>
+                <li><strong>Arrependimento e cancelamento:</strong> respeita-se o direito de arrependimento de 7 (sete) dias na primeira contratação à distância quando aplicável nos termos do Art. 49 do CDC. O cancelamento interrompe cobranças futuras sem retenção indevida, mantendo a exclusão ou portabilidade de dados conforme a LGPD.</li>
             </ul>
 
             <h2>6. Algoritmo Inteligente, IA e Coleta de Dados</h2>
@@ -95,8 +98,9 @@
             <h2>7. Avaliações e Conduta</h2>
             <p>As avaliações publicadas no Marketplace devem refletir experiências reais de pedidos concluídos. O AcheIAki reserva-se o direito de moderar ou remover conteúdos ofensivos, caluniosos, discriminatórios, ilegais ou fraudulentos.</p>
 
-            <h2>8. Propriedade Intelectual</h2>
-            <p>A marca <strong>AcheIAki</strong>, seu logotipo, código-fonte, layout, banco de dados, algoritmo de ranqueamento e textos institucionais pertencem exclusivamente aos titulares da plataforma, sendo vedada a cópia, engenharia reversa ou redistribuição sem autorização expressa.</p>
+            <h2>8. Propriedade Intelectual e Proibição de Clonagem / Scraping</h2>
+            <p>A marca <strong>AcheIAki</strong>, seu logotipo, código-fonte, arquitetura, layout, banco de dados, algoritmo de ranqueamento, APIs e textos institucionais pertencem exclusivamente aos titulares da plataforma e são protegidos pela Lei de Software (Lei nº 9.609/1998), pela Lei de Direitos Autorais (Lei nº 9.610/1998) e pela Lei de Propriedade Industrial (Lei nº 9.279/1996).</p>
+            <p>É expressamente proibida a cópia integral ou parcial, espelhamento de site (inclusive por ferramentas automatizadas como WebCopy, HTTrack, scrapers ou robôs não autorizados), engenharia reversa, incorporação indevida em iframes ou redistribuição comercial sem autorização prévia e por escrito, sujeitando o infrator às medidas cíveis e criminais cabíveis.</p>
 
             <h2>9. Limitação de Responsabilidade e Disponibilidade</h2>
             <p>Empregamos boas práticas de segurança e infraestrutura em nuvem para manter a disponibilidade contínua do serviço. Contudo, interrupções temporárias decorrentes de manutenção técnica, falhas de telecomunicações de terceiros ou força maior não geram dever de indenização por lucros cessantes.</p>

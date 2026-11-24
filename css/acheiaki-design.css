@@ -14,11 +14,11 @@
     --aki-line: rgba(20, 23, 31, 0.09);
     --aki-line-strong: rgba(20, 23, 31, 0.16);
 
-    /* Identidade AcheIAki + Conversão Culinária */
-    --aki-navy: #0b192c;
-    --aki-navy-2: #132845;
-    --aki-brand: #0284c7;
-    --aki-cyan: #0ea5e9;
+    /* Identidade AcheIAki + Conversão Culinária (cores quentes de comida e delivery) */
+    --aki-navy: #231915;
+    --aki-navy-2: #362620;
+    --aki-brand: #ea580c;
+    --aki-cyan: #f59e0b;
     --aki-accent: #e85d04;
     --aki-accent-hover: #c2410c;
     --aki-success: #15803d;
@@ -32,7 +32,7 @@
     --aki-shadow-xs: 0 1px 2px rgba(20, 23, 31, 0.05);
     --aki-shadow-sm: 0 1px 2px rgba(20, 23, 31, 0.04), 0 6px 16px -6px rgba(20, 23, 31, 0.08);
     --aki-shadow-md: 0 2px 6px rgba(20, 23, 31, 0.04), 0 16px 32px -12px rgba(20, 23, 31, 0.12);
-    --aki-shadow-modal: 0 24px 60px -16px rgba(11, 25, 44, 0.34);
+    --aki-shadow-modal: 0 24px 60px -16px rgba(35, 25, 21, 0.34);
 
     --aki-ease: cubic-bezier(0.22, 1, 0.36, 1);
     --aki-radius-sm: 10px;

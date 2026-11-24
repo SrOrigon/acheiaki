@@ -8,7 +8,7 @@ DirectoryIndex marketplace.html index.php index.html
 # 2. Desabilitar listagem de diretório e bloquear arquivos sensíveis por segurança
 Options -Indexes
 
-<FilesMatch "^(router\.php|auth_config\.php|verificar_sistema\.php|go_live_smoke\.php|worker\.php|db_pdo\.php|Database\.php|store_schema\.php|tenant_init\.php|pedido_acesso\.php|.*_lib\.php|Dockerfile|Procfile|railway\.json|\.env.*|.*\.md|.*\.log|.*\.sql)$">
+<FilesMatch "^(router\.php|auth_config\.php|verificar_sistema\.php|go_live_smoke\.php|worker\.php|db_pdo\.php|Database\.php|store_schema\.php|tenant_init\.php|pedido_acesso\.php|.*_lib\.php|configurar-producao\.html|openapi-pdv\.json|Dockerfile|Procfile|railway\.json|\.env.*|.*\.(md|log|sql|bak|map|sh|ps1|yml|yaml))$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
@@ -17,9 +17,12 @@ Options -Indexes
     </IfModule>
 </FilesMatch>
 
-# 2.1 SEO Dinâmico (Google Search Console) + Multi-tenant: /loja/{slug}/ e /loja/{slug}/pagina.html
+# 2.1 Proteção Anti-WebCopy/HTTrack + SEO Dinâmico (Google Search Console) + Multi-tenant
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteCond %{HTTP_USER_AGENT} (CyotekWebCopy|WebCopy|HTTrack|SiteSucker|Teleport|WebZIP|WebCopier|WebReaper|WebStripper|Offline\ Explorer|Scrapy|Wget|AhrefsBot|SemrushBot|MJ12bot|DotBot|Bytespider) [NC]
+    RewriteRule ^ - [F,L]
+    RewriteRule ^(scripts|mobile-capacitor)(/|$) - [F,L]
     RewriteRule ^sitemap\.xml$ sitemap.php [L,NC]
     RewriteRule ^robots\.txt$ robots.php [L,NC]
     RewriteRule ^loja/([a-zA-Z0-9_-]+)/(css|js|assets)/(.*)$ $2/$3 [L,NC]

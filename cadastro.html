@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#0b192c">
+    <meta name="theme-color" content="#ea580c">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
-    <title>AcheIAki — Cadastre sua empresa sem comissão por pedido (Taxa Zero)</title>
+    <title>AcheIAki — Cadastre seu restaurante ou loja sem comissão (Taxa Zero)</title>
     <meta name="description" content="Pare de perder até 25% por pedido. Cadastre sua empresa no AcheIAki: cardápio digital, IA regional, kit pronto para converter clientes na sacola/WhatsApp e 0% de comissão.">
     <meta name="robots" content="index, follow">
     <link rel="icon" type="image/jpeg" href="assets/images/acheiaki-icon.jpg">
@@ -15,33 +15,33 @@
     <style>
         body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--aki-canvas, #f7f6f2); color: var(--aki-ink, #14171f); font-size: 16px; line-height: 1.55; }
         main { max-width: 780px; margin: 0 auto; padding: 24px 18px 56px; }
-        .aki-top-brand { background: #0b192c; color: #fff; border-radius: 16px; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 26px -10px rgba(11,25,44,0.28); }
+        .aki-top-brand { background: #231915; color: #fff; border-radius: 16px; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; border: 1px solid rgba(251,146,60,0.2); box-shadow: 0 10px 26px -10px rgba(35,25,21,0.28); }
         .aki-top-brand-left { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
         .aki-top-brand-left img { width: 42px; height: 42px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); object-fit: cover; }
         .aki-top-word { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.025em; line-height: 1.1; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
-        .aki-top-word .aki-ia { color: #38bdf8; }
-        .aki-top-sub { font-size: 0.82rem; color: #cbd5e1; margin-top: 2px; }
+        .aki-top-word .aki-ia { color: #fb923c; }
+        .aki-top-sub { font-size: 0.82rem; color: #fed7aa; margin-top: 2px; }
         .aki-back-mkt { color: #fff; text-decoration: none; font-size: 0.88rem; font-weight: 600; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); display: inline-flex; align-items: center; gap: 7px; }
         .aki-back-mkt:hover { background: rgba(255,255,255,0.16); }
         h1 { font-size: 1.85rem; line-height: 1.2; margin: 10px 0 8px; color: #14171f; font-weight: 700; }
         .promessa { background: #fff; border-radius: 14px; padding: 16px 20px; margin: 16px 0; border: 1px solid rgba(20,23,31,0.08); }
         .promessa li { margin: 8px 0; }
         .aki-pitch { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
-        .aki-roi-box { background: #0b192c; color: #fff; border-radius: 18px; padding: 20px 22px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 12px 28px -12px rgba(11,25,44,0.35); }
-        .aki-roi-kicker { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(56,189,248,0.16); color: #7dd3fc; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em; margin-bottom: 8px; }
+        .aki-roi-box { background: linear-gradient(135deg, #2b1810 0%, #7c2d12 100%); color: #fff; border-radius: 18px; padding: 20px 22px; border: 1px solid rgba(251,146,60,0.22); box-shadow: 0 12px 28px -12px rgba(35,25,21,0.35); }
+        .aki-roi-kicker { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(234,88,12,0.26); color: #fed7aa; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em; margin-bottom: 8px; }
         .aki-roi-box h2 { margin: 0 0 6px; font-size: 1.25rem; color: #fff; }
         .aki-roi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-        .aki-roi-box label { color: #cbd5e1; margin: 0 0 4px; font-size: 0.85rem; }
+        .aki-roi-box label { color: #fed7aa; margin: 0 0 4px; font-size: 0.85rem; }
         .aki-roi-box input[type="number"] { min-height: 44px; padding: 8px 12px; background: rgba(255,255,255,0.96); color: #14171f; font-weight: 700; }
         .aki-roi-result { margin-top: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; padding: 14px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-        .aki-roi-stat small { display: block; font-size: 0.78rem; color: #cbd5e1; }
-        .aki-roi-stat strong { display: block; font-size: 1.35rem; font-variant-numeric: tabular-nums; margin-top: 2px; color: #38bdf8; }
+        .aki-roi-stat small { display: block; font-size: 0.78rem; color: #fed7aa; }
+        .aki-roi-stat strong { display: block; font-size: 1.35rem; font-variant-numeric: tabular-nums; margin-top: 2px; color: #fb923c; }
         .aki-roi-stat strong.alerta { color: #fca5a5; }
         .aki-engines-card { background: #fff; border-radius: 18px; padding: 20px 22px; border: 1px solid rgba(20,23,31,0.09); box-shadow: 0 1px 2px rgba(20,23,31,0.04), 0 8px 20px -10px rgba(20,23,31,0.08); }
         .aki-engines-card h2 { margin: 0 0 4px; font-size: 1.15rem; color: #14171f; }
         .aki-engines-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
         .aki-engine-item { background: #faf9f6; border: 1px solid rgba(20,23,31,0.08); border-radius: 14px; padding: 14px; }
-        .aki-engine-tag { display: inline-block; font-size: 0.73rem; font-weight: 700; color: #0369a1; background: #e0f2fe; padding: 3px 8px; border-radius: 999px; margin-bottom: 6px; }
+        .aki-engine-tag { display: inline-block; font-size: 0.73rem; font-weight: 700; color: #c2410c; background: #ffedd5; padding: 3px 8px; border-radius: 999px; margin-bottom: 6px; }
         .aki-engine-item h3 { margin: 0 0 5px; font-size: 0.96rem; color: #14171f; line-height: 1.3; }
         .aki-engine-item p { margin: 0; font-size: 0.84rem; color: #4b5563; line-height: 1.45; }
         .aki-garantia-box { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: 14px; padding: 12px 16px; display: flex; align-items: flex-start; gap: 11px; font-size: 0.9rem; line-height: 1.45; }
@@ -52,15 +52,15 @@
         form, .pronto { background: #fff; border-radius: 18px; padding: 26px 24px; box-shadow: 0 1px 2px rgba(20,23,31,0.04), 0 8px 24px -8px rgba(20,23,31,0.08); border: 1px solid rgba(20,23,31,0.08); }
         label { display: block; font-weight: 600; font-size: 0.94rem; margin: 14px 0 6px; color: #14171f; }
         input, select { width: 100%; box-sizing: border-box; font-size: 1rem; min-height: 48px; padding: 11px 14px; border: 1px solid rgba(20,23,31,0.16); border-radius: 10px; background: #fff; font-family: inherit; }
-        input:focus, select:focus { outline: none; border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2,132,199,0.14); }
-        button, .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; background: #0b192c; color: #fff; border: 0; border-radius: 12px; min-height: 50px; padding: 12px 18px; font-size: 1rem; font-weight: 700; cursor: pointer; text-decoration: none; }
-        button:hover, .btn:hover { background: #132845; }
+        input:focus, select:focus { outline: none; border-color: #ea580c; box-shadow: 0 0 0 3px rgba(234,88,12,0.14); }
+        button, .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; background: #ea580c; color: #fff; border: 0; border-radius: 12px; min-height: 50px; padding: 12px 18px; font-size: 1rem; font-weight: 700; cursor: pointer; text-decoration: none; }
+        button:hover, .btn:hover { background: #c2410c; }
         .cadastro-toggle-modos { background: #ece9e0; padding: 5px; border-radius: 14px; margin-bottom: 18px; }
         .cadastro-toggle-modos button { margin-top: 0; background: transparent; color: #4b5563; border-radius: 10px; font-weight: 600; box-shadow: none; }
         .cadastro-toggle-modos button.ativo { background: #fff; color: #14171f; font-weight: 700; box-shadow: 0 1px 3px rgba(20,23,31,0.09); }
         .hp { position: absolute; left: -9999px; }
         .erro { color: #b91c1c; font-weight: 600; background: #fef2f2; border: 1px solid #fecaca; padding: 10px 12px; border-radius: 10px; }
-        a.link { color: #0284c7; font-weight: 600; }
+        a.link { color: #c2410c; font-weight: 600; }
         @media (min-width: 641px) and (max-width: 1024px) {
             main { padding: 20px 20px 52px; max-width: 820px; }
             .aki-engines-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -93,8 +93,8 @@
             <a href="marketplace.html?escolha=cliente" class="aki-back-mkt"><i class="fa-solid fa-bag-shopping"></i> Sou Cliente (Quero Comprar)</a>
         </div>
         <div style="background:#fff;border:1px solid rgba(20,23,31,0.09);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-            <span style="font-weight:500;color:#4b5563;font-size:0.94rem;">Você está na área exclusiva de <strong style="color:#14171f;">empresas e restaurantes (CNPJ)</strong>.</span>
-            <a href="marketplace.html?escolha=cliente" style="color:#0284c7;font-weight:600;text-decoration:none;font-size:0.94rem;">Ir para compras como cliente <i class="fa-solid fa-arrow-right"></i></a>
+            <span style="font-weight:500;color:#4b5563;font-size:0.94rem;">Você está na área de <strong style="color:#14171f;">restaurantes, lanchonetes e lojas</strong>.</span>
+            <a href="marketplace.html?escolha=cliente" style="color:#ea580c;font-weight:700;text-decoration:none;font-size:0.94rem;">Quero pedir comida como cliente <i class="fa-solid fa-arrow-right"></i></a>
         </div>
         <h1>Cadastre ou acesse sua loja no AcheIAki</h1>
         <p style="font-size:1.02rem;color:#4b5563;">Escolha abaixo se deseja criar uma nova loja com seu CNPJ ou entrar no painel de uma loja já cadastrada:</p>
@@ -210,29 +210,29 @@
         </div>
 
         <form id="form-cadastro">
-            <h2 style="margin-top:0;font-size:1.25rem;color:#0f766e;">0. Como você prefere montar e usar sua página? *</h2>
-            <p style="margin:0 0 8px;color:#475563;font-size:0.92rem;">Escolha seu nível inicial — você pode trocar entre <strong>Básico</strong>, <strong>Avançado</strong> e <strong>Expert</strong> dentro do painel sempre que quiser.</p>
+            <h2 style="margin-top:0;font-size:1.25rem;color:#c2410c;">0. Como você prefere usar o painel da sua loja? *</h2>
+            <p style="margin:0 0 8px;color:#475563;font-size:0.92rem;">Já deixamos no <strong>Modo Fácil</strong> (tudo simples e guiado). Você pode trocar quando quiser lá dentro.</p>
             <div class="pz-nivel-cards" id="cad-nivel-cards">
                 <label class="pz-nivel-card ativo" data-nivel-card="basico">
-                    <strong><span>🤖 Básico (Com IA)</span> <input type="radio" name="nivel_experiencia" value="basico" checked required></strong>
-                    <small>Nossa IA monta toda a sua página inicial e ensina passo a passo como cadastrar seu cardápio.</small>
+                    <strong><span>🟢 Modo Fácil (Recomendado)</span> <input type="radio" name="nivel_experiencia" value="basico" checked required></strong>
+                    <small>Só o essencial na tela: pratos, preços, WhatsApp e pedidos sem complicação.</small>
                 </label>
                 <label class="pz-nivel-card" data-nivel-card="avancado">
-                    <strong><span>🛠️ Avançado (IA + Manual)</span> <input type="radio" name="nivel_experiencia" value="avancado"></strong>
-                    <small>Mantém a ajuda da IA e libera controles manuais de entrega, textos, cupons e categorias.</small>
+                    <strong><span>🛠️ Mais Opções</span> <input type="radio" name="nivel_experiencia" value="avancado"></strong>
+                    <small>Libera entrega por bairro, cupons de desconto, clientes e relatórios de vendas.</small>
                 </label>
                 <label class="pz-nivel-card" data-nivel-card="expert">
-                    <strong><span>💻 Expert (Acesso Total)</span> <input type="radio" name="nivel_experiencia" value="expert"></strong>
-                    <small>Acesso completo a todos os dados de cadastro, estoque/DRE, equipe, JSON bruto e APIs técnicas.</small>
+                    <strong><span>⚙️ Completo (Estoque / PDV)</span> <input type="radio" name="nivel_experiencia" value="expert"></strong>
+                    <small>Controle completo de estoque, nota fiscal (NFC-e), caixa, funcionários e integrações.</small>
                 </label>
             </div>
 
-            <h2 style="margin-top:16px;font-size:1.25rem;color:#9a3412;">1. Dados obrigatórios da empresa (CNPJ)</h2>
+            <h2 style="margin-top:16px;font-size:1.25rem;color:#9a3412;">1. Dados da sua empresa</h2>
             <label for="nome">Nome do estabelecimento *</label>
             <input id="nome" name="nome" required minlength="3" placeholder="Ex.: Restaurante Fogão a Lenha">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div>
-                    <label for="cad-cnpj">CNPJ obrigatório (14 dígitos) *</label>
+                    <label for="cad-cnpj">CNPJ da empresa *</label>
                     <input id="cad-cnpj" name="cnpj" inputmode="numeric" required maxlength="18" placeholder="00.000.000/0001-00">
                 </div>
                 <div>
@@ -258,13 +258,13 @@
                 </div>
             </div>
 
-            <h2 style="margin:22px 0 6px;font-size:1.25rem;color:#9a3412;">2. Endereço e localização GPS obrigatória</h2>
+            <h2 style="margin:22px 0 6px;font-size:1.25rem;color:#9a3412;">2. Onde fica a sua loja</h2>
             <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
                 <div style="flex:1;min-width:150px;">
                     <label for="cad-cep">CEP *</label>
                     <input id="cad-cep" name="cep" inputmode="numeric" required maxlength="9" placeholder="00000-000">
                 </div>
-                <button type="button" id="btn-cad-gps" style="margin-top:0;background:#0f766e;min-height:52px;font-size:0.95rem;"><i class="fa-solid fa-location-crosshairs"></i> Capturar GPS da loja *</button>
+                <button type="button" id="btn-cad-gps" style="margin-top:0;background:#15803d;min-height:52px;font-size:0.95rem;"><i class="fa-solid fa-location-crosshairs"></i> Usar minha localização (GPS) *</button>
             </div>
             <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;">
                 <div>
@@ -292,12 +292,12 @@
             </div>
             <input type="hidden" id="cad-lat" value="0">
             <input type="hidden" id="cad-lng" value="0">
-            <p id="cad-gps-status" style="font-size:0.88rem;color:#4b5563;margin:6px 0 0;">Obrigatório: capture o GPS ou informe o CEP e endereço completo válido para clientes da sua região encontrarem a empresa.</p>
+            <p id="cad-gps-status" style="font-size:0.88rem;color:#4b5563;margin:6px 0 0;">Toque no botão verde acima (se estiver na loja) ou preencha o CEP e endereço para os clientes da sua cidade te encontrarem.</p>
 
-            <h2 style="margin:22px 0 6px;font-size:1.25rem;color:#9a3412;">3. Entrega, raio máximo e pagamentos</h2>
+            <h2 style="margin:22px 0 6px;font-size:1.25rem;color:#9a3412;">3. Entrega, distância e pagamento</h2>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
                 <div>
-                    <label for="cad-raio">Raio de entrega (km) *</label>
+                    <label for="cad-raio">Até quantos km entrega? *</label>
                     <input id="cad-raio" type="number" min="1" max="300" step="1" required value="10" placeholder="Ex.: 10 ou 100">
                 </div>
                 <div>
@@ -305,11 +305,11 @@
                     <input id="cad-tempo" type="number" min="10" max="180" required value="35" placeholder="35">
                 </div>
                 <div>
-                    <label for="cad-taxa">Taxa base (R$) *</label>
+                    <label for="cad-taxa">Valor da entrega (R$) *</label>
                     <input id="cad-taxa" type="number" min="0" step="0.50" required value="0" placeholder="0 = grátis">
                 </div>
             </div>
-            <p style="font-size:0.85rem;color:#4b5563;margin:4px 0 8px;">Se você atende entregas de longa distância (ex.: 50 km ou 100 km), informe esse limite acima — nossa IA usará exatamente o seu raio quando não houver loja do segmento perto do comprador.</p>
+            <p style="font-size:0.85rem;color:#4b5563;margin:4px 0 8px;">Coloque 0 na taxa se a entrega for grátis. Se você entrega longe (ex.: 50 km ou 100 km), digite essa distância acima.</p>
             <label>Formas de pagamento aceitas (marque ao menos 1) *</label>
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
                 <label style="display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:500;"><input type="checkbox" id="cad-pay-pix" checked style="width:auto;min-height:auto;"> PIX</label>
@@ -337,6 +337,25 @@
                     </div>
                 </div>
             </div>
+            <h2 style="margin:22px 0 6px;font-size:1.2rem;color:#231915;">5. Escolha seu plano (7 dias grátis · 0% comissão) *</h2>
+            <p style="margin:0 0 10px;color:#475569;font-size:0.9rem;">Comece com 7 dias grátis e <strong>sem precisar de cartão agora</strong>. Depois, no seu painel, você escolhe pagamento automático ou pagar por PIX/cartão quando vencer (até 2 dias após vencer a loja continua no ar; passando de 2 dias a vitrine pausa sem apagar seus dados e volta na hora pagando a mensalidade + 10%).</p>
+            <div id="cad-planos-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px;margin-bottom:14px;">
+                <label class="pz-nivel-card" data-plano-card="essencial">
+                    <strong><span>Essencial</span> <input type="radio" name="plano_escolhido" value="essencial"></strong>
+                    <div style="font-weight:800;color:#e85d04;font-size:1.05rem;">R$ 79,90/mês</div>
+                    <small>Cardápio próprio + marketplace, painel, cozinha, impressão de comandas e até 50 produtos (acesso do dono).</small>
+                </label>
+                <label class="pz-nivel-card ativo" data-plano-card="pro">
+                    <strong><span>⭐ Pro (Recomendado)</span> <input type="radio" name="plano_escolhido" value="pro" checked></strong>
+                    <div style="font-weight:800;color:#e85d04;font-size:1.05rem;">R$ 149,90/mês</div>
+                    <small>Produtos ilimitados, até 5 funcionários, caixa/financeiro completo, cupons, fidelidade, carrinhos abandonados, entregadores e IA na vitrine.</small>
+                </label>
+                <label class="pz-nivel-card" data-plano-card="enterprise">
+                    <strong><span>🏢 Enterprise / Rede</span> <input type="radio" name="plano_escolhido" value="enterprise"></strong>
+                    <div style="font-weight:800;color:#e85d04;font-size:1.05rem;">R$ 249,90/mês</div>
+                    <small>Tudo do Pro + funcionários ilimitados, estoque e ficha técnica (CMV), NFC-e, PDV, Push, destaque máximo e painel multi-lojas.</small>
+                </label>
+            </div>
             <div style="margin-top:16px;padding:14px;background:#f7f6f2;border:1px solid rgba(20,23,31,0.09);border-radius:12px;display:grid;gap:10px;">
                 <label style="display:flex;align-items:flex-start;gap:10px;margin:0;font-weight:500;font-size:0.94rem;cursor:pointer;">
                     <input type="checkbox" id="cad-aceite-termos" checked required style="width:20px;height:20px;min-height:auto;margin-top:2px;flex-shrink:0;accent-color:#15803d;">
@@ -359,7 +378,7 @@
             </ol>
             <p style="display:flex;flex-wrap:wrap;gap:10px;">
                 <a id="link-painel" class="btn" href="#" style="margin-top:0;background:#e85d04;">Abrir o painel agora</a>
-                <a id="link-cardapio" class="btn" href="#" style="margin-top:0;background:#0b192c;">Ver meu cardápio</a>
+                <a id="link-cardapio" class="btn" href="#" style="margin-top:0;background:#231915;">Ver meu cardápio</a>
             </p>
             <p><button type="button" id="btn-copiar-link-loja" class="btn" style="margin-top:8px;background:#0d9488;">Copiar link da loja</button></p>
             <p><a id="link-tutorial" class="link" href="#">Ver tutorial de primeiros passos</a></p>
@@ -634,6 +653,8 @@
             const aceitaIa = document.getElementById('cad-aceite-ia') ? document.getElementById('cad-aceite-ia').checked : true;
             const nivelSel = document.querySelector('input[name="nivel_experiencia"]:checked');
             const nivelExperiencia = nivelSel ? nivelSel.value : 'basico';
+            const planoSel = document.querySelector('input[name="plano_escolhido"]:checked');
+            const planoEscolhido = planoSel ? planoSel.value : 'pro';
 
             const botao = evento.target.querySelector('button[type="submit"]');
             botao.disabled = true;
@@ -647,6 +668,7 @@
                     razao_social: document.getElementById('cad-razao').value.trim(),
                     nicho: document.getElementById('nicho').value,
                     nivel_experiencia: nivelExperiencia,
+                    plano: planoEscolhido,
                     whatsapp: zapNum,
                     cep: cepNum,
                     rua: rua,
@@ -704,6 +726,30 @@
                 botao.innerHTML = 'Concluir cadastro e criar loja <i class="fa-solid fa-arrow-right"></i>';
             });
         });
+    </script>
+    <script>
+        (function () {
+            const boxPlanos = document.getElementById('cad-planos-cards');
+            if (!boxPlanos) return;
+            const atualizarAtivo = () => {
+                boxPlanos.querySelectorAll('[data-plano-card]').forEach((el) => {
+                    const inp = el.querySelector('input[type="radio"]');
+                    el.classList.toggle('ativo', Boolean(inp && inp.checked));
+                });
+            };
+            boxPlanos.addEventListener('change', atualizarAtivo);
+            fetch('planos_api.php').then((r) => r.json()).then((d) => {
+                if (!d || !d.success || !Array.isArray(d.planos)) return;
+                d.planos.forEach((p) => {
+                    const card = boxPlanos.querySelector('[data-plano-card="' + p.slug + '"]');
+                    if (!card) return;
+                    const priceEl = card.querySelector('div');
+                    if (priceEl && p.preco_mensal) {
+                        priceEl.textContent = Number(p.preco_mensal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + '/mês';
+                    }
+                });
+            }).catch(() => {});
+        })();
     </script>
     <script src="js/modo-apresentacao.js"></script>
     <script>

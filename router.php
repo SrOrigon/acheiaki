@@ -6,20 +6,44 @@
 $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $decodedPath = rawurldecode($uriPath);
 
-// Cabeçalhos básicos de segurança em todas as respostas
+// Cabeçalhos básicos de segurança e proteção contra clickjacking/clonagem em todas as respostas
+if (function_exists('header_remove')) {
+    @header_remove('X-Powered-By');
+}
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
+header("Content-Security-Policy: frame-ancestors 'self'");
+header('Cross-Origin-Opener-Policy: same-origin-allow-popups');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Permissions-Policy: geolocation=(self), microphone=(self)');
+$akiHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+if ($akiHttps) {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+}
+
+// Bloqueio de ferramentas automatizadas de cópia/clonagem de sites (WebCopy, HTTrack, SiteSucker, etc.)
+// Mantém 100% liberados Googlebot, Search Console, Bingbot, WhatsApp e redes sociais.
+$akiUa = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+if ($decodedPath !== '/health.php' && $akiUa !== '' && !preg_match('/(Googlebot|Google-InspectionTool|AdsBot-Google|Bingbot|WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|TelegramBot)/i', $akiUa)) {
+    if (preg_match('/(CyotekWebCopy|WebCopy|HTTrack|SiteSucker|Teleport|WebZIP|WebCopier|WebReaper|WebStripper|Offline Explorer|BlackWidow|PageGrabber|EmailSiphon|Scrapy|Wget|AhrefsBot|SemrushBot|MJ12bot|DotBot|Bytespider)/i', $akiUa)) {
+        http_response_code(403);
+        header('X-Robots-Tag: noindex, nofollow');
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'Acesso bloqueado por política de proteção de propriedade intelectual.';
+        return true;
+    }
+}
 
 // Bloqueia acesso direto a arquivos sensíveis, dados internos, scripts CLI e bibliotecas
 $bloqueados = [
     '#^/data(/|$)#i',
     '#^/scripts(/|$)#i',
+    '#^/mobile-capacitor(/|$)#i',
     '#^/\.#',
-    '#^(?:/loja/[a-zA-Z0-9_-]+)?/(router\.php|auth_config\.php|verificar_sistema\.php|go_live_smoke\.php|worker\.php|db_pdo\.php|Database\.php|store_schema\.php|tenant_init\.php|pedido_acesso\.php|.*_lib\.php|Dockerfile|Procfile|railway\.json|nixpacks\.toml|composer\.(json|lock))$#i',
+    '#^(?:/loja/[a-zA-Z0-9_-]+)?/(router\.php|auth_config\.php|verificar_sistema\.php|go_live_smoke\.php|worker\.php|db_pdo\.php|Database\.php|store_schema\.php|tenant_init\.php|pedido_acesso\.php|.*_lib\.php|configurar-producao\.html|openapi-pdv\.json|Dockerfile|Procfile|railway\.json|nixpacks\.toml|composer\.(json|lock))$#i',
     '#^/loja/[a-zA-Z0-9_-]+/saas_admin\.php$#i',
-    '#\.(md|log|sql|bak|env)$#i',
+    '#\.(md|log|sql|bak|env|map|sh|ps1|yml|yaml)$#i',
 ];
 foreach ($bloqueados as $re) {
     if (preg_match($re, $decodedPath)) {
@@ -28,6 +52,11 @@ foreach ($bloqueados as $re) {
         echo 'Acesso negado.';
         return true;
     }
+}
+
+// Páginas operacionais/privadas nunca devem ser indexadas ou arquivadas por buscadores
+if (preg_match('#^(?:/loja/[a-zA-Z0-9_-]+)?/(admin|superadmin|painel|cozinha|motoboy|rastreio|atendimento|tutorial)\.html$#i', $decodedPath)) {
+    header('X-Robots-Tag: noindex, nofollow, noarchive');
 }
 
 // Sitemap e Robots dinâmicos para Google Search Console (funciona em qualquer domínio)
@@ -229,7 +258,34 @@ if (preg_match('#^/loja/([a-zA-Z0-9_-]+)/([A-Za-z0-9_-]+\.php)$#i', $decodedPath
 
 // Multi-tenant: /loja/{slug}/ ou /loja/{slug}/{arquivo}.html
 if (preg_match('#^/loja/([a-zA-Z0-9_-]+)(?:/([A-Za-z0-9_-]+\.html)?)?$#i', $decodedPath, $m)) {
+    $slugLojaRota = strtolower((string) $m[1]);
     $htmlName = !empty($m[2]) ? $m[2] : 'index.html';
+    $paginasPublicasComprador = ['index.html', 'categoria.html', 'hamburgueres.html', 'porcoes.html', 'bebidas.html', 'combos.html', 'acai.html'];
+    if (in_array(strtolower($htmlName), $paginasPublicasComprador, true)) {
+        try {
+            require_once __DIR__ . '/tenant_init.php';
+            require_once __DIR__ . '/saas_lib.php';
+            if (pedidozap_loja_bloqueada($slugLojaRota)) {
+                http_response_code(404);
+                header('X-Robots-Tag: noindex, nofollow, noarchive');
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                header('Content-Type: text/html; charset=utf-8');
+                echo '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">'
+                    . '<meta name="robots" content="noindex,nofollow">'
+                    . '<title>Estabelecimento indisponível — AcheIAki</title>'
+                    . '<style>body{margin:0;font-family:Inter,system-ui,sans-serif;background:#231915;color:#faf7f2;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center;}'
+                    . '.box{max-width:440px;background:#2d201a;border:1px solid rgba(251,146,60,0.25);border-radius:18px;padding:30px 24px;box-shadow:0 20px 45px rgba(0,0,0,0.35);}'
+                    . 'h1{margin:0 0 10px;font-size:1.4rem;}p{margin:0 0 18px;color:#cbd5e1;line-height:1.55;font-size:0.96rem;}'
+                    . 'a.btn{display:inline-block;background:#e85d04;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:12px;}</style></head>'
+                    . '<body><div class="box"><h1>Estabelecimento indisponível no momento</h1>'
+                    . '<p>Esta loja não está recebendo pedidos no momento pelo AcheIAki. Veja outras opções abertas na sua região.</p>'
+                    . '<a class="btn" href="/marketplace.html">Explorar Marketplace AcheIAki</a></div></body></html>';
+                return true;
+            }
+        } catch (Throwable $eShadow) {
+            // fallback segue fluxo normal
+        }
+    }
     $htmlFile = __DIR__ . '/' . $htmlName;
     if (is_file($htmlFile)) {
         header('Cache-Control: no-cache, no-store, must-revalidate');

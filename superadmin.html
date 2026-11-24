@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
     <style>
         body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #f7f6f2; color: #14171f; font-size: 15px; }
-        header { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 14px 24px; background: #0b192c; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        header { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 14px 24px; background: #231915; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .aki-head-brand { display: flex; align-items: center; gap: 12px; }
         .aki-head-brand img { width: 38px; height: 38px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); object-fit: cover; }
         main { padding: 24px 20px 56px; max-width: 1120px; margin: 0 auto; }
@@ -18,8 +18,8 @@
         label { display: block; font-size: .82rem; font-weight: 600; color: #4b5563; margin-bottom: 4px; }
         input, select { width: 100%; padding: 9px 11px; border: 1px solid rgba(20,23,31,.16); border-radius: 8px; box-sizing: border-box; font-family: inherit; }
         .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-        button, .btn { border: 0; border-radius: 9px; padding: 9px 14px; cursor: pointer; background: #0284c7; color: #fff; font-weight: 600; }
-        button.sec { background: #0b192c; }
+        button, .btn { border: 0; border-radius: 9px; padding: 9px 14px; cursor: pointer; background: #ea580c; color: #fff; font-weight: 600; }
+        button.sec { background: #231915; }
         button.perigo { background: #b91c1c; }
         table { width: 100%; border-collapse: collapse; font-size: .9rem; }
         th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid rgba(20,23,31,.08); vertical-align: top; }
@@ -27,6 +27,7 @@
         .acoes { display: flex; flex-wrap: wrap; gap: 6px; }
         .pill { border-radius: 999px; padding: 2px 9px; font-size: .75rem; font-weight: 600; background: #dcfce7; color: #166534; }
         .pill.bloqueado { background: #fee2e2; color: #991b1b; }
+        .pill.atrasado { background: #ffedd5; color: #9a3412; }
         .pill.pendente, .pill.teste { background: #fef3c7; color: #92400e; }
         .card { overflow-x: auto; max-width: 100%; }
         @media (min-width: 641px) and (max-width: 1024px) {
@@ -48,7 +49,7 @@
         <div class="aki-head-brand">
             <img src="assets/images/acheiaki-icon.jpg" alt="AcheIAki">
             <div>
-                <strong style="font-size:1.15rem;">Ache<span style="color:#00d4ff;">IA</span>ki <span style="opacity:.8;font-weight:500;">— Painel Master</span></strong>
+                <strong style="font-size:1.15rem;">Ache<span style="color:#fb923c;">IA</span>ki <span style="opacity:.8;font-weight:500;">— Painel Master</span></strong>
                 <div style="opacity:.8;font-size:.82rem;">O Marketplace Inteligente da sua Região • Lojas, planos e suporte</div>
             </div>
         </div>
@@ -66,14 +67,12 @@
                 <div><label for="novo-senha">Senha inicial</label><input id="novo-senha" type="password"></div>
                 <div><label for="novo-plano">Plano</label>
                     <select id="novo-plano">
-                        <option value="essencial">Essencial</option>
-                        <option value="profissional">Profissional</option>
-                        <option value="avancado">Avançado (IA &amp; Gestão Completa)</option>
-                        <option value="basico">Básico (legado)</option>
-                        <option value="pro">Pro (legado)</option>
-                        <option value="completo">Completo (legado)</option>
+                        <option value="essencial">Essencial (R$ 79,90/mês — Porta de entrada)</option>
+                        <option value="pro" selected>Pro ⭐ (R$ 149,90/mês — Recomendado)</option>
+                        <option value="enterprise">Enterprise / Rede (R$ 249,90/mês — Completo)</option>
                     </select>
                 </div>
+                <div><label for="novo-grupo-rede">Grupo de Rede (opcional, p/ múltiplas lojas)</label><input id="novo-grupo-rede" placeholder="Ex.: rede-sabor-sul"></div>
                 <div><label for="novo-vencimento">Vencimento</label><input id="novo-vencimento" type="date"></div>
             </div>
             <p><button id="btn-criar" type="button">Criar loja</button></p>
@@ -104,13 +103,19 @@
                     • Passo a passo: aponte seu domínio da EduHub no Railway (CNAME/DNS) → cole o código do Search Console no campo acima e salve → envie <code>sitemap.xml</code> no Google Search Console.
                 </div>
             </div>
-            <h2 style="margin-top:18px;">Cobrança automática (Mercado Pago)</h2>
+            <h2 style="margin-top:18px;">Planos &amp; Cobrança automática (Mercado Pago · 0% comissão)</h2>
             <div class="grade">
-                <div><label for="saas-mensalidade">Valor da mensalidade (R$)</label><input id="saas-mensalidade" inputmode="decimal" placeholder="49,90"></div>
-                <div><label for="saas-mp-token">Access Token de produção do Mercado Pago</label><input id="saas-mp-token" type="password" autocomplete="off" placeholder="APP_USR-..."></div>
+                <div><label for="saas-preco-essencial">Plano Essencial (R$/mês)</label><input id="saas-preco-essencial" inputmode="decimal" placeholder="79,90"></div>
+                <div><label for="saas-preco-pro">Plano Pro ⭐ (R$/mês)</label><input id="saas-preco-pro" inputmode="decimal" placeholder="149,90"></div>
+                <div><label for="saas-preco-enterprise">Plano Enterprise / Rede (R$/mês)</label><input id="saas-preco-enterprise" inputmode="decimal" placeholder="249,90"></div>
+                <div><label for="saas-desc-anual">Desconto pagamento anual (%)</label><input id="saas-desc-anual" type="number" min="0" max="50" placeholder="20"></div>
+                <div><label for="saas-dias-teste">Dias grátis no teste (máximo 7 dias)</label><input id="saas-dias-teste" type="number" min="1" max="7" value="7" placeholder="7"></div>
+                <div><label for="saas-tolerancia-dias">Tolerância de atraso antes do Shadowban (máx. 2 dias)</label><input id="saas-tolerancia-dias" type="number" min="0" max="2" value="2" placeholder="2"></div>
+                <div><label for="saas-multa-reativacao">Encargo de reativação após 2 dias (%)</label><input id="saas-multa-reativacao" type="number" min="0" max="10" step="0.5" value="10" placeholder="10"></div>
+                <div style="grid-column:1/-1;"><label for="saas-mp-token">Access Token de produção do Mercado Pago</label><input id="saas-mp-token" type="password" autocomplete="off" placeholder="APP_USR-..."></div>
             </div>
             <p id="saas-mp-status" style="font-size:0.95em;"></p>
-            <p style="font-size:0.9em;">URL de notificações (cole em Mercado Pago &gt; Suas integrações &gt; Webhooks, eventos <strong>Planos e assinaturas</strong>):<br><code id="saas-webhook"></code></p>
+            <p style="font-size:0.9em;">URL de notificações (cole em Mercado Pago &gt; Suas integrações &gt; Webhooks, eventos <strong>Planos e assinaturas</strong> e <strong>Pagamentos / Checkout</strong>):<br><code id="saas-webhook"></code></p>
             <p><button id="btn-saas" type="button">Salvar atendimento e cobrança</button></p>
         </section>
         <section class="card">
@@ -139,7 +144,7 @@
         <section class="card">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
                 <h2 style="margin:0;">Banco oficial — PostgreSQL no Railway</h2>
-                <a href="marketplace.html" target="_blank" class="btn" style="text-decoration:none;background:#071c34;border:1px solid #00d4ff;">Abrir Marketplace AcheIAki</a>
+                <a href="marketplace.html" target="_blank" class="btn" style="text-decoration:none;background:#231915;border:1px solid #fb923c;">Abrir Marketplace AcheIAki</a>
             </div>
             <p style="font-size:0.92rem;color:#4b5563;">No <strong>Railway</strong>, ao adicionar um banco MySQL ou PostgreSQL ao projeto, o sistema detecta automaticamente as variáveis <code>MYSQL_URL</code> / <code>DATABASE_URL</code> sem precisar digitar senha aqui. Você também pode configurar manualmente abaixo.</p>
             <div class="grade">
@@ -185,9 +190,10 @@
             <select id="filtro-status">
                 <option value="">Todas</option>
                 <option value="ativo">Ativas</option>
+                <option value="atrasado">Em atraso (tolerância até 2 dias)</option>
+                <option value="bloqueado">Shadowban / Bloqueadas</option>
                 <option value="pendente">Pendentes</option>
-                <option value="bloqueado">Bloqueadas</option>
-                <option value="teste">Em teste</option>
+                <option value="teste">Em teste (7 dias)</option>
             </select>
             <div style="overflow-x:auto;margin-top:12px;">
                 <table>

@@ -150,7 +150,7 @@ function montarLinkZapStatus(pedido, novoStatus) {
         ? TENANT.apiUrl('rastreio.html?id=' + encodeURIComponent(pedido.id) + cod)
         : ('rastreio.html?id=' + encodeURIComponent(pedido.id) + cod);
     let abs = rel;
-    try { abs = new URL(rel, window.location.href).href; } catch (e) {}
+    try { abs = new URL(rel, window.location.href).href; } catch (e) { }
 
     const msgs = {
         'preparo': `Olá ${pedido.cliente || ''}! Seu pedido #${pedido.id} na *${nomeLoja}* foi aceito e está sendo preparado! 🔥\nAcompanhe ao vivo: ${abs}`,
@@ -170,7 +170,7 @@ function mostrarAtalhoZapStatus(pedido, novoStatus) {
     if (!bar) {
         bar = document.createElement('div');
         bar.id = 'painel-zap-toast';
-        bar.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:99999;background:#0b192c;color:#fff;padding:12px 16px;border-radius:14px;display:flex;align-items:center;gap:12px;box-shadow:0 16px 32px rgba(0,0,0,0.3);border:2px solid #25D366;flex-wrap:wrap;max-width:92vw;';
+        bar.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:99999;background:#231915;color:#fff;padding:12px 16px;border-radius:14px;display:flex;align-items:center;gap:12px;box-shadow:0 16px 32px rgba(0,0,0,0.3);border:2px solid #25D366;flex-wrap:wrap;max-width:92vw;';
         document.body.appendChild(bar);
     }
     const rotulo = novoStatus === 'em-rota' ? 'Saiu p/ entrega' : (novoStatus === 'preparo' ? 'Aceito/Preparo' : 'Entregue');
@@ -237,7 +237,7 @@ function imprimirComanda(pedido, modo, forcar) {
         alert(t.erro_popup || 'Carregue a página novamente (módulo de comanda não encontrado).');
         return;
     }
-  const efetivoModo = modo === 'completa' ? 'completa' : 'cozinha';
+    const efetivoModo = modo === 'completa' ? 'completa' : 'cozinha';
     ComandaPedidoZap.imprimir(pedido, {
         modo: efetivoModo,
         forcar: !!forcar,
@@ -286,9 +286,9 @@ async function tentarImprimirComandaPreparo(pedido, comandaId) {
     const chaveImp = painelStorage('comanda_imp_' + pedido.comanda_id);
     try {
         if (localStorage.getItem(chaveImp) === '1') return;
-    } catch (e) {}
+    } catch (e) { }
     if (!ComandaPedidoZap.precisaImprimir(pedido)) return;
-    try { localStorage.setItem(chaveImp, '1'); } catch (e) {}
+    try { localStorage.setItem(chaveImp, '1'); } catch (e) { }
     const ok = ComandaPedidoZap.imprimir(pedido, {
         modo: 'cozinha',
         comanda: textosComandaPainel(),
@@ -474,14 +474,29 @@ function carregarPedidos(forcarFull) {
 
 function renderizarPainel() {
     let aviso = document.getElementById('aviso-loja-travada');
-    if (lojaTravada()) {
+    const assPainel = window.PedidoZapStore && PedidoZapStore.assinatura;
+    const emAtrasoPainel = !!(assPainel && assPainel.status === 'atrasado');
+    if (lojaTravada() || emAtrasoPainel) {
         if (!aviso) {
             aviso = document.createElement('p');
             aviso.id = 'aviso-loja-travada';
             aviso.className = 'aviso-painel';
-            aviso.textContent = 'A mensalidade venceu. Dá para ver os pedidos, mas não dá para avançar nem receber pedido novo até o pagamento.';
             const quadro = document.querySelector('.board');
             if (quadro && quadro.parentNode) quadro.parentNode.insertBefore(aviso, quadro);
+        }
+        const avSrv = assPainel && assPainel.cobranca_aviso;
+        if (lojaTravada()) {
+            aviso.style.background = '#fef2f2';
+            aviso.style.color = '#991b1b';
+            aviso.style.borderColor = '#fca5a5';
+            aviso.textContent = (avSrv && avSrv.titulo)
+                ? avSrv.titulo + ' — Seus dados estão 100% salvos. Dá para consultar pedidos antigos, mas não avançar nem receber novos até regularizar no Admin > Mensalidade.'
+                : 'Loja em bloqueio/shadowban por vencimento (seus dados estão 100% salvos). Regularize na aba Mensalidade para voltar a aparecer aos compradores e receber pedidos.';
+        } else {
+            aviso.style.background = '#fff7ed';
+            aviso.style.color = '#9a3412';
+            aviso.style.borderColor = '#fdba74';
+            aviso.textContent = (avSrv && avSrv.titulo ? avSrv.titulo + ' — ' : '') + ((avSrv && avSrv.mensagem) || 'Pagamento em atraso. Regularize no prazo máximo de 2 dias para evitar shadowban e acréscimo de 10%.');
         }
     } else if (aviso) {
         aviso.remove();

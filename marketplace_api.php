@@ -10,9 +10,7 @@ require_once __DIR__ . '/saas_lib.php';
 require_once __DIR__ . '/territorio_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+pz_cors_same_origin('GET, POST, OPTIONS', 'Content-Type');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -94,6 +92,9 @@ if ($acao === 'listar_lojas') {
             'logo_url' => $l['logo_url'],
             'hero_url' => $l['hero_url'] ?? 'assets/images/placeholder-hero.svg',
             'destaque' => $l['destaque'],
+            'plano_slug' => $l['plano_slug'] ?? 'essencial',
+            'plano_nome' => $l['plano_nome'] ?? 'Essencial',
+            'selo_marketplace' => $l['selo_marketplace'] ?? '',
             'nota_media' => $l['nota_media'],
             'total_avaliacoes' => $l['total_avaliacoes'],
             'resumo_avaliacoes' => $l['resumo_avaliacoes'] ?? null,

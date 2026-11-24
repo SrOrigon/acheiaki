@@ -191,7 +191,9 @@
     }
 
     async function loadFromApi(opts, slug) {
-        const url = apiUrl('get_public_store.php?v=' + Date.now());
+        const arquivoAtual = (global.location.pathname.split('/').pop() || 'index.html');
+        const ehInterno = /admin|painel|motoboy|cozinha|superadmin|rastreio/.test(arquivoAtual);
+        const url = apiUrl('get_public_store.php?v=' + Date.now() + (ehInterno ? '&interno=1' : ''));
         let response;
         try {
             response = await fetchWithTimeout(url, 15000);
@@ -246,7 +248,11 @@
         global.PedidoZapStore.assinatura = data.assinatura || null;
         global.PedidoZapStore.lojaBloqueada = !!data.loja_bloqueada;
         global.PedidoZapStore.offline = !!data.offline;
-        if (global.PedidoZapOfflineCache && !data.offline) {
+        const arquivoAtualPub = (global.location.pathname.split('/').pop() || 'index.html');
+        const ehInternoPub = /admin|painel|motoboy|cozinha|superadmin|rastreio/.test(arquivoAtualPub);
+        if (data.loja_bloqueada && !ehInternoPub) {
+            try { localStorage.removeItem('pz_offline_store_' + (slug || 'default')); } catch (eRm) {}
+        } else if (global.PedidoZapOfflineCache && !data.offline && !data.loja_bloqueada) {
             global.PedidoZapOfflineCache.salvarLoja(slug, data).catch(() => {});
             global.PedidoZapOfflineCache.mostrarFaixaOffline(false);
         }
@@ -324,7 +330,8 @@
         overlay.setAttribute('role', 'alert');
         overlay.style.cssText = 'position:fixed;inset:0;background:#111827;color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;z-index:99999;text-align:center;font-family:Roboto,sans-serif;';
         overlay.innerHTML = '<div><h2 style="margin:0 0 12px;">Loja indisponível</h2>' +
-            '<p style="opacity:0.85;max-width:380px;margin:0 auto 8px;">' + (message || 'Não foi possível carregar o cardápio.') + '</p>' +
+            '<p style="opacity:0.85;max-width:380px;margin:0 auto 16px;">' + (message || 'Não foi possível carregar o cardápio.') + '</p>' +
+            '<p><a href="/marketplace.html" style="display:inline-block;background:#e85d04;color:#fff;text-decoration:none;font-weight:700;padding:11px 18px;border-radius:10px;">Ver outras lojas no Marketplace</a></p>' +
             (slug && slug !== 'default' ? '<p style="opacity:0.6;font-size:0.85em">Estabelecimento: <code>' + slug + '</code></p>' : '') +
             '</div>';
         document.body.appendChild(overlay);

@@ -70,6 +70,9 @@ if ($id !== '') {
     } elseif ($tipo === 'subscription_authorized_payment' || $tipo === 'authorized_payment') {
         $jobId = pz_queue_push('mp.sync_subscription', ['kind' => 'authorized_payment', 'id' => $id], 'default');
         $resultado = ['success' => true, 'queued' => true, 'job_id' => $jobId];
+    } elseif ($tipo === 'payment' || strpos($tipo, 'payment') !== false) {
+        $jobId = pz_queue_push('mp.sync_payment', ['id' => $id], 'default');
+        $resultado = ['success' => true, 'queued' => true, 'job_id' => $jobId];
     }
 }
 

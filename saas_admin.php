@@ -35,6 +35,7 @@ if ($acao === 'listar') {
         'lojas' => pedidozap_resumo_lojas(),
         'nichos' => pedidozap_nicho_presets(),
         'saas' => pedidozap_saas_config_publica(),
+        'planos' => array_values(pz_planos_catalogo()),
         'integracoes' => pedidozap_integracoes_publicas(),
         'db_config' => function_exists('pz_db_config_publica') ? pz_db_config_publica() : null,
     ], JSON_UNESCAPED_UNICODE);
@@ -58,13 +59,28 @@ if ($acao === 'salvar_saas') {
 if ($acao === 'atualizar') {
     $slug = $body['slug'] ?? '';
     $meta = [];
-    foreach (['nome_empresa', 'razao_social', 'nicho', 'login', 'status', 'plano', 'vencimento', 'whatsapp', 'destaque', 'cidade', 'bairro'] as $campo) {
+    foreach (['nome_empresa', 'razao_social', 'nicho', 'login', 'status', 'plano', 'plano_escolhido', 'ciclo_cobranca', 'grupo_rede', 'vencimento', 'whatsapp', 'destaque', 'cidade', 'bairro'] as $campo) {
         if (array_key_exists($campo, $body)) {
             $meta[$campo] = is_string($body[$campo]) ? trim($body[$campo]) : $body[$campo];
         }
     }
-    if (isset($meta['status']) && !in_array($meta['status'], ['ativo', 'bloqueado', 'pendente', 'teste'], true)) {
-        $meta['status'] = 'ativo';
+    if (isset($meta['plano']) && $meta['plano'] !== '') {
+        $meta['plano'] = pz_plano_normalizar($meta['plano']);
+        $meta['plano_escolhido'] = $meta['plano'];
+    }
+    if (isset($meta['status'])) {
+        if (!in_array($meta['status'], ['ativo', 'bloqueado', 'pendente', 'teste'], true)) {
+            $meta['status'] = 'ativo';
+        }
+        if ($meta['status'] === 'ativo') {
+            $meta['bloqueio_motivo'] = '';
+            $meta['shadowban_ativo'] = false;
+            $meta['taxa_reativacao_pendente'] = false;
+            $meta['em_teste'] = false;
+        } elseif ($meta['status'] === 'bloqueado') {
+            $meta['bloqueio_motivo'] = 'manual';
+            $meta['shadowban_ativo'] = true;
+        }
     }
     $ok = pedidozap_salvar_registro_loja($slug, $meta);
     echo json_encode(['success' => (bool) $ok, 'lojas' => pedidozap_resumo_lojas()], JSON_UNESCAPED_UNICODE);
@@ -102,7 +118,9 @@ if ($acao === 'criar') {
         'nicho' => $body['nicho'] ?? 'lanchonete',
         'login' => $body['login'] ?? 'admin',
         'senha' => $body['senha'] ?? '',
-        'plano' => $body['plano'] ?? 'basico',
+        'plano' => pz_plano_normalizar((string) ($body['plano'] ?? 'essencial')),
+        'plano_escolhido' => pz_plano_normalizar((string) ($body['plano'] ?? 'essencial')),
+        'grupo_rede' => trim((string) ($body['grupo_rede'] ?? '')),
         'vencimento' => $body['vencimento'] ?? '',
         'whatsapp' => $body['whatsapp'] ?? '',
         'status' => 'ativo',

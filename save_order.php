@@ -9,9 +9,12 @@ require_once 'push_lib.php';
 require_once 'pdv_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
-header('Access-Control-Allow-Headers: Content-Type');
+pz_cors_same_origin('POST, OPTIONS', 'Content-Type');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
 
 function pz_texto($valor, $max = 300)
 {

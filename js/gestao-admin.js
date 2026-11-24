@@ -69,7 +69,32 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(Object.assign({ auth }, body || {}))
         });
-        return resp.json();
+        const data = await resp.json().catch(() => ({ success: false, message: 'Resposta inválida.' }));
+        if (data && typeof data === 'object') data._httpStatus = resp.status;
+        return data;
+    }
+
+    function renderUpgradeBox(root, res) {
+        if (!root || !res || res.codigo_erro !== 'upgrade_plano') return false;
+        const nomeNec = esc(res.plano_necessario_nome || 'superior');
+        const preco = res.preco_necessario ? brl(res.preco_necessario) + '/mês' : '';
+        root.innerHTML = `
+            <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:14px;padding:20px;max-width:640px;">
+                <h4 style="margin:0 0 8px;color:#9a3412;"><i class="fa-solid fa-crown"></i> Recurso disponível a partir do plano ${nomeNec}</h4>
+                <p style="margin:0 0 14px;color:#7c2d12;line-height:1.5;">${esc(res.message || 'Faça upgrade do seu plano para liberar este módulo.')}</p>
+                <button type="button" class="fg-btn fg-btn-prim" id="fg-btn-ir-upgrade">
+                    <i class="fa-solid fa-arrow-up-right-dots"></i> Ver planos e fazer upgrade ${preco ? '(' + esc(preco) + ')' : ''}
+                </button>
+            </div>
+        `;
+        const b = root.querySelector('#fg-btn-ir-upgrade');
+        if (b) {
+            b.addEventListener('click', () => {
+                const abaConta = document.querySelector('[data-tab="conta"]');
+                if (abaConta) abaConta.click();
+            });
+        }
+        return true;
     }
 
     async function apiAgenteDiagnostico() {
@@ -313,6 +338,7 @@
             apiGestao('estoque_listar'),
             apiGestao('fichas_listar')
         ]);
+        if (renderUpgradeBox(root, resEst)) return;
         if (resEst && resEst.success) {
             state.estoque = { itens: resEst.itens || [], fornecedores: resEst.fornecedores || [], movimentacoes: resEst.movimentacoes || [] };
         }
@@ -627,6 +653,7 @@
                 fim: state.financeiro.fim || undefined
             })
         ]);
+        if (renderUpgradeBox(root, resCx) || renderUpgradeBox(root, resFin)) return;
         if (resCx && resCx.success) {
             state.caixa = resCx;
         }
@@ -856,6 +883,7 @@
             apiGestao('clientes_listar'),
             apiGestao('marketing_listar')
         ]);
+        if (renderUpgradeBox(root, resCli) || renderUpgradeBox(root, resMkt)) return;
         if (resCli && resCli.success) state.clientes = resCli.clientes || [];
         if (resMkt && resMkt.success) state.marketing = { cupons: resMkt.cupons || [], recuperacao: resMkt.recuperacao || [] };
         renderClientes();
@@ -967,6 +995,7 @@
         const root = document.getElementById('fg-entregadores-root');
         if (!root) return;
         const res = await apiGestao('entregadores_listar');
+        if (renderUpgradeBox(root, res)) return;
         if (res && res.success) {
             state.entregadores = { entregadores: res.entregadores || [], relatorio: res.relatorio || [] };
         }
@@ -1020,6 +1049,7 @@
             apiGestao('auditoria_listar'),
             apiGestao('homologacao_status')
         ]);
+        if (renderUpgradeBox(root, resEq)) return;
         if (resEq && resEq.success) state.equipe = { funcionarios: resEq.funcionarios || [], perfis: resEq.perfis || {} };
         if (resAud && resAud.success) state.auditoria = resAud.auditoria || [];
         if (resChk && resChk.success) state.checks = resChk.checks || [];
@@ -1785,7 +1815,7 @@
                             ${notas.map((n) => `
                                 <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #e5e7eb;font-size:0.85rem;">
                                     <span><strong>#${esc(n.numero)}</strong> · Ped #${esc(n.order_id)} (${esc(n.status)})</span>
-                                    <a href="${esc(n.danfe_url || ('fiscal_api.php?action=danfe&order_id=' + encodeURIComponent(n.order_id)))}" target="_blank" rel="noopener" style="color:#0284c7;font-weight:700;">Ver DANFE</a>
+                                    <a href="${esc(n.danfe_url || ('fiscal_api.php?action=danfe&order_id=' + encodeURIComponent(n.order_id)))}" target="_blank" rel="noopener" style="color:#c2410c;font-weight:700;">Ver DANFE</a>
                                 </div>
                             `).join('')}
                         </div>

@@ -7,7 +7,7 @@ require_once __DIR__ . '/store_schema.php';
 require_once __DIR__ . '/saas_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
+pz_cors_same_origin('POST, OPTIONS', 'Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);

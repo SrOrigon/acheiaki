@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#0b1120">
+    <meta name="theme-color" content="#231915">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Tela da Cozinha</title>
@@ -18,8 +18,8 @@
         body {
             margin: 0;
             font-family: 'Inter', system-ui, sans-serif;
-            background: #0b1120;
-            color: #f8fafc;
+            background: #1c1411;
+            color: #faf7f2;
             min-height: 100vh;
             font-size: 16px;
         }
@@ -27,7 +27,7 @@
             position: sticky;
             top: 0;
             z-index: 10;
-            background: rgba(11, 17, 32, 0.94);
+            background: rgba(28, 20, 17, 0.95);
             backdrop-filter: blur(8px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding: 12px 18px;
@@ -49,7 +49,7 @@
             cursor: pointer;
             min-height: 54px;
         }
-        #btn-auto-imprimir { background: #0369a1; color: #fff; }
+        #btn-auto-imprimir { background: #c2410c; color: #fff; }
         #btn-som-cozinha { background: #15803d; color: #fff; }
         #btn-atualizar { background: #e85d04; color: #fff; }
         #btn-notificacao { background: #475569; color: #fff; }
@@ -75,8 +75,8 @@
             .conteudo { padding: 12px 12px calc(24px + env(safe-area-inset-bottom)); }
         }
         .ficha {
-            background: #162032;
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: #2b1e19;
+            border: 1px solid rgba(251, 146, 60, 0.22);
             border-top: 3px solid #e85d04;
             border-radius: 14px;
             padding: 16px;
@@ -109,9 +109,9 @@
         .btn-pronto { background: #16a34a; color: #fff; font-weight: 800; border: none; border-radius: 12px; padding: 16px; cursor: pointer; font-size: 1.12rem; min-height: 58px; }
         .selo-balcao { font-size: 0.55em; background: #0d9488; color: #fff; padding: 2px 6px; border-radius: 6px; vertical-align: middle; margin-left: 4px; }
         .dica {
-            background: #1e3a5f;
-            border: 1px solid #38bdf8;
-            color: #e0f2fe;
+            background: #362219;
+            border: 1px solid #fb923c;
+            color: #ffedd5;
             padding: 12px 16px;
             margin: 0 16px 16px;
             border-radius: 10px;
@@ -138,7 +138,7 @@
             <button type="button" id="btn-iniciar-turno-cozinha" class="btn-ferramenta" style="background:#e85d04;width:100%;"><i class="fa-solid fa-volume-high"></i> Iniciar Turno / Liberar Som da Cozinha</button>
         </div>
         <div class="ferramenta-linha">
-            <button type="button" id="btn-auto-imprimir" class="btn-ferramenta" style="background:#0369a1;"><i class="fa-solid fa-print"></i> Impressão automática</button>
+            <button type="button" id="btn-auto-imprimir" class="btn-ferramenta" style="background:#c2410c;"><i class="fa-solid fa-print"></i> Impressão automática</button>
             <div class="ferramenta-explica"><strong id="ajuda-cozinha-titulo-impressao">Impressão</strong><span id="ajuda-cozinha-texto-impressao"></span></div>
         </div>
         <div class="ferramenta-linha">

@@ -17,8 +17,7 @@ try {
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, OPTIONS');
+pz_cors_same_origin('GET, OPTIONS', 'Content-Type');
 header('Cache-Control: public, max-age=10, stale-while-revalidate=30');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -45,7 +44,8 @@ if ($tenant !== 'default' && !Database::tenantDataExists($tenant)) {
     exit;
 }
 
-$cacheKeyPub = 'pub_store_json_' . $tenant;
+$internoReq = !empty($_GET['interno']);
+$cacheKeyPub = 'pub_store_json_' . $tenant . ($internoReq ? '_int' : '');
 $json = pz_cache_get($cacheKeyPub, null);
 if (!is_string($json) || $json === '') {
     $config = Database::readStrict('config.json');
@@ -66,6 +66,17 @@ if (!is_string($json) || $json === '') {
 
     $version = isset($config['VERSION']) ? (int) $config['VERSION'] : 0;
     $assinatura = pedidozap_assinatura_publica($tenant);
+    $bloqueada = ($assinatura['status'] ?? '') === 'bloqueado';
+
+    if ($bloqueada && !$internoReq) {
+        // Shadowban público: oculta cardápio e dados públicos aos compradores sem apagar nada do banco/cadastro.
+        $cardapio = [];
+        $config = [
+            'TENANT_SLUG' => $tenant,
+            'NOME_LOJA' => $config['NOME_LOJA'] ?? $tenant,
+            'VERSION' => $version,
+        ];
+    }
 
     $payload = [
         'success' => true,
@@ -74,7 +85,8 @@ if (!is_string($json) || $json === '') {
         'config' => $config,
         'cardapio' => $cardapio,
         'assinatura' => $assinatura,
-        'loja_bloqueada' => $assinatura['status'] === 'bloqueado',
+        'loja_bloqueada' => $bloqueada,
+        'shadowban' => $bloqueada,
     ];
 
     $json = json_encode($payload, JSON_UNESCAPED_UNICODE);
@@ -83,7 +95,7 @@ if (!is_string($json) || $json === '') {
         echo json_encode(['success' => false, 'message' => 'Erro ao serializar cardápio.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
-    pz_cache_set($cacheKeyPub, $json, 45);
+    pz_cache_set($cacheKeyPub, $json, 30);
 }
 
 $etagPub = '"' . sha1($json) . '"';

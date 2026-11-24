@@ -45,19 +45,19 @@
 }
 
 .fg-kpi.destaque-ia {
-    border-color: rgba(2, 132, 199, 0.25);
-    border-left: 3px solid #0284c7;
+    border-color: rgba(234, 88, 12, 0.25);
+    border-left: 3px solid #ea580c;
 }
 
 /* Central do Copiloto IA na Visão Geral */
 .fg-ia-hub {
-    background: #0b192c;
+    background: #231915;
     color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(251, 146, 60, 0.2);
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 18px;
-    box-shadow: 0 10px 26px -10px rgba(11, 25, 44, 0.25);
+    box-shadow: 0 10px 26px -10px rgba(35, 25, 21, 0.28);
 }
 
 .fg-ia-hub-topo {
@@ -291,7 +291,7 @@
 .fg-pill.ok { background: #d1fae5; color: #065f46; }
 .fg-pill.warn { background: #fef3c7; color: #92400e; }
 .fg-pill.bad { background: #fee2e2; color: #991b1b; }
-.fg-pill.info { background: #e0f2fe; color: #075985; }
+.fg-pill.info { background: #ffedd5; color: #9a3412; }
 
 .fg-btn {
     border: none;
@@ -357,8 +357,8 @@
     font-weight: 700;
     padding: 3px 8px;
     border-radius: 6px;
-    background: #eff6ff;
-    color: #1d4ed8;
+    background: #fff7ed;
+    color: #c2410c;
     margin-top: 4px;
 }
 

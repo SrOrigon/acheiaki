@@ -9,7 +9,7 @@
 
 .pz-perfil h3 {
     margin: 0 0 8px;
-    color: #0c4a6e;
+    color: #9a3412;
     font-size: 1.15rem;
 }
 
@@ -48,7 +48,7 @@
     padding: 12px 16px;
     font-weight: 800;
     cursor: pointer;
-    background: #0284c7;
+    background: #ea580c;
     color: #fff;
 }
 
@@ -72,7 +72,7 @@
 }
 
 .pz-perfil-item:hover {
-    border-color: #0284c7;
+    border-color: #ea580c;
 }
 
 .pz-perfil-item strong {

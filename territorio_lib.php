@@ -73,7 +73,15 @@ function pz_territorio_coletar_lojas($useCache = true)
     if ($useCache && function_exists('pz_cache_get')) {
         $cached = pz_cache_get('mkt_lojas_all', null);
         if (is_array($cached) && !empty($cached)) {
-            return $cached;
+            $regAgora = pedidozap_ler_registro();
+            $saasAgora = pedidozap_saas_config();
+            return array_values(array_filter($cached, static function ($lojaItem) use ($regAgora, $saasAgora) {
+                $s = $lojaItem['slug'] ?? '';
+                if ($s === '' || !isset($regAgora[$s]) || !is_array($regAgora[$s])) {
+                    return true;
+                }
+                return (pedidozap_status_efetivo($regAgora[$s], $saasAgora)['status'] ?? 'ativo') !== 'bloqueado';
+            }));
         }
     }
     $anterior = Database::getTenant();
@@ -330,8 +338,16 @@ function pz_territorio_coletar_lojas($useCache = true)
             $pendencias[] = 'Pelo menos 1 forma de pagamento';
         }
 
+        $planoLojaInfo = function_exists('pz_plano_da_loja') ? pz_plano_da_loja($slug) : null;
+        $boostPlano = is_array($planoLojaInfo) ? (int) ($planoLojaInfo['boost_territorio'] ?? 0) : 0;
+        $scoreComPlano = min(100, $score + $boostPlano);
+
         $lojas[] = [
             'slug' => $slug,
+            'plano_slug' => is_array($planoLojaInfo) ? (string) ($planoLojaInfo['slug'] ?? 'essencial') : 'essencial',
+            'plano_nome' => is_array($planoLojaInfo) ? (string) ($planoLojaInfo['nome'] ?? 'Essencial') : 'Essencial',
+            'selo_marketplace' => is_array($planoLojaInfo) ? (string) ($planoLojaInfo['selo_marketplace'] ?? '') : '',
+            'boost_territorio_plano' => $boostPlano,
             'nome' => $nome,
             'slogan' => (string) ($cfg['SLOGAN'] ?? ''),
             'cnpj' => $cnpj,
@@ -381,7 +397,7 @@ function pz_territorio_coletar_lojas($useCache = true)
             'hero_url' => $heroUrl,
             'hero_titulo' => (string) ($cfg['TEXTOS']['HERO_TITULO'] ?? $nome),
             'hero_subtitulo' => (string) ($cfg['TEXTOS']['HERO_SUBTITULO'] ?? ($cfg['SLOGAN'] ?? '')),
-            'destaque' => !empty($meta['destaque']),
+            'destaque' => !empty($meta['destaque']) || !empty($planoLojaInfo['recursos']['destaque_marketplace']),
             'nota_media' => $notaMedia,
             'total_avaliacoes' => $qtdAval,
             'resumo_avaliacoes' => [
@@ -401,7 +417,7 @@ function pz_territorio_coletar_lojas($useCache = true)
             'total_pedidos' => $totalPed,
             'cancelados' => $cancelados,
             'preco_medio' => $precoMedio,
-            'score_territorio' => $score,
+            'score_territorio' => $scoreComPlano,
             'pilares' => [
                 'cardapio' => $ptsCardapio,
                 'operacao' => $ptsOperacao,

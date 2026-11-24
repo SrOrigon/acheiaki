@@ -1,13 +1,13 @@
 {
-  "name": "AcheIAki — O Marketplace Inteligente da sua Região",
+  "name": "AcheIAki — Peça Comida Perto de Você",
   "short_name": "AcheIAki",
-  "description": "Compare preços por segmento perto de você e peça direto da loja sem taxa escondida.",
+  "description": "Veja restaurantes e lanchonetes perto de você e peça direto da loja sem taxa escondida.",
   "start_url": "marketplace.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#f7f6f2",
-  "theme_color": "#0b192c",
+  "background_color": "#faf7f2",
+  "theme_color": "#ea580c",
   "lang": "pt-BR",
   "icons": [
     {

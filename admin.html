@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#0b192c">
+    <meta name="theme-color" content="#ea580c">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Painel Administrativo</title>
@@ -87,8 +87,8 @@
         .form-group-admin textarea:focus,
         .form-group-admin select:focus {
             outline: none;
-            border-color: #0284c7;
-            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.14);
+            border-color: #ea580c;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.14);
         }
 
         .aki-admin-bento {
@@ -163,7 +163,7 @@
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            background: #0284c7;
+            background: #ea580c;
             color: #fff;
             display: flex;
             align-items: center;
@@ -208,8 +208,8 @@
             min-width: 0;
             width: 100%;
             font-weight: 600;
-            color: #0b192c;
-            background: #f8fafc;
+            color: #231915;
+            background: #faf7f2;
             border: 1px solid #cbd5e1;
             border-radius: 10px;
             padding: 10px 12px;
@@ -239,8 +239,8 @@
         }
 
         .btn-edit {
-            background: #e0f2fe;
-            color: #0284c7;
+            background: #ffedd5;
+            color: #c2410c;
         }
 
         .btn-delete {
@@ -323,7 +323,7 @@
         .admin-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 16px; }
         .admin-tabs button { border: 1px solid rgba(20, 23, 31, 0.12); background: #fff; border-radius: 10px; padding: 11px 15px; cursor: pointer; font-weight: 600; font-size: 0.94rem; min-height: 46px; color: #374151; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
         .admin-tabs button:hover { background: #f7f6f2; color: #14171f; }
-        .admin-tabs button.ativo { background: #0b192c; color: #fff; border-color: #0b192c; font-weight: 700; box-shadow: 0 4px 12px rgba(11, 25, 44, 0.16); }
+        .admin-tabs button.ativo { background: #ea580c; color: #fff; border-color: #ea580c; font-weight: 700; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.22); }
         .admin-guia { background: #fffbeb; border: 2px solid #f59e0b; }
         .admin-guia ol { margin: 8px 0 0; padding-left: 22px; font-size: 1.05rem; }
         .admin-guia li { margin-bottom: 8px; }
@@ -460,82 +460,82 @@
         </div>
 
         <div class="admin-modo-bar" id="barra-modo-admin">
-            <div class="pz-niveis-switcher" role="group" aria-label="Nível de uso do painel">
-                <button type="button" class="pz-nivel-btn ativo" data-set-nivel="basico"><i class="fa-solid fa-wand-magic-sparkles"></i> Básico (Com IA)</button>
-                <button type="button" class="pz-nivel-btn" data-set-nivel="avancado"><i class="fa-solid fa-sliders"></i> Avançado (IA + Manual)</button>
-                <button type="button" class="pz-nivel-btn" data-set-nivel="expert"><i class="fa-solid fa-code"></i> Expert (Total)</button>
+            <div class="pz-niveis-switcher" role="group" aria-label="Modo do painel">
+                <button type="button" class="pz-nivel-btn ativo" data-set-nivel="basico"><i class="fa-solid fa-check-circle"></i> Modo Fácil</button>
+                <button type="button" class="pz-nivel-btn" data-set-nivel="avancado"><i class="fa-solid fa-sliders"></i> Mais Opções</button>
+                <button type="button" class="pz-nivel-btn" data-set-nivel="expert"><i class="fa-solid fa-gear"></i> Completo</button>
             </div>
-            <span class="dica-modo" id="dica-modo-admin">Nível Básico: a IA monta sua página e te ensina a fazer o cardápio passo a passo.</span>
-            <button type="button" id="btn-abrir-escolha-nivel" class="btn-mini" style="background:#f1f5f9;color:#0f172a;font-weight:700;">Comparar níveis</button>
+            <span class="dica-modo" id="dica-modo-admin">Modo Fácil ligado: só o essencial na sua tela para você vender hoje sem complicação.</span>
+            <button type="button" id="btn-abrir-escolha-nivel" class="btn-mini" style="background:#f5f2ed;color:#231915;font-weight:700;">Ver diferença</button>
         </div>
 
         <div class="admin-card pz-basico-ia-hero" id="card-basico-ia-guia" data-painel-basico="1">
-            <h3 style="margin:0 0 6px;color:#0f766e;"><i class="fa-solid fa-robot"></i> Sua IA constrói sua página e ensina seu cardápio</h3>
-            <p style="margin:0;color:#334155;font-size:0.96rem;">Você está no <strong>Nível Básico</strong>: deixe o trabalho pesado com a nossa IA ou mude para <strong>Avançado</strong> / <strong>Expert</strong> acima quando quiser.</p>
+            <h3 style="margin:0 0 6px;color:#9a3412;"><i class="fa-solid fa-wand-magic-sparkles"></i> Quer ajuda automática para montar seu cardápio?</h3>
+            <p style="margin:0;color:#431407;font-size:0.96rem;">Toque no botão verde se quiser que a nossa ajuda monte seus primeiros itens, ou vá direto nos 4 botões grandes abaixo.</p>
             <div class="pz-basico-ia-acoes">
-                <button type="button" id="btn-basico-ia-montar" class="btn-save-file" style="width:auto;background:#0d9488;"><i class="fa-solid fa-wand-magic-sparkles"></i> Pedir à IA para montar minha página e cardápio</button>
-                <button type="button" id="btn-basico-ia-ensinar" class="btn-save-file" style="width:auto;background:#0284c7;"><i class="fa-solid fa-graduation-cap"></i> Ensinar como fazer meu cardápio</button>
-                <button type="button" id="btn-basico-ia-auditar" class="btn-save-file" style="width:auto;background:#0f172a;"><i class="fa-solid fa-list-check"></i> Ver o que falta na loja</button>
+                <button type="button" id="btn-basico-ia-montar" class="btn-save-file" style="width:auto;background:#15803d;"><i class="fa-solid fa-wand-magic-sparkles"></i> Montar página inicial sozinho</button>
+                <button type="button" id="btn-basico-ia-ensinar" class="btn-save-file" style="width:auto;background:#ea580c;"><i class="fa-solid fa-graduation-cap"></i> Como fazer meu cardápio</button>
+                <button type="button" id="btn-basico-ia-auditar" class="btn-save-file" style="width:auto;background:#231915;"><i class="fa-solid fa-list-check"></i> Ver o que falta</button>
             </div>
         </div>
 
         <div class="admin-card" style="padding:20px 22px;">
             <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
-                <h2 style="margin:0;font-size:1.18rem;color:var(--aki-ink);">Acesso rápido</h2>
-                <span style="font-size:0.88rem;color:var(--aki-muted);">Atalhos para as tarefas diárias da loja</span>
+                <h2 style="margin:0;font-size:1.18rem;color:var(--aki-ink);">O que você quer fazer agora?</h2>
+                <span style="font-size:0.88rem;color:var(--aki-muted);">Toque em um dos 4 botões grandes abaixo</span>
             </div>
             <div class="aki-admin-bento">
                 <button type="button" onclick="document.getElementById('link-kanban').click()" class="aki-bento-btn">
-                    <span class="aki-bento-ico" style="background:#fff7ed;color:#c2410c;"><i class="fa-solid fa-inbox"></i></span>
-                    <span><strong>Pedidos recebidos</strong><small>Aceitar e acompanhar entrega</small></span>
+                    <span class="aki-bento-ico" style="background:#fff7ed;color:#c2410c;"><i class="fa-solid fa-bell"></i></span>
+                    <span><strong>1. Ver pedidos novos</strong><small>Aceitar pedido e mandar pra cozinha</small></span>
                 </button>
                 <button type="button" onclick="var t=document.querySelector('#admin-tabs [data-tab=cardapio]');if(t){t.click();t.scrollIntoView({behavior:'smooth'});}" class="aki-bento-btn">
-                    <span class="aki-bento-ico" style="background:#eff6ff;color:#0284c7;"><i class="fa-solid fa-utensils"></i></span>
-                    <span><strong>Cardápio e preços</strong><small>Adicionar, editar ou pausar itens</small></span>
+                    <span class="aki-bento-ico" style="background:#ffedd5;color:#ea580c;"><i class="fa-solid fa-burger"></i></span>
+                    <span><strong>2. Mudar pratos e preços</strong><small>Colocar foto, preço ou pausar lanche</small></span>
                 </button>
                 <button type="button" onclick="var t=document.querySelector('#admin-tabs [data-tab=contato]');if(t){t.click();t.scrollIntoView({behavior:'smooth'});}" class="aki-bento-btn">
-                    <span class="aki-bento-ico" style="background:#ecfdf5;color:#15803d;"><i class="fa-solid fa-location-dot"></i></span>
-                    <span><strong>WhatsApp e endereço</strong><small>Contato, horário e região</small></span>
+                    <span class="aki-bento-ico" style="background:#ecfdf5;color:#15803d;"><i class="fa-brands fa-whatsapp"></i></span>
+                    <span><strong>3. WhatsApp e horário</strong><small>Onde você atende e hora que abre</small></span>
                 </button>
                 <button type="button" onclick="document.getElementById('link-ver-site').click()" class="aki-bento-btn">
-                    <span class="aki-bento-ico" style="background:#f1efe9;color:#0b192c;"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
-                    <span><strong>Ver loja online</strong><small>Abrir vitrine como o cliente vê</small></span>
+                    <span class="aki-bento-ico" style="background:#f5f2ed;color:#231915;"><i class="fa-solid fa-eye"></i></span>
+                    <span><strong>4. Ver meu cardápio</strong><small>Abrir como o cliente vê no celular</small></span>
                 </button>
             </div>
         </div>
 
-        <div class="admin-card" id="card-divulgar-loja" style="background:#ffffff;border:1px solid rgba(11,25,44,0.12);border-left:5px solid #0284c7;">
+        <div class="admin-card" id="card-divulgar-loja" style="background:#ffffff;border:1px solid rgba(35,25,21,0.12);border-left:5px solid #ea580c;">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
                 <div>
-                    <span style="display:inline-block;background:#e0f2fe;color:#0369a1;font-size:0.75rem;font-weight:700;padding:3px 9px;border-radius:999px;margin-bottom:6px;">KIT DIA 1 • TAXA ZERO</span>
-                    <h3 style="margin:0;color:#0b192c;font-size:1.15rem;"><i class="fa-solid fa-bullhorn" style="color:#0284c7;"></i> Conquistar e Converter Clientes Hoje</h3>
-                    <p style="margin:4px 0 0;color:#475569;font-size:0.92rem;">Puxe quem já compra de você (WhatsApp, balcão, sacola de entrega e Google Maps) para pedir direto sem pagar comissão:</p>
+                    <span style="display:inline-block;background:#ffedd5;color:#c2410c;font-size:0.75rem;font-weight:700;padding:3px 9px;border-radius:999px;margin-bottom:6px;">DIVULGAR • 0% COMISSÃO</span>
+                    <h3 style="margin:0;color:#231915;font-size:1.15rem;"><i class="fa-solid fa-bullhorn" style="color:#ea580c;"></i> Mande o link da sua loja para os clientes</h3>
+                    <p style="margin:4px 0 0;color:#475569;font-size:0.92rem;">Copie seu link e cole no WhatsApp ou Instagram para receber pedidos sem pagar taxa:</p>
                 </div>
             </div>
             <div class="aki-div-url-row">
                 <input type="text" id="aki-div-url" readonly class="aki-div-url-input" value="Carregando link da loja...">
-                <button type="button" id="aki-div-btn-copiar" class="btn-save-file" style="width:auto;background:#0b192c;min-height:46px;"><i class="fa-regular fa-copy"></i> Copiar Link</button>
+                <button type="button" id="aki-div-btn-copiar" class="btn-save-file" style="width:auto;background:#231915;min-height:46px;"><i class="fa-regular fa-copy"></i> Copiar Link</button>
             </div>
             <div class="aki-div-btn-grid">
-                <button type="button" id="aki-div-btn-zap" class="btn-save-file" style="background:#15803d;"><i class="fa-brands fa-whatsapp"></i> Enviar no Status / Zap</button>
-                <button type="button" id="aki-div-btn-panfleto" class="btn-save-file" style="background:#0284c7;"><i class="fa-solid fa-print"></i> Panfleto Sacola / Balcão</button>
-                <button type="button" id="aki-div-btn-bio" class="btn-save-file" style="background:#334155;"><i class="fa-solid fa-map-pin"></i> Texto Bio / Google Maps</button>
-                <button type="button" id="aki-div-btn-cupom" class="btn-save-file" style="background:#b45309;"><i class="fa-solid fa-ticket"></i> Criar Cupom DIRETO10</button>
+                <button type="button" id="aki-div-btn-zap" class="btn-save-file" style="background:#15803d;"><i class="fa-brands fa-whatsapp"></i> Mandar no WhatsApp</button>
+                <button type="button" id="aki-div-btn-panfleto" class="btn-save-file" style="background:#ea580c;"><i class="fa-solid fa-print"></i> Imprimir Panfleto da Sacola</button>
+                <button type="button" id="aki-div-btn-bio" class="btn-save-file" style="background:#57534e;"><i class="fa-solid fa-map-pin"></i> Texto p/ Instagram / Maps</button>
+                <button type="button" id="aki-div-btn-cupom" class="btn-save-file" style="background:#b45309;"><i class="fa-solid fa-ticket"></i> Criar Cupom de 10% OFF</button>
             </div>
             <p id="aki-div-feedback" hidden style="margin:10px 0 0;padding:8px 12px;border-radius:8px;background:#ecfdf5;color:#065f46;font-size:0.88rem;font-weight:600;"></p>
         </div>
 
         <div class="admin-card admin-card-assistente-home" id="card-assistente-resumo" data-painel-avancado="1">
-            <h3 style="margin-top:0;color:#0f766e;"><i class="fa-solid fa-robot"></i> Copiloto Food Gestão IA (Prioritário e Integrado)</h3>
-            <p style="margin:0 0 12px;color:#334155;">Nosso <strong>Agente IA</strong> agora opera diretamente sobre suas vendas reais, estoque/CMV, fichas técnicas, caixa, contas e pedidos — 100% local ou híbrido via SuperAdmin. Use a central abaixo em <strong>Visão Geral &amp; IA</strong> ou o botão <strong>Agente IA</strong> no canto da tela.</p>
-            <p style="margin:0;font-size:0.95rem;color:#64748b;">Quem precisa de ajustes finos de textos ou comanda personalizada: marque <strong>ferramentas avançadas</strong> acima (ou diga “painel completo” à assistente).</p>
+            <h3 style="margin-top:0;color:#c2410c;"><i class="fa-solid fa-robot"></i> Assistente de Gestão</h3>
+            <p style="margin:0 0 12px;color:#334155;">Acompanhe suas vendas, estoque, fichas técnicas, caixa, contas e pedidos no resumo abaixo ou toque no botão de ajuda no canto da tela.</p>
+            <p style="margin:0;font-size:0.95rem;color:#64748b;">Para liberar controle completo de estoque e nota fiscal, clique em <strong>Completo</strong> lá em cima.</p>
         </div>
 
-        <div class="regras-faceis" id="card-regras-faceis">
+        <div class="regras-faceis" id="card-regras-faceis" data-painel-avancado="1">
             <h3><i class="fa-solid fa-hand-pointer"></i> Três coisas para não errar</h3>
             <ul>
                 <li id="sim-regra-1">Sempre toque no botão verde <strong>Salvar</strong> no alto depois de mudar algo.</li>
-                <li id="sim-regra-2">Em dúvida? Use os 4 botões coloridos acima ou toque em <strong>Agente IA</strong>.</li>
+                <li id="sim-regra-2">Em dúvida? Use os 4 botões grandes acima.</li>
                 <li id="sim-regra-3">Pedidos do cliente ficam no botão laranja <strong>Ver Pedidos</strong>.</li>
             </ul>
         </div>
@@ -549,15 +549,15 @@
                 <a id="link-atendimento" href="atendimento.html" class="btn-save-file" style="background-color: #0d9488; justify-content: center; min-height:56px; font-size:1rem; margin-top:8px;">Pedido manual (balcão)</a>
             </div>
             <div style="flex: 1; min-width: 200px;">
-                <h4 style="margin: 0 0 10px 0; color: #4338ca;"><i class="fa-solid fa-motorcycle"></i> Entregador</h4>
-                <p style="font-size: 1rem; color: #3730a3; margin-bottom: 15px;">Abra no celular de quem faz a entrega.</p>
-                <a id="link-motoboy" href="motoboy.html" class="btn-save-file" style="background-color: #6366f1; justify-content: center; min-height:56px; font-size:1.05rem;">Tela do entregador</a>
+                <h4 style="margin: 0 0 10px 0; color: #9a3412;"><i class="fa-solid fa-motorcycle"></i> Entregador</h4>
+                <p style="font-size: 1rem; color: #7c2d12; margin-bottom: 15px;">Abra no celular de quem faz a entrega.</p>
+                <a id="link-motoboy" href="motoboy.html" class="btn-save-file" style="background-color: #ea580c; justify-content: center; min-height:56px; font-size:1.05rem;">Tela do entregador</a>
             </div>
             <div style="flex: 1; min-width: 200px;">
                 <h4 style="margin: 0 0 10px 0; color: #374151;"><i class="fa-solid fa-globe"></i> Como o cliente vê</h4>
                 <p style="font-size: 1rem; color: #4b5563; margin-bottom: 15px;">Abra o cardápio da sua loja ou o Marketplace da cidade.</p>
                 <a id="link-ver-site" href="index.html" target="_blank" class="btn-save-file" style="background-color: #4b5563; justify-content: center; min-height:52px; font-size:1.05rem;">Ver minha loja</a>
-                <a href="marketplace.html" target="_blank" class="btn-save-file" style="background-color: #071c34; border: 1px solid #00d4ff; justify-content: center; min-height:52px; font-size:1rem; margin-top:8px;"><i class="fa-solid fa-magnifying-glass-chart"></i> Abrir AcheIAki Marketplace</a>
+                <a href="marketplace.html" target="_blank" class="btn-save-file" style="background-color: #231915; border: 1px solid #fb923c; justify-content: center; min-height:52px; font-size:1rem; margin-top:8px;"><i class="fa-solid fa-store"></i> Abrir AcheIAki Marketplace</a>
             </div>
         </div>
 
@@ -587,12 +587,12 @@
         </div>
 
         <nav class="admin-tabs" id="admin-tabs" aria-label="Áreas do painel">
-            <button type="button" data-tab="visao-geral" class="ativo"><i class="fa-solid fa-chart-pie"></i> Resumo de hoje</button>
-            <button type="button" data-tab="cardapio"><i class="fa-solid fa-utensils"></i> Pratos e preços</button>
-            <button type="button" data-tab="identidade"><i class="fa-solid fa-store"></i> Nome e foto</button>
-            <button type="button" data-tab="contato"><i class="fa-solid fa-location-dot"></i> WhatsApp e endereço</button>
-            <button type="button" data-tab="pagamentos"><i class="fa-regular fa-credit-card"></i> Pagamentos</button>
-            <button type="button" data-tab="conta"><i class="fa-regular fa-calendar-check"></i> Mensalidade</button>
+            <button type="button" data-tab="visao-geral" class="ativo"><i class="fa-solid fa-chart-pie"></i> Hoje</button>
+            <button type="button" data-tab="cardapio"><i class="fa-solid fa-utensils"></i> Meus Pratos</button>
+            <button type="button" data-tab="identidade"><i class="fa-solid fa-store"></i> Nome e Foto</button>
+            <button type="button" data-tab="contato"><i class="fa-solid fa-location-dot"></i> WhatsApp e Horário</button>
+            <button type="button" data-tab="pagamentos"><i class="fa-regular fa-credit-card"></i> Como Receber</button>
+            <button type="button" data-tab="conta"><i class="fa-regular fa-calendar-check"></i> Meu Plano</button>
             <button type="button" data-tab="frete" data-modo="avancado"><i class="fa-solid fa-motorcycle"></i> Entrega e taxa</button>
             <button type="button" data-tab="segmento" data-modo="avancado">Categorias (Manual)</button>
             <button type="button" data-tab="textos" data-modo="avancado">Textos do site</button>
@@ -612,7 +612,7 @@
         </nav>
 
         <div class="admin-card" data-painel="visao-geral">
-            <div id="fg-visao-geral-root">Carregando Copiloto Food Gestão IA...</div>
+            <div id="fg-visao-geral-root">Carregando resumo da sua loja...</div>
         </div>
 
         <div class="admin-card" data-painel="territorio" hidden>
@@ -1111,20 +1111,56 @@
         </div>
 
         <div class="admin-card" data-painel="conta" hidden>
-            <h3><i class="fa-solid fa-file-invoice"></i> Sua mensalidade</h3>
+            <h3><i class="fa-solid fa-file-invoice"></i> Seu plano e mensalidade (0% comissão por pedido)</h3>
             <p class="dica-secao" data-ajuda-aba="conta"></p>
-        <p id="conta-resumo" style="font-size:1em;">Consultando plano...</p>
-        <div id="conta-pagamento" style="display:none;margin:12px 0;">
-            <p id="conta-valor" style="font-size:1.05em;font-weight:700;margin-bottom:8px;"></p>
-            <label for="conta-email" style="display:block;margin-bottom:4px;">E-mail para a cobrança</label>
-            <input id="conta-email" type="email" placeholder="seuemail@exemplo.com" style="width:100%;max-width:360px;padding:10px;border-radius:8px;border:1px solid #d1d5db;">
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-                <button type="button" id="btn-assinar" class="btn-save-file" style="width:auto;">Assinar com Mercado Pago</button>
-                <button type="button" id="btn-sincronizar-assinatura" class="btn-save-file" style="width:auto;background:#374151;">Já paguei, atualizar</button>
+            <p id="conta-resumo" style="font-size:1.02em;font-weight:600;">Consultando plano...</p>
+            <div id="conta-aviso-box" style="display:none;margin:12px 0;padding:14px 16px;border-radius:12px;border:1px solid #fed7aa;background:#fff7ed;color:#7c2d12;line-height:1.5;font-size:0.94rem;"></div>
+
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 10px;">
+                <span style="font-weight:700;font-size:0.92rem;color:#334155;">Ciclo de cobrança:</span>
+                <button type="button" id="conta-ciclo-mensal" class="btn-mini" style="background:#ea580c;color:#fff;padding:7px 14px;border-radius:999px;border:none;cursor:pointer;font-weight:700;">Mensal</button>
+                <button type="button" id="conta-ciclo-anual" class="btn-mini" style="background:#f5f2ed;color:#231915;padding:7px 14px;border-radius:999px;border:1px solid #d6d3d1;cursor:pointer;font-weight:700;">Anual (20% OFF)</button>
             </div>
-            <p style="font-size:0.85em;margin-top:8px;opacity:0.8;">Cobrança mensal automática no cartão. A loja é liberada sozinha assim que o pagamento é aprovado.</p>
-        </div>
-        <a id="conta-suporte" class="btn-save-file" style="width:auto;display:none;" target="_blank" rel="noopener">Suporte técnico</a>
+
+            <div id="conta-planos-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px;margin:12px 0 18px;"></div>
+
+            <div id="conta-pagamento" style="display:none;margin:14px 0;padding:16px;border-radius:14px;background:#faf7f2;border:1px solid #e7e5e4;">
+                <p id="conta-valor" style="font-size:1.08em;font-weight:800;margin:0 0 10px;color:#231915;"></p>
+                <div id="conta-modo-cobranca" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px;margin:10px 0 14px;">
+                    <label data-modo-card="recorrente" style="cursor:pointer;border:2px solid #ea580c;background:#fff7ed;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px;">
+                        <span style="display:flex;justify-content:space-between;align-items:center;font-weight:800;color:#231915;">
+                            <span>💳 Pagamento Automático</span>
+                            <input type="radio" name="conta_modo_pag" value="recorrente" checked style="width:auto;min-height:auto;">
+                        </span>
+                        <small style="color:#475569;line-height:1.4;">Renovação automática recorrente no Cartão/Mercado Pago. Evita atraso, shadowban e acréscimo de 10%. Cancele quando quiser.</small>
+                    </label>
+                    <label data-modo-card="avulso" style="cursor:pointer;border:1px solid #cbd5e1;background:#fff;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px;">
+                        <span style="display:flex;justify-content:space-between;align-items:center;font-weight:800;color:#231915;">
+                            <span>⚡ Avulso (PIX / Cartão / Boleto)</span>
+                            <input type="radio" name="conta_modo_pag" value="avulso" style="width:auto;min-height:auto;">
+                        </span>
+                        <small style="color:#475569;line-height:1.4;">Pague só este ciclo sem débito automático. Você recebe avisos antes de vencer (tolerância máxima de 2 dias após vencimento).</small>
+                    </label>
+                </div>
+                <div id="conta-reativacao-aviso" style="display:none;margin:0 0 12px;padding:12px;border-radius:10px;background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;font-size:0.9rem;line-height:1.45;"></div>
+                <label for="conta-email" style="display:block;margin-bottom:4px;font-weight:600;">E-mail para a cobrança (Mercado Pago)</label>
+                <input id="conta-email" type="email" placeholder="seuemail@exemplo.com" style="width:100%;max-width:360px;padding:10px;border-radius:8px;border:1px solid #d1d5db;">
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                    <button type="button" id="btn-assinar" class="btn-save-file" style="width:auto;">Assinar plano selecionado</button>
+                    <button type="button" id="btn-sincronizar-assinatura" class="btn-save-file" style="width:auto;background:#374151;">Já paguei, atualizar</button>
+                    <button type="button" id="btn-cancelar-recorrencia" class="btn-save-file" style="width:auto;background:#991b1b;display:none;">Cancelar renovação automática</button>
+                </div>
+                <p style="font-size:0.85em;margin-top:10px;color:#475569;">Regras claras: após o vencimento há <strong>tolerância máxima de 2 dias</strong>. Passando de 2 dias sem pagamento, a loja entra em <strong>shadowban</strong> (fica oculta para compradores, mas todos os seus dados permanecem 100% salvos) e a reativação inclui encargo contratual de <strong>+10%</strong> sobre o plano.</p>
+            </div>
+
+            <div id="conta-notificacoes-box" style="display:none;margin:14px 0;padding:14px;border-radius:12px;background:#faf7f2;border:1px solid #e7e5e4;">
+                <strong style="display:block;margin-bottom:8px;color:#231915;font-size:0.92rem;"><i class="fa-solid fa-bell"></i> Histórico de avisos de prazo e pagamentos</strong>
+                <ul id="conta-notificacoes-lista" style="margin:0;padding-left:18px;font-size:0.86rem;color:#334155;line-height:1.5;"></ul>
+            </div>
+
+            <div id="conta-rede-box" style="display:none;margin:18px 0;padding:16px;border-radius:14px;background:#f0fdf4;border:1px solid #bbf7d0;"></div>
+
+            <a id="conta-suporte" class="btn-save-file" style="width:auto;display:none;" target="_blank" rel="noopener">Suporte técnico</a>
             <p id="link-painel-master" style="margin-top:12px;display:none;"><a href="superadmin.html">Voltar ao painel master</a></p>
         </div>
 
@@ -1209,9 +1245,9 @@
             <div id="expert-resumo-grid" class="pz-expert-grid"></div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
                 <button type="button" id="btn-expert-recarregar" class="btn-save-file" style="width:auto;background:#334155;"><i class="fa-solid fa-rotate"></i> Atualizar JSON atual</button>
-                <button type="button" id="btn-expert-aplicar" class="btn-save-file" style="width:auto;background:#0284c7;"><i class="fa-solid fa-check-double"></i> Aplicar JSON no painel</button>
-                <button type="button" id="btn-expert-baixar" class="btn-save-file" style="width:auto;background:#0f172a;"><i class="fa-solid fa-download"></i> Exportar pacote completo (.json)</button>
-                <button type="button" id="btn-expert-copiar-api" class="btn-save-file" style="width:auto;background:#0d9488;"><i class="fa-regular fa-copy"></i> Copiar endpoints da API</button>
+                <button type="button" id="btn-expert-aplicar" class="btn-save-file" style="width:auto;background:#ea580c;"><i class="fa-solid fa-check-double"></i> Aplicar JSON no painel</button>
+                <button type="button" id="btn-expert-baixar" class="btn-save-file" style="width:auto;background:#231915;"><i class="fa-solid fa-download"></i> Exportar pacote completo (.json)</button>
+                <button type="button" id="btn-expert-copiar-api" class="btn-save-file" style="width:auto;background:#15803d;"><i class="fa-regular fa-copy"></i> Copiar endpoints da API</button>
             </div>
             <div class="form-group-admin">
                 <label for="expert-json-config"><strong>config.json completo</strong> (todas as chaves de cadastro, entrega, IA, textos, horários e permissões)</label>
@@ -1231,20 +1267,20 @@
 
     <div id="modal-nivel-boas-vindas" class="modal-boas-vindas" hidden role="dialog" aria-modal="true" aria-labelledby="modal-nv-titulo">
         <div class="caixa" style="max-width:720px;text-align:left;">
-            <h2 id="modal-nv-titulo" style="margin-top:0;color:#0f172a;"><i class="fa-solid fa-layer-group" style="color:#0d9488;"></i> Antes de construir sua página: escolha seu nível</h2>
-            <p style="margin:0 0 12px;color:#475569;">Você pode começar no seu ritmo e <strong>mudar de nível a qualquer momento</strong> na barra superior do painel.</p>
+            <h2 id="modal-nv-titulo" style="margin-top:0;color:#231915;"><i class="fa-solid fa-layer-group" style="color:#ea580c;"></i> Como você quer usar o seu painel?</h2>
+            <p style="margin:0 0 12px;color:#475569;">Se está começando agora, escolha o <strong>Modo Fácil</strong>. Você pode trocar quando quiser lá em cima.</p>
             <div class="pz-nivel-cards">
                 <button type="button" class="pz-nivel-card" data-escolher-nivel-modal="basico">
-                    <strong><span>🤖 Básico</span><span style="font-size:0.75rem;color:#0d9488;">Recomendado</span></strong>
-                    <small>A IA monta toda a sua página inicial e te ensina passo a passo como fazer o seu cardápio.</small>
+                    <strong><span>🟢 Modo Fácil</span><span style="font-size:0.75rem;color:#15803d;">Recomendado</span></strong>
+                    <small>Só o essencial: pratos, preços, WhatsApp e pedidos sem tela cheia de botões difíceis.</small>
                 </button>
                 <button type="button" class="pz-nivel-card" data-escolher-nivel-modal="avancado">
-                    <strong><span>🛠️ Avançado</span><span style="font-size:0.75rem;color:#0284c7;">Híbrido</span></strong>
-                    <small>Mantém a ajuda da IA, mas libera opções manuais para ajustar taxa, textos, cupons e categorias por conta própria.</small>
+                    <strong><span>🛠️ Mais Opções</span><span style="font-size:0.75rem;color:#ea580c;">Intermediário</span></strong>
+                    <small>Libera entrega por bairro, cupons de desconto, lista de clientes e relatórios.</small>
                 </button>
                 <button type="button" class="pz-nivel-card" data-escolher-nivel-modal="expert">
-                    <strong><span>💻 Expert</span><span style="font-size:0.75rem;color:#0f172a;">Tecnologia</span></strong>
-                    <small>Acesso total a todas as informações do cadastro, financeiro/DRE, estoque, RBAC e editor técnico JSON/APIs.</small>
+                    <strong><span>⚙️ Completo</span><span style="font-size:0.75rem;color:#231915;">Tudo</span></strong>
+                    <small>Controle completo de estoque, nota fiscal (NFC-e), caixa, funcionários e integrações.</small>
                 </button>
             </div>
         </div>

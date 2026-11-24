@@ -35,26 +35,52 @@ async function chamarAssinatura(corpo) {
 }
 
 function textoAssinatura(assinatura) {
-    const rotulos = { ativo: 'Mensalidade em dia', bloqueado: 'Loja bloqueada', pendente: 'Pagamento pendente', teste: 'Teste grátis' };
-    const extra = assinatura.motivo === 'vencido' ? ' O prazo acabou e o cardápio público está pausado.' : '';
-    return 'Plano ' + (assinatura.plano || 'básico') + (assinatura.vencimento ? ' até ' + assinatura.vencimento.split('-').reverse().join('/') : '')
+    const rotulos = {
+        ativo: 'Mensalidade em dia',
+        atrasado: 'Pagamento em atraso (tolerância máx. 2 dias)',
+        bloqueado: assinatura.motivo === 'teste_encerrado'
+            ? 'Teste de 7 dias encerrado (Shadowban)'
+            : 'Loja bloqueada / Shadowban ativo',
+        pendente: 'Pagamento pendente',
+        teste: 'Teste grátis (máx. 7 dias)'
+    };
+    let extra = '';
+    if (assinatura.status === 'atrasado') {
+        extra = ' Você está no dia ' + (assinatura.dias_atraso || 1) + ' de 2 da tolerância máxima antes do shadowban + 10%.';
+    } else if (assinatura.status === 'bloqueado') {
+        extra = assinatura.encargo_reativacao_ativo
+            ? ' Sua página desapareceu para os compradores (dados 100% salvos). Para reativar incide +10% sobre o plano.'
+            : ' Sua página está oculta para compradores (dados 100% salvos) até a regularização.';
+    }
+    return 'Plano ' + (assinatura.plano || 'Essencial') + (assinatura.vencimento ? ' até ' + assinatura.vencimento.split('-').reverse().join('/') : '')
         + ' — ' + (rotulos[assinatura.status] || assinatura.status) + extra
         + (assinatura.assinatura_status === 'authorized' ? ' Renovação automática ativa.' : '');
 }
 
 function mostrarFaixaCobranca(assinatura) {
     let faixa = document.getElementById('faixa-cobranca');
-    const dias = assinatura.vencimento
-        ? Math.ceil((new Date(assinatura.vencimento + 'T23:59:59') - new Date()) / 86400000)
-        : null;
-    const automatica = assinatura.assinatura_status === 'authorized';
+    const avisoSrv = assinatura.cobranca_aviso || null;
     let texto = '';
-    if (assinatura.status === 'bloqueado') {
-        texto = 'Sua loja está pausada para novos pedidos. Regularize a mensalidade para voltar a vender.';
-    } else if (!automatica && (assinatura.status === 'teste' || assinatura.em_teste) && dias !== null) {
-        texto = dias > 0 ? 'Teste grátis: faltam ' + dias + ' dia(s). Assine agora e não perca nenhum pedido.' : 'Seu teste grátis termina hoje.';
-    } else if (!automatica && dias !== null && dias <= 5) {
-        texto = 'Sua mensalidade vence em ' + Math.max(dias, 0) + ' dia(s).';
+    let cor = '#d97706';
+
+    if (avisoSrv && avisoSrv.titulo) {
+        texto = avisoSrv.titulo + (assinatura.status === 'bloqueado' || assinatura.status === 'atrasado' ? ' — ' + (avisoSrv.cta_texto || 'Regularizar agora') : '');
+        if (assinatura.status === 'bloqueado') cor = '#991b1b';
+        else if (assinatura.status === 'atrasado') cor = '#dc2626';
+        else if (avisoSrv.nivel === 'info') cor = '#c2410c';
+    } else {
+        const dias = assinatura.vencimento
+            ? Math.ceil((new Date(assinatura.vencimento + 'T23:59:59') - new Date()) / 86400000)
+            : null;
+        const automatica = assinatura.assinatura_status === 'authorized';
+        if (assinatura.status === 'bloqueado') {
+            cor = '#991b1b';
+            texto = 'Loja em shadowban para compradores (dados salvos). Regularize para voltar ao ar.';
+        } else if (!automatica && (assinatura.status === 'teste' || assinatura.em_teste) && dias !== null) {
+            texto = dias > 0 ? 'Teste grátis: faltam ' + dias + ' dia(s). Escolha seu plano.' : 'Seu teste grátis de 7 dias termina hoje.';
+        } else if (!automatica && dias !== null && dias <= 5) {
+            texto = 'Sua mensalidade vence em ' + Math.max(dias, 0) + ' dia(s).';
+        }
     }
     if (!texto) {
         if (faixa) faixa.remove();
@@ -63,7 +89,7 @@ function mostrarFaixaCobranca(assinatura) {
     if (!faixa) {
         faixa = document.createElement('div');
         faixa.id = 'faixa-cobranca';
-        faixa.style.cssText = 'position:sticky;top:0;z-index:9999;padding:12px 16px;text-align:center;font-weight:700;color:#fff;cursor:pointer;';
+        faixa.style.cssText = 'position:sticky;top:0;z-index:9999;padding:12px 16px;text-align:center;font-weight:700;color:#fff;cursor:pointer;font-size:0.93rem;';
         faixa.addEventListener('click', () => {
             const aba = document.querySelector('[data-tab="conta"]');
             if (aba) aba.click();
@@ -72,8 +98,8 @@ function mostrarFaixaCobranca(assinatura) {
         });
         document.body.prepend(faixa);
     }
-    faixa.style.background = assinatura.status === 'bloqueado' ? '#b91c1c' : '#d97706';
-    faixa.textContent = texto + (assinatura.pagamento_online ? ' Clique para pagar.' : '');
+    faixa.style.background = cor;
+    faixa.textContent = texto + (assinatura.pagamento_online ? ' · Clique aqui para resolver' : '');
 }
 
 function iniciarCobrancaOnline(assinatura) {
@@ -84,24 +110,212 @@ function iniciarCobrancaOnline(assinatura) {
     cobrancaIniciada = true;
 
     const resumo = document.getElementById('conta-resumo');
+    const avisoBox = document.getElementById('conta-aviso-box');
+    const reativBox = document.getElementById('conta-reativacao-aviso');
+    const modoWrap = document.getElementById('conta-modo-cobranca');
+    const notifBox = document.getElementById('conta-notificacoes-box');
+    const notifLista = document.getElementById('conta-notificacoes-lista');
     const botaoAssinar = document.getElementById('btn-assinar');
     const botaoSync = document.getElementById('btn-sincronizar-assinatura');
+    const botaoCancelarRec = document.getElementById('btn-cancelar-recorrencia');
     const campoEmail = document.getElementById('conta-email');
+    const gridPlanos = document.getElementById('conta-planos-grid');
+    const btnMensal = document.getElementById('conta-ciclo-mensal');
+    const btnAnual = document.getElementById('conta-ciclo-anual');
+    const boxRede = document.getElementById('conta-rede-box');
 
-    const aplicar = (dados) => {
-        if (!dados) return;
-        if (window.PedidoZapStore) PedidoZapStore.assinatura = dados;
-        if (resumo) resumo.textContent = textoAssinatura(dados);
-        mostrarFaixaCobranca(dados);
-        if (botaoAssinar) {
-            botaoAssinar.textContent = dados.assinatura_status === 'authorized' ? 'Trocar cartão / refazer assinatura' : 'Assinar com Mercado Pago';
+    let planoSelecionado = assinatura.plano_slug || 'pro';
+    let cicloSelecionado = assinatura.ciclo === 'anual' ? 'anual' : 'mensal';
+    let modoSelecionado = assinatura.modo_cobranca_preferido === 'avulso' ? 'avulso' : 'recorrente';
+    let dadosAtual = assinatura;
+
+    const fmtBrl = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    const atualizarEstiloModo = () => {
+        if (!modoWrap) return;
+        modoWrap.querySelectorAll('[data-modo-card]').forEach((card) => {
+            const m = card.getAttribute('data-modo-card');
+            const inp = card.querySelector('input[name="conta_modo_pag"]');
+            const ativo = m === modoSelecionado;
+            if (inp) inp.checked = ativo;
+            card.style.border = ativo ? '2px solid #e85d04' : '1px solid #cbd5e1';
+            card.style.background = ativo ? '#fff7ed' : '#fff';
+        });
+    };
+
+    const renderAvisosConta = () => {
+        if (avisoBox) {
+            const av = dadosAtual.cobranca_aviso;
+            if (av && av.titulo) {
+                const paletas = {
+                    bloqueado: { bg: '#fef2f2', bd: '#fca5a5', fg: '#991b1b' },
+                    urgente: { bg: '#fff1f2', bd: '#fb7185', fg: '#9f1239' },
+                    aviso: { bg: '#fff7ed', bd: '#fdba74', fg: '#9a3412' },
+                    info: { bg: '#fff7ed', bd: '#fdba74', fg: '#9a3412' },
+                };
+                const pal = paletas[av.nivel] || paletas.aviso;
+                avisoBox.style.display = 'block';
+                avisoBox.style.background = pal.bg;
+                avisoBox.style.borderColor = pal.bd;
+                avisoBox.style.color = pal.fg;
+                avisoBox.innerHTML = '<strong>' + av.titulo + '</strong><br><span>' + av.mensagem + '</span>';
+            } else {
+                avisoBox.style.display = 'none';
+            }
+        }
+        if (notifBox && notifLista) {
+            const hist = Array.isArray(dadosAtual.cobranca_notificacoes) ? dadosAtual.cobranca_notificacoes : [];
+            if (hist.length) {
+                notifBox.style.display = 'block';
+                notifLista.innerHTML = hist.slice(0, 6).map((n) => '<li><strong>' + (n.data_br || '') + '</strong> — ' + (n.titulo || '') + '</li>').join('');
+            } else {
+                notifBox.style.display = 'none';
+            }
         }
     };
 
+    const renderPlanos = () => {
+        const lista = Array.isArray(dadosAtual.planos_catalogo) ? dadosAtual.planos_catalogo : [];
+        if (btnAnual && dadosAtual.desconto_anual_pct != null) {
+            btnAnual.textContent = 'Anual (' + dadosAtual.desconto_anual_pct + '% OFF)';
+        }
+        if (btnMensal && btnAnual) {
+            const ativoCss = 'background:#ea580c;color:#fff;padding:7px 14px;border-radius:999px;border:none;cursor:pointer;font-weight:700;';
+            const inativoCss = 'background:#f1f5f9;color:#0f172a;padding:7px 14px;border-radius:999px;border:1px solid #cbd5e1;cursor:pointer;font-weight:700;';
+            btnMensal.style.cssText = cicloSelecionado === 'mensal' ? ativoCss : inativoCss;
+            btnAnual.style.cssText = cicloSelecionado === 'anual' ? ativoCss : inativoCss;
+        }
+
+        if (gridPlanos && lista.length) {
+            gridPlanos.innerHTML = lista.map((p) => {
+                const atual = p.slug === (dadosAtual.plano_slug || '');
+                const sel = p.slug === planoSelecionado;
+                const precoExib = cicloSelecionado === 'anual' ? p.preco_anual_mensal : p.preco_mensal;
+                const subPreco = cicloSelecionado === 'anual'
+                    ? 'Cobrado ' + fmtBrl(p.preco_anual) + '/ano'
+                    : 'Sem fidelidade · 0% comissão';
+                return '<div data-escolher-plano="' + p.slug + '" style="cursor:pointer;border-radius:14px;padding:14px;background:' + (sel ? '#fff7ed' : '#fff')
+                    + ';border:' + (sel ? '2px solid #e85d04' : '1px solid #e2e8f0') + ';display:flex;flex-direction:column;gap:8px;position:relative;">'
+                    + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">'
+                    + '<strong style="font-size:1.05rem;color:#231915;">' + p.nome + '</strong>'
+                    + (atual
+                        ? '<span style="font-size:0.72rem;background:#15803d;color:#fff;padding:3px 8px;border-radius:999px;font-weight:700;">Plano Atual</span>'
+                        : (p.badge ? '<span style="font-size:0.72rem;background:#ea580c;color:#fff;padding:3px 8px;border-radius:999px;font-weight:700;">' + p.badge + '</span>' : ''))
+                    + '</div>'
+                    + '<div style="font-size:1.45rem;font-weight:800;color:#e85d04;">' + fmtBrl(precoExib) + '<span style="font-size:0.78rem;font-weight:600;color:#64748b;">/mês</span></div>'
+                    + '<div style="font-size:0.78rem;color:#64748b;margin-top:-4px;">' + subPreco + '</div>'
+                    + '<ul style="margin:4px 0 0;padding-left:16px;font-size:0.82rem;color:#334155;line-height:1.45;">'
+                    + (p.itens_destaque || []).map((it) => '<li>' + it + '</li>').join('')
+                    + '</ul></div>';
+            }).join('');
+
+            gridPlanos.querySelectorAll('[data-escolher-plano]').forEach((card) => {
+                card.addEventListener('click', () => {
+                    planoSelecionado = card.getAttribute('data-escolher-plano') || 'pro';
+                    renderPlanos();
+                });
+            });
+        }
+
+        const escolhido = lista.find((p) => p.slug === planoSelecionado) || lista[1] || lista[0];
+        const comMulta = !!dadosAtual.encargo_reativacao_ativo;
+        const pctMulta = Number(dadosAtual.encargo_reativacao_pct || 10);
+        if (escolhido) {
+            const valNormal = Number(cicloSelecionado === 'anual' ? escolhido.preco_anual : escolhido.preco_mensal);
+            const encargoVal = comMulta ? Math.round(valNormal * (pctMulta / 100) * 100) / 100 : 0;
+            const valTotal = Math.round((valNormal + encargoVal) * 100) / 100;
+
+            if (document.getElementById('conta-valor')) {
+                document.getElementById('conta-valor').textContent = comMulta
+                    ? 'Reativação Plano ' + escolhido.nome + ': ' + fmtBrl(valNormal) + ' + ' + pctMulta + '% (' + fmtBrl(encargoVal) + ') = ' + fmtBrl(valTotal)
+                    : 'Plano ' + escolhido.nome + ': ' + fmtBrl(valNormal)
+                    + (cicloSelecionado === 'anual' ? ' / ano (' + fmtBrl(escolhido.preco_anual_mensal) + '/mês)' : ' / mês');
+            }
+            if (reativBox) {
+                if (comMulta) {
+                    reativBox.style.display = 'block';
+                    reativBox.innerHTML = '<strong>Reativação de Shadowban (+' + pctMulta + '% após 2 dias de atraso):</strong> primeiro você quita a reativação única (' + fmtBrl(valTotal) + ' via PIX ou Cartão) para tirar sua loja do shadowban na hora. Depois, se desejar, poderá ativar a renovação automática pelo valor normal.';
+                } else {
+                    reativBox.style.display = 'none';
+                }
+            }
+            if (modoWrap) {
+                modoWrap.style.display = comMulta ? 'none' : 'grid';
+                atualizarEstiloModo();
+            }
+            if (botaoAssinar) {
+                if (comMulta) {
+                    botaoAssinar.textContent = 'Pagar ' + fmtBrl(valTotal) + ' e Reativar Loja Agora';
+                    botaoAssinar.style.background = '#b91c1c';
+                } else {
+                    botaoAssinar.style.background = '';
+                    botaoAssinar.textContent = modoSelecionado === 'recorrente'
+                        ? 'Ativar Pagamento Automático (' + escolhido.nome + ')'
+                        : 'Pagar Avulso por PIX / Cartão (' + fmtBrl(valNormal) + ')';
+                }
+            }
+        }
+        if (botaoCancelarRec) {
+            botaoCancelarRec.style.display = dadosAtual.assinatura_status === 'authorized' ? 'inline-flex' : 'none';
+        }
+    };
+
+    const carregarPainelRede = async (dados) => {
+        if (!boxRede) return;
+        const ehRede = dados.plano_slug === 'enterprise' || sessionStorage.getItem('admin_master') === '1';
+        if (!ehRede) {
+            boxRede.style.display = 'none';
+            return;
+        }
+        try {
+            const url = (typeof TENANT !== 'undefined' && TENANT.apiUrl)
+                ? TENANT.apiUrl('gestao_api.php?action=rede_resumo')
+                : 'gestao_api.php?action=rede_resumo';
+            const r = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    auth: { user: sessionStorage.getItem('admin_user') || '', pass: sessionStorage.getItem('admin_pass') || '' }
+                })
+            });
+            const d = await r.json();
+            if (!d || !d.success || !Array.isArray(d.unidades)) return;
+            boxRede.style.display = 'block';
+            const c = d.consolidado || {};
+            boxRede.innerHTML = '<h4 style="margin:0 0 8px;color:#14532d;"><i class="fa-solid fa-building-flag"></i> Painel Consolidado da Rede' + (d.grupo_rede ? ' (' + d.grupo_rede + ')' : '') + '</h4>'
+                + '<p style="margin:0 0 10px;font-size:0.9rem;color:#166534;"><strong>' + (c.total_unidades || 0) + ' unidade(s)</strong> · Pedidos hoje: <strong>' + (c.pedidos_hoje || 0) + '</strong> · Faturamento hoje: <strong>' + fmtBrl(c.faturamento_hoje) + '</strong> · Faturamento mês: <strong>' + fmtBrl(c.faturamento_mes) + '</strong></p>'
+                + '<div style="display:grid;gap:8px;">'
+                + d.unidades.map((u) => '<div style="background:#fff;border:1px solid #dcfce7;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">'
+                    + '<div><strong>' + u.nome + '</strong> <small style="color:#64748b;">(' + (u.cidade || u.slug) + ')</small><br><small>Hoje: ' + u.pedidos_hoje + ' ped. · ' + fmtBrl(u.faturamento_hoje) + ' | Mês: ' + fmtBrl(u.faturamento_mes) + '</small></div>'
+                    + '<a href="' + u.url_painel + '" style="background:#231915;color:#fff;padding:6px 12px;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:700;">Abrir unidade</a></div>').join('')
+                + '</div>';
+        } catch (e) { /* silencioso */ }
+    };
+
+    const aplicar = (dados) => {
+        if (!dados) return;
+        dadosAtual = dados;
+        if (window.PedidoZapStore) PedidoZapStore.assinatura = dados;
+        if (resumo) resumo.textContent = textoAssinatura(dados);
+        mostrarFaixaCobranca(dados);
+        renderAvisosConta();
+        renderPlanos();
+        carregarPainelRede(dados);
+    };
+
+    if (modoWrap) {
+        modoWrap.querySelectorAll('input[name="conta_modo_pag"]').forEach((inp) => {
+            inp.addEventListener('change', () => {
+                modoSelecionado = inp.value === 'avulso' ? 'avulso' : 'recorrente';
+                renderPlanos();
+            });
+        });
+    }
+    if (btnMensal) btnMensal.addEventListener('click', () => { cicloSelecionado = 'mensal'; renderPlanos(); });
+    if (btnAnual) btnAnual.addEventListener('click', () => { cicloSelecionado = 'anual'; renderPlanos(); });
+
     if (assinatura.pagamento_online) {
         bloco.style.display = 'block';
-        const valor = Number(assinatura.mensalidade_valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        document.getElementById('conta-valor').textContent = valor + ' por mês';
     }
     aplicar(assinatura);
 
@@ -115,7 +329,8 @@ function iniciarCobrancaOnline(assinatura) {
         botaoAssinar.disabled = true;
         botaoAssinar.textContent = 'Abrindo o Mercado Pago...';
         try {
-            const data = await chamarAssinatura({ acao: 'criar', email });
+            const modoEnviar = dadosAtual.encargo_reativacao_ativo ? 'avulso' : modoSelecionado;
+            const data = await chamarAssinatura({ acao: 'criar', email, plano: planoSelecionado, ciclo: cicloSelecionado, modo: modoEnviar });
             if (data.success && data.url) {
                 window.location.href = data.url;
                 return;
@@ -128,33 +343,56 @@ function iniciarCobrancaOnline(assinatura) {
         aplicar(PedidoZapStore && PedidoZapStore.assinatura);
     });
 
-    const sincronizar = async (preapprovalId, silencioso) => {
+    if (botaoCancelarRec) {
+        botaoCancelarRec.addEventListener('click', async () => {
+            if (!confirm('Deseja cancelar a renovação automática? Sua loja continua funcionando normalmente até o fim do período já pago.')) return;
+            botaoCancelarRec.disabled = true;
+            try {
+                const data = await chamarAssinatura({ acao: 'cancelar_recorrencia' });
+                if (data.assinatura) aplicar(data.assinatura);
+                alert(data.message || 'Renovação automática encerrada.');
+            } catch (e) {
+                alert('Sem conexão com o servidor.');
+            }
+            botaoCancelarRec.disabled = false;
+        });
+    }
+
+    const sincronizar = async (preapprovalId, paymentId, silencioso) => {
         botaoSync.disabled = true;
         try {
-            const data = await chamarAssinatura({ acao: 'sincronizar', preapproval_id: preapprovalId || '' });
+            const data = await chamarAssinatura({
+                acao: 'sincronizar',
+                preapproval_id: preapprovalId || '',
+                payment_id: paymentId || ''
+            });
             if (data.email && !campoEmail.value) campoEmail.value = data.email;
             if (data.assinatura) aplicar(data.assinatura);
             if (!silencioso) {
-                if (data.pago) alert('Pagamento confirmado! Sua loja está liberada.');
-                else if (data.status === 'authorized' || data.status === 'pending') alert('Assinatura registrada. Assim que o Mercado Pago aprovar a cobrança, a loja é liberada automaticamente.');
-                else alert(data.message || 'Ainda não encontramos pagamento aprovado.');
+                if (data.pago) alert('Pagamento confirmado! Sua loja está ativa e visível no Marketplace.');
+                else if (data.status === 'authorized' || data.status === 'pending' || data.status === 'in_process') {
+                    alert('Pagamento/assinatura registrado. Assim que o Mercado Pago compensar, a loja é liberada automaticamente.');
+                } else {
+                    alert(data.message || 'Ainda não encontramos pagamento aprovado.');
+                }
             }
         } catch (e) {
             if (!silencioso) alert('Sem conexão com o servidor.');
         }
         botaoSync.disabled = false;
     };
-    botaoSync.addEventListener('click', () => sincronizar('', false));
+    botaoSync.addEventListener('click', () => sincronizar('', '', false));
 
     const params = new URLSearchParams(window.location.search);
     if (params.get('assinatura') === 'retorno') {
-        sincronizar(params.get('preapproval_id') || '', false);
-        params.delete('assinatura');
-        params.delete('preapproval_id');
+        const pId = params.get('payment_id') || params.get('collection_id') || '';
+        const preId = params.get('preapproval_id') || '';
+        sincronizar(preId, pId, false);
+        ['assinatura', 'preapproval_id', 'payment_id', 'collection_id', 'collection_status', 'status', 'external_reference', 'payment_type', 'merchant_order_id', 'preference_id', 'site_id', 'processing_mode', 'merchant_account_id', 'mp_status'].forEach((k) => params.delete(k));
         const qs = params.toString();
         history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : ''));
     } else if (assinatura.pagamento_online) {
-        sincronizar('', true);
+        sincronizar('', '', true);
     }
 }
 
@@ -364,7 +602,7 @@ async function iniciarAdmin() {
 
     // Botão Resetar Preview (Novo)
     const btnResetPreview = document.createElement('button');
-        btnResetPreview.innerText = "Desfazer o que ainda não foi salvo";
+    btnResetPreview.innerText = "Desfazer o que ainda não foi salvo";
     btnResetPreview.className = "btn-mini btn-delete";
     btnResetPreview.style.marginTop = "10px";
     btnResetPreview.onclick = () => {
@@ -996,7 +1234,7 @@ const NICHOS_LOJA = {
         { slug: 'pratos', nome: 'Pratos feitos', subtitulo: 'Almoço do dia', emoji: '🍽️', cor: '#b45309' },
         { slug: 'marmitas', nome: 'Marmitas', subtitulo: 'P, M e G', emoji: '🍱', cor: '#ea580c' },
         { slug: 'guarnicoes', nome: 'Guarnições', subtitulo: 'Acompanhamentos', emoji: '🥗', cor: '#16a34a' },
-        { slug: 'sopas', nome: 'Sopas e caldos', subtitulo: 'Quentinhas', emoji: '🥣', cor: '#0369a1' },
+        { slug: 'sopas', nome: 'Sopas e caldos', subtitulo: 'Quentinhas', emoji: '🥣', cor: '#d97706' },
         { slug: 'bebidas', nome: 'Bebidas', subtitulo: 'Geladas', emoji: '🥤', cor: '#2563eb' }
     ]},
     marmitaria: { id: 'marmitaria', categorias: [
@@ -1242,11 +1480,7 @@ function ligarWhiteLabel() {
     const resumoConta = document.getElementById('conta-resumo');
     if (resumoConta) {
         if (!assinatura) resumoConta.textContent = 'O status do plano aparece quando o servidor da loja responde.';
-        else {
-            const rotulos = { ativo: 'Mensalidade em dia', bloqueado: 'Loja bloqueada', pendente: 'Pagamento pendente', teste: 'Teste grátis' };
-            const extra = assinatura.motivo === 'vencido' ? ' O prazo acabou e o cardápio público está pausado.' : '';
-            resumoConta.textContent = 'Plano ' + (assinatura.plano || 'básico') + (assinatura.vencimento ? ' até ' + assinatura.vencimento : '') + ' — ' + (rotulos[assinatura.status] || assinatura.status) + extra;
-        }
+        else resumoConta.textContent = textoAssinatura(assinatura);
     }
     const linkSuporte = document.getElementById('conta-suporte');
     if (linkSuporte && assinatura && assinatura.suporte_whatsapp) {

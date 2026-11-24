@@ -143,10 +143,10 @@
             modal.innerHTML = ''
                 + '<div class="aki-lgpd-modal-card">'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;">'
-                + '<h3 style="margin:0;color:#071c34;">Preferências de Privacidade e IA (LGPD)</h3>'
-                + '<button type="button" id="aki-lgpd-m-fechar" style="border:none;background:#f1f5f9;width:32px;height:32px;border-radius:50%;font-size:1.2rem;cursor:pointer;">&times;</button>'
+                + '<h3 style="margin:0;color:#231915;">Preferências de Privacidade e IA (LGPD)</h3>'
+                + '<button type="button" id="aki-lgpd-m-fechar" style="border:none;background:#f5efe6;width:32px;height:32px;border-radius:50%;font-size:1.2rem;cursor:pointer;">&times;</button>'
                 + '</div>'
-                + '<p style="margin:0;font-size:0.9rem;color:#475569;">Conforme a Lei nº 13.709/2018 (LGPD), você escolhe como seus dados são tratados. Consulte os <a href="termos.html" target="_blank" style="color:#0284c7;font-weight:700;">Termos de Uso</a> e a <a href="privacidade.html" target="_blank" style="color:#0284c7;font-weight:700;">Política de Privacidade</a>.</p>'
+                + '<p style="margin:0;font-size:0.9rem;color:#475569;">Conforme a Lei nº 13.709/2018 (LGPD), você escolhe como seus dados são tratados. Consulte os <a href="termos.html" target="_blank" style="color:#c2410c;font-weight:700;">Termos de Uso</a> e a <a href="privacidade.html" target="_blank" style="color:#c2410c;font-weight:700;">Política de Privacidade</a>.</p>'
                 + '<div class="aki-lgpd-opt">'
                 + '<div><strong>1. Funcionamento Essencial</strong><small>Sessão de login, carrinho de compras, endereço selecionado e segurança contra fraudes. Sempre ativo.</small></div>'
                 + '<input type="checkbox" class="aki-lgpd-switch" checked disabled aria-label="Cookies essenciais sempre ativos">'
@@ -156,7 +156,7 @@
                 + '<input type="checkbox" id="aki-lgpd-chk-ia" class="aki-lgpd-switch">'
                 + '</div>'
                 + '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">'
-                + '<button type="button" id="aki-lgpd-m-salvar" class="aki-lgpd-btn aki-lgpd-btn-prim" style="background:#071c34;color:#fff;">Salvar minhas preferências</button>'
+                + '<button type="button" id="aki-lgpd-m-salvar" class="aki-lgpd-btn aki-lgpd-btn-prim" style="background:#ea580c;color:#fff;">Salvar minhas preferências</button>'
                 + '</div>'
                 + '</div>';
             document.body.appendChild(modal);

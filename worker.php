@@ -21,6 +21,7 @@ $maxMemBytes = (int) (getenv('PZ_WORKER_MAX_MEM_MB') ?: 96) * 1024 * 1024;
 $inicio = time();
 $totalProcessados = 0;
 $ultimoHb = 0;
+$ultimaVarreduraSaas = 0;
 $hbDir = __DIR__ . '/data/cache';
 $hbFile = $hbDir . '/worker_heartbeat.json';
 
@@ -34,6 +35,18 @@ do {
     $totalProcessados += ($okQtd + $errQtd);
 
     $agora = time();
+    if ($once || ($agora - $ultimaVarreduraSaas) >= 900) {
+        try {
+            require_once __DIR__ . '/saas_lib.php';
+            $varredura = pedidozap_varrer_vencimentos_e_avisos();
+            if (!empty($varredura['atualizadas'])) {
+                echo '[' . date('c') . '] Cobrança/Shadowban: ' . (int) $varredura['atualizadas'] . " loja(s) atualizada(s)\n";
+            }
+        } catch (Throwable $eSaas) {
+            echo '[' . date('c') . '] Erro na varredura de cobrança: ' . $eSaas->getMessage() . "\n";
+        }
+        $ultimaVarreduraSaas = $agora;
+    }
     if ($okQtd > 0 || $errQtd > 0 || ($agora - $ultimoHb) >= 10) {
         if (!is_dir($hbDir)) {
             @mkdir($hbDir, 0775, true);

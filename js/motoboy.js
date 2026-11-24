@@ -73,7 +73,7 @@ function renderizarFilaProntos(orders) {
                 : '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:999px;font-size:0.74rem;font-weight:800;">NA COZINHA</span>';
             return '<div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:10px 12px;margin-bottom:8px;">'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px;">'
-                + '<strong style="color:#0b192c;">#' + esc(p.id) + ' · ' + esc(p.cliente) + '</strong>' + selBadge
+                + '<strong style="color:#231915;">#' + esc(p.id) + ' · ' + esc(p.cliente) + '</strong>' + selBadge
                 + '</div>'
                 + (endTxt ? '<div style="font-size:0.84rem;color:#334155;margin-bottom:4px;">📍 ' + esc(endTxt) + (end.complemento ? ' (' + esc(end.complemento) + ')' : '') + '</div>' : '')
                 + '<div style="font-size:0.84rem;font-weight:700;color:#059669;margin-bottom:6px;">💵 Cobrar: ' + cobrarTxt + '</div>'

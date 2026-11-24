@@ -67,7 +67,7 @@
             if (!toast && document.body) {
                 toast = document.createElement('div');
                 toast.id = 'aki-realtime-toast';
-                toast.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:99999;max-width:340px;background:#0b192c;color:#fff;padding:14px 16px;border-radius:14px;box-shadow:0 16px 36px rgba(0,0,0,0.28);border-left:4px solid #f97316;font-family:inherit;font-size:0.9rem;cursor:pointer;transition:opacity .25s ease;';
+                toast.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:99999;max-width:340px;background:#231915;color:#fff;padding:14px 16px;border-radius:14px;box-shadow:0 16px 36px rgba(0,0,0,0.28);border-left:4px solid #ea580c;font-family:inherit;font-size:0.9rem;cursor:pointer;transition:opacity .25s ease;';
                 document.body.appendChild(toast);
             }
             if (toast) {

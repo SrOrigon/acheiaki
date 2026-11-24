@@ -78,6 +78,24 @@ try {
     }
 
     if (isset($data['cardapio']) && is_array($data['cardapio'])) {
+        $isMasterSave = ($sessao['role'] ?? '') === 'master';
+        $planoSave = pz_plano_da_loja($tenant);
+        $maxProdsPlano = (int) ($planoSave['limites']['max_produtos'] ?? 0);
+        if (!$isMasterSave && $maxProdsPlano > 0) {
+            $qtdProdsEnv = pz_plano_contar_produtos_cardapio($data['cardapio']);
+            if ($qtdProdsEnv > $maxProdsPlano) {
+                http_response_code(402);
+                echo json_encode([
+                    'success' => false,
+                    'codigo_erro' => 'upgrade_plano',
+                    'plano_atual' => $planoSave['slug'],
+                    'plano_necessario' => 'pro',
+                    'plano_necessario_nome' => 'Pro',
+                    'message' => 'Seu plano ' . $planoSave['nome'] . ' permite até ' . $maxProdsPlano . ' produtos no cardápio (você enviou ' . $qtdProdsEnv . '). Faça upgrade para o plano Pro para cardápio ilimitado.',
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+        }
         $configAtual = Database::read('config.json');
         $configNorm = pedidozap_normalizar_config(is_array($configAtual) ? $configAtual : [], $tenant);
         if (isset($data['config']) && is_array($data['config'])) {

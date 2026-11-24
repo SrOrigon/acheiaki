@@ -1904,7 +1904,7 @@
         fix.hidden = true;
         fix.innerHTML = ''
             + '<div class="pz-assist-topo">'
-            + '<div><h2>Agente <span style="color:#00d4ff;">IA</span> — AcheIAki</h2><p>' + (ctx === 'painel' ? 'Copiloto do turno em tempo real.' : 'Gestão financeira, estoque, pedidos e cardápio.') + '</p></div>'
+            + '<div><h2>Agente <span style="color:#fb923c;">IA</span> — AcheIAki</h2><p>' + (ctx === 'painel' ? 'Ajuda rápida no seu turno.' : 'Ajuda para cadastrar pratos, ver vendas e mudar preços.') + '</p></div>'
             + '<button type="button" class="pz-assist-fechar" aria-label="Fechar">×</button>'
             + '</div>'
             + '<div class="pz-assist-mensagens" id="pz-assist-msgs"></div>'

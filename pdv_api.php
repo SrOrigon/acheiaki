@@ -4,6 +4,7 @@
  * Autenticação: Header Authorization: Bearer <api_key> ou X-Api-Key: <api_key>.
  */
 require_once __DIR__ . '/tenant_init.php';
+require_once __DIR__ . '/saas_lib.php';
 require_once __DIR__ . '/pdv_lib.php';
 require_once __DIR__ . '/gestao_lib.php';
 require_once __DIR__ . '/fiscal_lib.php';
@@ -61,6 +62,12 @@ if ($tokenInformado === '' || $pdvCfg['api_key'] === '' || !hash_equals($pdvCfg[
 if (empty($pdvCfg['habilitado'])) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Conector PDV não habilitado nesta loja. Ative em Admin -> Integrações PDV & Fiscal.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (!pz_plano_tem_recurso('pdv_open_delivery', $tenant)) {
+    http_response_code(402);
+    echo json_encode(['success' => false, 'codigo_erro' => 'upgrade_plano', 'message' => 'A API Open Delivery PDV está disponível no plano Enterprise / Rede.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

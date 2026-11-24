@@ -10,9 +10,7 @@ require_once __DIR__ . '/cache_lib.php';
 require_once __DIR__ . '/queue_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+pz_cors_same_origin('GET, POST, OPTIONS', 'Content-Type');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

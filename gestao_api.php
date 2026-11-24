@@ -48,6 +48,58 @@ if (!$sessao) {
 }
 
 $ator = trim((string) (($sessao['nome'] ?? '') ?: ($sessao['user'] ?? $user)));
+$isMasterPlano = ($sessao['role'] ?? '') === 'master';
+$planoAtualLoja = pz_plano_da_loja();
+
+$mapaPlanoAcoes = [
+    // Pro+
+    'caixa_listar' => ['caixa_financeiro_dre', 'Caixa Diário', 'pro'],
+    'caixa_abrir' => ['caixa_financeiro_dre', 'Caixa Diário', 'pro'],
+    'caixa_movimentar' => ['caixa_financeiro_dre', 'Caixa Diário', 'pro'],
+    'caixa_fechar' => ['caixa_financeiro_dre', 'Caixa Diário', 'pro'],
+    'financeiro_listar' => ['caixa_financeiro_dre', 'Financeiro & DRE', 'pro'],
+    'financeiro_salvar' => ['caixa_financeiro_dre', 'Financeiro & DRE', 'pro'],
+    'financeiro_pagar' => ['caixa_financeiro_dre', 'Financeiro & DRE', 'pro'],
+    'financeiro_excluir' => ['caixa_financeiro_dre', 'Financeiro & DRE', 'pro'],
+    'dre' => ['caixa_financeiro_dre', 'Relatório DRE', 'pro'],
+    'clientes_listar' => ['crm_cupons_fidelidade', 'CRM de Clientes', 'pro'],
+    'cliente_salvar' => ['crm_cupons_fidelidade', 'CRM de Clientes', 'pro'],
+    'marketing_listar' => ['crm_cupons_fidelidade', 'Cupons & Recuperação de Carrinhos', 'pro'],
+    'cupom_salvar' => ['crm_cupons_fidelidade', 'Cupons de Desconto', 'pro'],
+    'cupom_excluir' => ['crm_cupons_fidelidade', 'Cupons de Desconto', 'pro'],
+    'recuperacao_status' => ['crm_cupons_fidelidade', 'Recuperação de Carrinhos', 'pro'],
+    'entregadores_listar' => ['entregadores_gps', 'Gestão de Entregadores', 'pro'],
+    'entregador_salvar' => ['entregadores_gps', 'Gestão de Entregadores', 'pro'],
+    'funcionarios_listar' => ['equipe_rbac', 'Equipe e Permissões (RBAC)', 'pro'],
+    'funcionario_salvar' => ['equipe_rbac', 'Equipe e Permissões (RBAC)', 'pro'],
+    'funcionario_excluir' => ['equipe_rbac', 'Equipe e Permissões (RBAC)', 'pro'],
+    'responder_avaliacao' => ['crm_cupons_fidelidade', 'Resposta Oficial às Avaliações', 'pro'],
+    // Enterprise / Rede
+    'estoque_listar' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'enterprise'],
+    'estoque_salvar' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'enterprise'],
+    'estoque_excluir' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'enterprise'],
+    'fornecedor_salvar' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'enterprise'],
+    'fornecedor_excluir' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'enterprise'],
+    'estoque_movimentar' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'enterprise'],
+    'fichas_listar' => ['estoque_ficha_cmv', 'Ficha Técnica & CMV', 'enterprise'],
+    'ficha_salvar' => ['estoque_ficha_cmv', 'Ficha Técnica & CMV', 'enterprise'],
+    'ficha_excluir' => ['estoque_ficha_cmv', 'Ficha Técnica & CMV', 'enterprise'],
+    'auditoria_listar' => ['auditoria_backup', 'Auditoria do Sistema', 'enterprise'],
+    'backup_exportar' => ['auditoria_backup', 'Backup JSON Completo', 'enterprise'],
+    'ia_pessoal_obter' => ['ia_pessoal_externa', 'IA Pessoal (API Key + Voz)', 'enterprise'],
+    'ia_pessoal_salvar' => ['ia_pessoal_externa', 'IA Pessoal (API Key + Voz)', 'enterprise'],
+    'ia_pessoal_testar' => ['ia_pessoal_externa', 'IA Pessoal (API Key + Voz)', 'enterprise'],
+    'pdv_config_salvar' => ['pdv_open_delivery', 'Conector PDV / ERP (Open Delivery)', 'enterprise'],
+    'pdv_testar_webhook' => ['pdv_open_delivery', 'Conector PDV / ERP (Open Delivery)', 'enterprise'],
+    'fiscal_config_salvar' => ['fiscal_nfce', 'Emissão Fiscal NFC-e / SAT', 'enterprise'],
+    'fiscal_emitir_pedido' => ['fiscal_nfce', 'Emissão Fiscal NFC-e / SAT', 'enterprise'],
+    'push_campanha_enviar' => ['push_campanhas', 'Campanhas Push Notifications', 'enterprise'],
+    'rede_resumo' => ['multi_unidades', 'Painel Consolidado Multi-Unidades (Rede)', 'enterprise'],
+];
+if (isset($mapaPlanoAcoes[$action])) {
+    [$recReq, $rotReq, $minReq] = $mapaPlanoAcoes[$action];
+    pz_plano_exigir($recReq, $rotReq, $minReq, $isMasterPlano);
+}
 
 function pz_exigir_perm(array $sessao, array $permsPermitidas)
 {
@@ -69,6 +121,7 @@ switch ($action) {
         echo json_encode([
             'success' => true,
             'sessao' => $sessao,
+            'plano' => $planoAtualLoja,
         ], JSON_UNESCAPED_UNICODE);
         break;
 
@@ -78,6 +131,7 @@ switch ($action) {
             'success' => true,
             'resumo' => pz_resumo_executivo_loja(),
             'sessao' => $sessao,
+            'plano' => $planoAtualLoja,
         ], JSON_UNESCAPED_UNICODE);
         break;
 
@@ -314,6 +368,22 @@ switch ($action) {
 
     case 'funcionario_salvar':
         pz_exigir_perm($sessao, ['equipe']);
+        $maxFunc = (int) ($planoAtualLoja['limites']['max_funcionarios'] ?? 0);
+        if (!$isMasterPlano && $maxFunc > 0 && empty($req['id'])) {
+            $existentesFunc = pz_listar_funcionarios();
+            if (count($existentesFunc) >= $maxFunc) {
+                http_response_code(402);
+                echo json_encode([
+                    'success' => false,
+                    'codigo_erro' => 'upgrade_plano',
+                    'plano_atual' => $planoAtualLoja['slug'],
+                    'plano_necessario' => 'enterprise',
+                    'plano_necessario_nome' => 'Enterprise / Rede',
+                    'message' => 'Seu plano ' . $planoAtualLoja['nome'] . ' permite até ' . $maxFunc . ' funcionário(s). Faça upgrade para o plano Enterprise / Rede para equipe ilimitada.',
+                ], JSON_UNESCAPED_UNICODE);
+                break;
+            }
+        }
         echo json_encode(pz_salvar_funcionario($req, $ator), JSON_UNESCAPED_UNICODE);
         break;
 
@@ -640,6 +710,65 @@ switch ($action) {
             pz_realtime_publicar($slugAtual, 'cardapio_atualizado', ['id' => $prodId, 'esgotado' => $esgotado]);
         }
         echo json_encode(['success' => $achou, 'id' => $prodId, 'esgotado' => $esgotado], JSON_UNESCAPED_UNICODE);
+        break;
+
+    case 'rede_resumo':
+        pz_exigir_perm($sessao, ['visao_geral', 'relatorios', 'financeiro']);
+        $slugAtual = Database::getTenant();
+        $registro = pedidozap_ler_registro();
+        $metaAtual = is_array($registro[$slugAtual] ?? null) ? $registro[$slugAtual] : [];
+        $grupoRede = trim((string) ($metaAtual['grupo_rede'] ?? ''));
+        $unidades = [];
+        $totPedHoje = 0;
+        $totFatHoje = 0.0;
+        $totFatMes = 0.0;
+        $totAbertos = 0;
+        $antTenant = Database::getTenant();
+        foreach ($registro as $s => $m) {
+            if (!is_array($m)) {
+                continue;
+            }
+            $mesmoGrupo = ($s === $slugAtual)
+                || ($grupoRede !== '' && strcasecmp(trim((string) ($m['grupo_rede'] ?? '')), $grupoRede) === 0);
+            if (!$mesmoGrupo) {
+                continue;
+            }
+            Database::setTenant($s);
+            $resU = pz_resumo_executivo_loja();
+            $pedH = (int) ($resU['hoje']['pedidos'] ?? 0);
+            $fatH = (float) ($resU['hoje']['faturamento_bruto'] ?? 0);
+            $fatM = (float) ($resU['mes']['faturamento_bruto'] ?? 0);
+            $abU = (int) ($resU['pedidos_abertos'] ?? 0);
+            $totPedHoje += $pedH;
+            $totFatHoje += $fatH;
+            $totFatMes += $fatM;
+            $totAbertos += $abU;
+            $unidades[] = [
+                'slug' => $s,
+                'nome' => (string) ($m['nome_empresa'] ?? $s),
+                'cidade' => (string) ($m['cidade'] ?? ''),
+                'bairro' => (string) ($m['bairro'] ?? ''),
+                'status' => pedidozap_status_efetivo($m)['status'],
+                'pedidos_hoje' => $pedH,
+                'pedidos_abertos' => $abU,
+                'faturamento_hoje' => round($fatH, 2),
+                'faturamento_mes' => round($fatM, 2),
+                'url_painel' => 'admin.html?tenant=' . rawurlencode($s),
+            ];
+        }
+        Database::setTenant($antTenant);
+        echo json_encode([
+            'success' => true,
+            'grupo_rede' => $grupoRede,
+            'consolidado' => [
+                'total_unidades' => count($unidades),
+                'pedidos_hoje' => $totPedHoje,
+                'pedidos_abertos' => $totAbertos,
+                'faturamento_hoje' => round($totFatHoje, 2),
+                'faturamento_mes' => round($totFatMes, 2),
+            ],
+            'unidades' => $unidades,
+        ], JSON_UNESCAPED_UNICODE);
         break;
 
     default:

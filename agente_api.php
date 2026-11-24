@@ -136,6 +136,15 @@ if ($action === 'vitrine_responder') {
         ], JSON_UNESCAPED_UNICODE);
         exit;
     }
+    if (!pz_plano_tem_recurso('ia_vitrine')) {
+        echo json_encode([
+            'success' => false,
+            'ativo' => false,
+            'codigo_erro' => 'upgrade_plano',
+            'resposta' => 'Atendimento automático por IA disponível a partir do plano Pro.',
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     if (isset($agenteCfg['vitrine_ativo']) && !$agenteCfg['vitrine_ativo']) {
         echo json_encode([
             'success' => false,
@@ -505,7 +514,8 @@ $resposta = '';
 // ---------------------------------------------------------------------
 // 0. PRIORIDADE DA IA PESSOAL DO CLIENTE (SE KEY + URL ESTIVEREM CADASTRADAS)
 // ---------------------------------------------------------------------
-if (!empty($iaPessoal['ativa'])) {
+$isMasterAgente = ($sessao['role'] ?? '') === 'master';
+if (!empty($iaPessoal['ativa']) && pz_plano_tem_recurso('ia_pessoal_externa', null, $isMasterAgente)) {
     $pedidosLista = Database::readStrict('pedidos.json');
     $pedidosAbertos = [];
     if (is_array($pedidosLista)) {

@@ -286,6 +286,13 @@ function pz_queue_executar_job(array $job)
             }
             return ['success' => true];
 
+        case 'mp.sync_payment':
+            require_once __DIR__ . '/saas_lib.php';
+            if (!empty($payload['id'])) {
+                return pedidozap_mp_sincronizar_pagamento((string) $payload['id']);
+            }
+            return ['success' => true];
+
         default:
             return ['success' => true, 'ignored' => true];
     }

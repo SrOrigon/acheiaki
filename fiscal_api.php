@@ -4,6 +4,7 @@
  */
 require_once __DIR__ . '/tenant_init.php';
 require_once __DIR__ . '/auth_lib.php';
+require_once __DIR__ . '/saas_lib.php';
 require_once __DIR__ . '/pedido_acesso.php';
 require_once __DIR__ . '/fiscal_lib.php';
 
@@ -87,6 +88,12 @@ header('Content-Type: application/json; charset=utf-8');
 if (!$adminOk) {
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Autenticação da loja obrigatória para consultar notas fiscais.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+$isMasterFisc = ($user !== '' || $pass !== '') && pedidozap_autorizado($user, $pass) === 'master';
+if (!pz_plano_tem_recurso('fiscal_nfce', $tenant, $isMasterFisc)) {
+    http_response_code(402);
+    echo json_encode(['success' => false, 'codigo_erro' => 'upgrade_plano', 'message' => 'A emissão fiscal NFC-e / SAT está disponível no plano Enterprise / Rede.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

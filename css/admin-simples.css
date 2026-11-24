@@ -30,14 +30,14 @@ body[data-pagina="admin"] .btn-mini {
 }
 
 body[data-pagina="admin"] :focus-visible {
-    outline: 2.5px solid #0284c7;
+    outline: 2.5px solid #ea580c;
     outline-offset: 2px;
 }
 
 .dica-abas {
     background: #fff;
     border: 1px solid rgba(20, 23, 31, 0.09);
-    border-left: 3px solid #0284c7;
+    border-left: 3px solid #ea580c;
     border-radius: 12px;
     padding: 12px 16px;
     margin: 0 0 14px;
@@ -73,8 +73,8 @@ body[data-pagina="admin"] :focus-visible {
 }
 
 .dica-secao {
-    background: #f7f6f2;
-    border-left: 3px solid #0284c7;
+    background: #fff7ed;
+    border-left: 3px solid #ea580c;
     padding: 12px 16px;
     margin: 0 0 16px;
     border-radius: 0 10px 10px 0;
