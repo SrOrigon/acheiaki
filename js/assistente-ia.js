@@ -30,6 +30,46 @@
         confeitaria: {
             rotulo: 'Doceria / confeitaria',
             palavras: ['doce', 'doceria', 'confeitaria', 'bolo', 'torta', 'brigadeiro', 'padaria', 'sobremesa']
+        },
+        bebidas: {
+            rotulo: 'Distribuidora de bebidas / adega',
+            palavras: ['bebida', 'bebidas', 'adega', 'distribuidora', 'deposito', 'cerveja', 'chopp', 'vinho', 'whisky', 'destilado', 'gelo', 'carvao']
+        },
+        mercado: {
+            rotulo: 'Mercado / mercearia / hortifrúti',
+            palavras: ['mercado', 'supermercado', 'minimercado', 'mercearia', 'hortifruti', 'sacolao', 'frutas', 'verduras', 'acougue', 'emporio']
+        },
+        farmacia: {
+            rotulo: 'Farmácia / drogaria',
+            palavras: ['farmacia', 'drogaria', 'remedio', 'medicamento', 'suplemento', 'vitamina', 'perfumaria']
+        },
+        petshop: {
+            rotulo: 'Pet Shop / agropecuária',
+            palavras: ['pet', 'petshop', 'pet shop', 'racao', 'veterinario', 'agropecuaria', 'banho e tosa']
+        },
+        moda: {
+            rotulo: 'Moda, roupas e calçados',
+            palavras: ['moda', 'roupa', 'roupas', 'vestuario', 'boutique', 'loja de roupa', 'calcado', 'calcados', 'tenis', 'sapato', 'acessorio']
+        },
+        eletronicos: {
+            rotulo: 'Eletrônicos, celulares e informática',
+            palavras: ['eletronico', 'eletronicos', 'celular', 'smartphone', 'capinha', 'assistencia tecnica', 'informatica', 'acessorio celular', 'som']
+        },
+        beleza: {
+            rotulo: 'Beleza, cosméticos e salão',
+            palavras: ['beleza', 'cosmetico', 'cosmeticos', 'maquiagem', 'perfume', 'salao', 'barbearia', 'estetica', 'skincare']
+        },
+        papelaria: {
+            rotulo: 'Papelaria, presentes e floricultura',
+            palavras: ['papelaria', 'presente', 'presentes', 'floricultura', 'flor', 'cesta', 'brinquedo', 'livraria']
+        },
+        ferragens: {
+            rotulo: 'Ferragens, elétrica e construção',
+            palavras: ['ferragem', 'ferragens', 'ferramenta', 'material de construcao', 'eletrica', 'hidraulica', 'tinta', 'casa e construcao']
+        },
+        comercio: {
+            rotulo: 'Comércio local, serviços e utilidades',
+            palavras: ['comercio', 'loja', 'varejo', 'utilidades', 'variedades', 'servico', 'servicos', 'bazar', 'otica']
         }
     };
 
@@ -98,50 +138,129 @@
             { cat: 'doces', nome: 'Caixa com 6 Brigadeiros Gourmet', descricao: 'Tradicional, ninho e meio amargo', preco: 22.00 },
             { cat: 'doces', nome: 'Pudim de Leite Condensado (Pote)', descricao: 'Com calda caramelizada', preco: 12.00 },
             { cat: 'bebidas', nome: 'Café Expresso / Cappuccino 200ml', descricao: 'Quentinho na hora', preco: 8.00 }
+        ],
+        bebidas: [
+            { cat: 'bebidas', nome: 'Fardo Cerveja Lata 350ml (12 un)', descricao: 'Trincando de gelada, pronta entrega', preco: 46.00 },
+            { cat: 'bebidas', nome: 'Refrigerante 2 Litros', descricao: 'Coca-Cola, Guaraná ou Sprite bem gelado', preco: 12.50 },
+            { cat: 'bebidas', nome: 'Água Mineral Sem Gás 1,5L', descricao: 'Garrafa gelada', preco: 5.00 },
+            { cat: 'conveniencia', nome: 'Saco de Gelo Filtrado 5kg + Carvão 3kg', descricao: 'Kit churrasco prático para entrega rápida', preco: 29.90 }
+        ],
+        mercado: [
+            { cat: 'mercearia', nome: 'Arroz Tipo 1 Pacote 5kg', descricao: 'Grãos selecionados direto da prateleira', preco: 29.90 },
+            { cat: 'mercearia', nome: 'Feijão Carioca Tipo 1 — 1kg', descricao: 'Safra nova de alta qualidade', preco: 8.90 },
+            { cat: 'hortifruti', nome: 'Kit Hortifrúti Semanal', descricao: 'Tomate, cebola, batata, cenoura e banana selecionados', preco: 34.90 },
+            { cat: 'limpeza', nome: 'Detergente Líquido Neutro 500ml', descricao: 'Rende muito e não agride as mãos', preco: 3.20 }
+        ],
+        farmacia: [
+            { cat: 'cuidados', nome: 'Protetor Solar FPS 60 (120ml)', descricao: 'Toque seco resistente à água', preco: 54.90 },
+            { cat: 'higiene', nome: 'Pacote Fralda Infantil Conforto M', descricao: 'Alta absorção dia e noite', preco: 44.90 },
+            { cat: 'suplementos', nome: 'Vitamina C + Zinco (30 cápsulas)', descricao: 'Imunidade diária com procedência garantida', preco: 24.90 },
+            { cat: 'cuidados', nome: 'Álcool Gel Antisséptico 70% 500ml', descricao: 'Hidratante sem ressecar as mãos', preco: 12.90 }
+        ],
+        petshop: [
+            { cat: 'racoes', nome: 'Ração Premium Cães Adultos 10,1kg', descricao: 'Sabor carne e vegetais, pacote original lacrado', preco: 119.90 },
+            { cat: 'racoes', nome: 'Ração Gatos Castrados Salmão 3kg', descricao: 'Controle urinário e pelagem brilhante', preco: 64.90 },
+            { cat: 'higiene', nome: 'Areia Sanitária Biodegradável 4kg', descricao: 'Forma torrões firmes e elimina odores', preco: 24.90 },
+            { cat: 'petiscos', nome: 'Bifinho Petisco Carne 65g', descricao: 'Ideal para treino e recompensa', preco: 7.90 }
+        ],
+        moda: [
+            { cat: 'destaques', nome: 'Camiseta Algodão Premium Básica', descricao: 'Tecido macio 100% algodão (P, M, G, GG)', preco: 59.90 },
+            { cat: 'destaques', nome: 'Calça Jeans Slim Conforto', descricao: 'Modelagem moderna com elastano (38 ao 46)', preco: 129.90 },
+            { cat: 'calcados', nome: 'Tênis Casual Urbano Confortável', descricao: 'Solado leve macio (numeração 36 ao 44)', preco: 149.90 },
+            { cat: 'acessorios', nome: 'Boné Aba Curva Ajustável', descricao: 'Acabamento reforçado tamanho único', preco: 45.00 }
+        ],
+        eletronicos: [
+            { cat: 'celulares', nome: 'Cabo Turbo USB-C 1,5m Reforçado', descricao: 'Carregamento rápido e transferência de dados', preco: 29.90 },
+            { cat: 'celulares', nome: 'Película Vidro 3D + Capinha Silicone', descricao: 'Instalação rápida com proteção contra quedas', preco: 39.90 },
+            { cat: 'audio', nome: 'Fone Bluetooth TWS Sem Fio', descricao: 'Estojo carregador + microfone integrado com garantia', preco: 89.90 },
+            { cat: 'acessorios', nome: 'Carregador Rápido 20W Bivolt', descricao: 'Homologado e testado na loja', preco: 59.90 }
+        ],
+        beleza: [
+            { cat: 'skincare', nome: 'Hidratante Corporal Perfume Suave 400ml', descricao: 'Absorção rápida com manteiga de karité', preco: 44.90 },
+            { cat: 'maquiagem', nome: 'Batom Matte Longa Duração', descricao: 'Alta pigmentação e conforto nos lábios', preco: 29.90 },
+            { cat: 'cabelos', nome: 'Kit Shampoo + Condicionador Nutrição', descricao: 'Brilho intenso para todos os tipos de cabelo', preco: 68.00 },
+            { cat: 'perfumes', nome: 'Body Splash Refrescante 200ml', descricao: 'Fragrância marcante para o dia a dia', preco: 49.90 }
+        ],
+        papelaria: [
+            { cat: 'presentes', nome: 'Cesta Especial Presente Personalizada', descricao: 'Embalagem laço pronta para surpreender', preco: 95.00 },
+            { cat: 'papelaria', nome: 'Caderno Universitário 10 Matérias Capa Dura', descricao: 'Folhas pautadas 200 folhas', preco: 28.90 },
+            { cat: 'papelaria', nome: 'Kit Canetas Gel Coloridas (6 unidades)', descricao: 'Ponta fina macia', preco: 19.90 },
+            { cat: 'presentes', nome: 'Caneca Cerâmica Temática com Caixa', descricao: 'Ótima opção para presente criativo', preco: 39.90 }
+        ],
+        ferragens: [
+            { cat: 'ferramentas', nome: 'Jogo de Chaves Fenda/Phillips (6 peças)', descricao: 'Aço resistente com cabo emborrachado', preco: 49.90 },
+            { cat: 'eletrica', nome: 'Lâmpada LED Bulbo 9W Branca Bivolt', descricao: 'Economia de até 80% de energia', preco: 8.90 },
+            { cat: 'eletrica', nome: 'Extensão Elétrica 5 Metros 3 Tomadas', descricao: 'Cabo reforçado certificado', preco: 38.90 },
+            { cat: 'hidraulica', nome: 'Fita Veda Rosca 18mm x 25m + Cola PVC', descricao: 'Kit rápido para pequenos reparos', preco: 18.50 }
+        ],
+        comercio: [
+            { cat: 'ofertas', nome: 'Produto Destaque da Semana', descricao: 'Qualidade garantida à pronta entrega direto da loja', preco: 49.90 },
+            { cat: 'kits', nome: 'Combo / Kit Promocional da Loja', descricao: 'Leve mais pagando preço real sem taxa de aplicativo', preco: 89.90 },
+            { cat: 'servicos', nome: 'Atendimento / Serviço Padrão', descricao: 'Agendamento ou atendimento direto no WhatsApp e loja', preco: 60.00 }
         ]
     };
 
-    // Base de conhecimento sobre o funcionamento do sistema AcheIAki
+    // Base de conhecimento completa sobre negócios e todo o ecossistema AcheIAki
     const CONHECIMENTO_SISTEMA = [
         {
             chaves: ['acheiaki', 'marketplace', 'algoritmo', 'regiao', 'região', 'melhor preco', 'como funciona o site'],
-            resposta: 'O AcheIAki ("Ache + IA + ki") é o Marketplace Inteligente da sua Região: ele organiza as empresas verificadas (CNPJ) da cidade e usa um Algoritmo Inteligente local para ranquear melhor preço por segmento, menor distância no seu raio de entrega e avaliação no território — com pedido direto e taxa zero de comissão.'
+            resposta: 'O AcheIAki ("Ache + IA + ki") é o Marketplace Inteligente multissetor (alimentação, varejo e serviços): organiza empresas verificadas por CNPJ e ranqueia melhor preço, distância e nota no território — sempre com pedido direto e 0% de comissão.'
         },
         {
-            chaves: ['comissao', 'taxa', 'mensalidade', 'plano', 'preco do sistema', 'quanto custa', 'gratis', 'teste'],
-            resposta: 'O AcheIAki funciona com mensalidade fixa — ZERO comissão por pedido! Novas empresas têm 7 dias grátis para testar com todas as funções liberadas. Na aba "Mensalidade" você acompanha o vencimento e o pagamento.'
+            chaves: ['comissao', 'taxa', 'mensalidade', 'plano', 'preco do sistema', 'quanto custa', 'gratis', 'teste', 'shadowban', 'atraso', 'tolerancia', '10%'],
+            resposta: 'O AcheIAki cobra mensalidade fixa — ZERO comissão por pedido! Novas lojas têm 7 dias grátis. Após o vencimento há tolerância máxima de 2 dias; passando disso a vitrine entra em shadowban (oculta para compradores, mantendo 100% dos seus dados salvos) com +10% na reativação. Você também pode ativar pagamento automático recorrente na aba "Meu Plano".'
         },
         {
-            chaves: ['cozinha', 'comanda', 'impressora', '80mm', 'imprimir'],
-            resposta: 'A Tela da Cozinha (cozinha.html) fica aberta perto da impressora térmica 80mm. Quando você aceita um pedido no Painel de Pedidos, a comanda é enviada automaticamente para a cozinha e pode ser impressa na hora! No modo completo, a aba "Cozinha / comanda" deixa personalizar os textos da via.'
+            chaves: ['wpp', 'whatsapp', 'robo', 'qr code', 'ao vivo', 'conversa', 'responder cliente'],
+            resposta: 'Na aba "WhatsApp e Horário", você ativa o WhatsApp + IA Ao Vivo (Evolution API via QR Code, Meta Cloud API ou Z-API). A IA responde seus clientes usando seus produtos e preços reais, consulta status de pedidos e envia atualizações automáticas a cada etapa!'
+        },
+        {
+            chaves: ['cmv', 'margem', 'markup', 'dre', 'lucro', 'financeiro', 'caixa'],
+            resposta: 'Na aba "Estoque & CMV" e "Caixa & DRE" (modo Completo): o CMV mostra quanto custou o produto/receita vendido; a Margem é quanto sobra para pagar despesas e gerar lucro. O sistema calcula automaticamente tanto para comida (ficha técnica) quanto para varejo (custo de compra e revenda).'
+        },
+        {
+            chaves: ['territorio', 'ranking', 'concorrencia', 'score', 'otimizar'],
+            resposta: 'Na aba "Território & Melhorias", a IA compara sua loja anonimamente com o bairro/cidade, calcula seu Score (0-100) e sugere melhorias de descrições e preços sem custo extra.'
+        },
+        {
+            chaves: ['sumido', 'recuperacao', 'abandono', 'cavalo de troia', 'panfleto', 'sacola', 'divulgar'],
+            resposta: 'Na tela "Hoje", você vê quanto economizou vs apps de 20%+, quais clientes não compram há 15+ dias para chamar no WhatsApp com 1 clique e imprime o Panfleto QR Code para colocar nas sacolas e converter seus clientes para o link Taxa Zero!'
+        },
+        {
+            chaves: ['cozinha', 'expedicao', 'separacao', 'comanda', 'impressora', '80mm', 'imprimir'],
+            resposta: 'A Tela de Preparo / Expedição (cozinha.html) funciona para cozinha de restaurante ou separação de pedidos no varejo/farmácia/mercado e imprime na térmica 80mm quando o pedido avança no painel!'
         },
         {
             chaves: ['balcao', 'manual', 'telefone', 'atendimento', 'atendente'],
-            resposta: 'Para anotar pedidos de quem chega no balcão ou liga no telefone, use o botão verde "Pedido manual (balcão)" (atendimento.html). Você informa nome e telefone do cliente, monta o pedido no cardápio e ele cai direto no seu painel e na cozinha.'
+            resposta: 'Para registrar vendas presenciais no balcão ou telefone, use "Pedido no balcão" (atendimento.html): digite nome e WhatsApp do cliente e monte o pedido direto pelo catálogo da loja.'
         },
         {
-            chaves: ['motoboy', 'entregador', 'rastreio', 'acompanhar', 'mapa'],
-            resposta: 'A tela do entregador (motoboy.html) foi feita para o celular de quem faz a entrega: ele vê os pedidos prontos, abre a rota e atualiza o status. O cliente recebe o link de rastreio (rastreio.html) para acompanhar o pedido!'
+            chaves: ['motoboy', 'entregador', 'rastreio', 'acompanhar', 'mapa', 'frete', 'retirada'],
+            resposta: 'A tela do entregador (motoboy.html) mostra as entregas no celular com mapa e o cliente acompanha em tempo real pelo link de rastreio (rastreio.html). Você também pode configurar retirada gratuita na loja.'
         },
         {
-            chaves: ['painel de pedidos', 'kanban', 'ver pedidos', 'onde chegam'],
-            resposta: 'Todos os pedidos feitos pelo site ou pelo balcão aparecem no botão laranja "Ver pedidos" (painel.html), organizados por etapa: Novo, Na Cozinha, Saiu para Entrega e Concluído, além de também irem para o seu WhatsApp.'
+            chaves: ['painel de pedidos', 'kanban', 'ver pedidos', 'onde chegam', 'nfce', 'pdv'],
+            resposta: 'Todos os pedidos aparecem em "Ver pedidos" (painel.html) por etapa: Novo, Preparo/Separação, Em Rota e Concluído. No modo Completo, "PDV, Fiscal & Escala" integra ERPs e emissão automática de NFC-e.'
         },
         {
             chaves: ['foto', 'imagem', 'logo', 'banner', 'capa'],
-            resposta: 'Para colocar foto nos pratos: vá na aba "Pratos e preços" e clique no ícone de foto ao lado de cada item para enviar do celular ou computador. Para logo e capa da loja, vá na aba "Nome e cores".'
+            resposta: 'Para enviar foto dos itens, abra a aba "Meus Produtos" e clique em Enviar foto. Para logo e capa da loja, vá na aba "Nome e Foto".'
         },
         {
             chaves: ['modo facil', 'modo completo', 'avancado', 'abas escondidas'],
-            resposta: 'O Modo Fácil mostra só o essencial para não confundir (Nome, WhatsApp, Cardápio, Entrega, Pagamento, Mensalidade e Senha). Se quiser ver Relatórios, Comanda, Balcão, Textos do site e Categorias, marque "Mostrar painel completo" ou me diga "painel completo".'
+            resposta: 'O Modo Fácil exibe só o essencial (Hoje, Meus Produtos, Nome e Foto, WhatsApp e Horário, Como Receber e Meu Plano). Toque em "Mais Opções" ou "Completo" no topo para liberar Estoque, DRE, Território e PDV/NFC-e.'
         },
         {
-            chaves: ['link', 'url', 'divulgar', 'site', 'vitrine', 'cardapio publico'],
-            resposta: 'Para abrir e copiar o link do seu cardápio para colocar na bio do Instagram e no WhatsApp, clique no botão "Ver o cardápio" no topo do painel. Qualquer mudança feita aqui só vai para os clientes depois que você clicar em "Salvar" (ou me pedir "salva").'
+            chaves: ['link', 'url', 'site', 'vitrine', 'cardapio publico', 'catalogo'],
+            resposta: 'Na tela "Hoje", o bloco de divulgação permite copiar seu link Taxa Zero com 1 toque para WhatsApp e Instagram. Lembre-se de clicar em "Salvar" no topo para publicar alterações.'
         },
         {
-            chaves: ['relatorio', 'vendas', 'mais vendido', 'faturamento'],
-            resposta: 'Os relatórios de vendas ficam na aba "O que vendeu" (visível no painel completo). Lá você vê o total faturado e o ranking do que mais e menos saiu no mês.'
+            chaves: ['relatorio', 'vendas', 'mais vendido', 'faturamento', 'ticket'],
+            resposta: 'Em "O que vendeu" você acompanha o ranking de itens mais e menos vendidos, e em "Hoje" vê faturamento, ticket médio e economia acumulada.'
+        },
+        {
+            chaves: ['troca', 'garantia', 'tamanho', 'numeracao', 'varejo', 'servico'],
+            resposta: 'Para lojas de moda, eletrônicos, farmácia, pet shop, mercado ou serviços, use as variações/tamanhos em cada produto ("Tamanhos/Variações" e "Opcionais/Extras") e informe prazos de garantia ou retirada nas descrições.'
         }
     ];
 
@@ -522,7 +641,7 @@
             // Quando o cliente configurou sua IA pessoal, deixa comandos naturais passarem por ela (com fallback local)
             if (global.__pzIaPessoalStatus && global.__pzIaPessoalStatus.ativa) return false;
             if (/painel completo|modo avan|nivel avan|modo expert|nivel expert|nivel basico|modo basico|acesso total|mostrar tudo|todas as abas|modo facil/.test(n)) return true;
-            if (/analis(ar)? minha loja|monta(r)? (minha )?(pagina|cardapio)|cardapio inicial|ensina(r)?.*cardapio|como fazer.*cardapio|sugere prato/.test(n)) return true;
+            if (/analis(ar)? minha loja|monta(r)? (minha )?(pagina|loja|catalogo|cardapio)|cardapio inicial|catalogo inicial|ensina(r)?.*(cardapio|catalogo|loja)|como fazer.*(cardapio|catalogo|loja)|sugere (prato|produto|item)/.test(n)) return true;
             if (/^(abre|abrir|vai (para|na)|mostra(r)?|ir para)\b/.test(n)) return true;
             if (/^(cadastra|adiciona|coloca|bota|inclui|novo prato|novo produto)\b/.test(n) && !/fornecedor|insumo|estoque|funcionario|entregador|cupom/.test(n)) return true;
             if (/^(muda|altera|troca|pausa|desativa|ativa|reativa|apaga|exclui|remove)\b/.test(n) && !/pedido|cupom|estoque|caixa/.test(n)) return true;
@@ -644,7 +763,7 @@
             // Responde dúvidas sobre o sistema sem perder o progresso do cadastro!
             if (/\?|como funciona|tem comissao|quanto custa|o que vem|gratis|teste|acheiaki|marketplace/.test(n)) {
                 const resp = this.responderConhecimentoSistema(n) ||
-                    'O AcheIAki coloca sua empresa no Marketplace Inteligente da Região com algoritmo de preço e localização, cardápio digital, painel de pedidos, cozinha, entregador e IA de gestão — sem comissão por pedido e com 7 dias grátis.';
+                    'O AcheIAki coloca sua empresa no Marketplace Inteligente da Região com algoritmo de preço e localização, catálogo digital, WhatsApp + IA ao vivo, painel de pedidos, preparo/expedição, entregador e IA de gestão — sem comissão por pedido e com 7 dias grátis.';
                 this.falar(resp + '\n\n' + this.proximaPerguntaCadastro());
                 return;
             }
@@ -756,7 +875,7 @@
                 extraiuAlgo = true;
                 // Se a frase for só o nicho (ex.: "Quero uma lanchonete", "Só marmita", "Pizzaria"), NÃO usa como nome!
                 if (st.passo === 'livre' || st.passo === 'nome') {
-                    const semNicho = n.replace(/quero|uma|um|so|só|de|vendo|trabalho com|lanchonete|marmitaria|marmita|pizzaria|pizza|pensao|acai|confeitaria|doceria/g, '').trim();
+                    const semNicho = n.replace(/quero|uma|um|so|só|de|vendo|trabalho com|loja|lanchonete|marmitaria|marmita|pizzaria|pizza|pensao|acai|confeitaria|doceria|mercado|farmacia|petshop|pet|moda|roupa|eletronicos|beleza|ferragens|papelaria|bebidas|comercio|servicos/g, '').trim();
                     if (semNicho.length < 3) {
                         this.falar('Boa! Segmento: ' + NICHOS_INFO[nichoDetectado].rotulo + '.\n' + this.proximaPerguntaCadastro());
                         return;
@@ -915,8 +1034,8 @@
             }
             if (!d.nicho) {
                 st.passo = 'nicho';
-                this.renderAtalhos(['Lanches', 'Marmita', 'Pizza', 'Pensão', 'Açaí', 'Doceria']);
-                return 'Que tipo de comida a "' + d.nome_empresa + '" vende?';
+                this.renderAtalhos(['Lanchonete', 'Pizzaria', 'Mercado', 'Farmácia', 'Pet Shop', 'Moda', 'Eletrônicos', 'Beleza', 'Ferragens', 'Comércio / Serviços']);
+                return 'Qual é o ramo / segmento da "' + d.nome_empresa + '"? (Ex.: lanchonete, mercado, farmácia, moda, pet shop, eletrônicos, serviços...)';
             }
             if (!d.whatsapp) {
                 st.passo = 'whatsapp';
@@ -1311,16 +1430,16 @@
             }
             if (/modo basico|nivel basico|modo facil|esconder avan|so o basico/.test(n)) {
                 global.PedidoZapModoAdmin && global.PedidoZapModoAdmin.set('basico');
-                this.falar('Nível Básico ativado! Eu cuido da montagem da página e te ensino a criar seu cardápio passo a passo.');
+                this.falar('Nível Básico ativado! Eu cuido da montagem da página e te ensino a criar seu catálogo passo a passo.');
                 return;
             }
-            if (/ensina(r)?.*cardapio|como fazer.*cardapio|tutorial.*cardapio/.test(n)) {
-                this.renderAtalhos(['Montar cardápio inicial', 'Cadastra X-Bacon 28', 'Abrir Pratos e preços']);
+            if (/ensina(r)?.*(cardapio|catalogo|loja)|como (fazer|montar).*(cardapio|catalogo|loja)|tutorial.*(cardapio|catalogo)/.test(n)) {
+                this.renderAtalhos(['Montar página inicial sozinho', 'Cadastra Produto 29,90', 'Abrir Meus Produtos']);
                 this.falar(
-                    'Aula rápida para fazer um cardápio que vende muito:\n' +
-                    '1) Comece com um cardápio base tocando em "Montar cardápio inicial" ou me ditando os pratos (ex.: "Cadastra Marmita P 22, Suco 7").\n' +
-                    '2) Vá em "Pratos e preços" e envie 1 foto real e nítida para cada item.\n' +
-                    '3) Coloque 1 item em Promoção para atrair cliques no Marketplace.\n' +
+                    'Aula rápida para montar uma vitrine que vende muito (comida, varejo ou serviços):\n' +
+                    '1) Comece com uma base pronta tocando em "Montar página inicial sozinho" ou me ditando os itens (ex.: "Cadastra Ração 10kg 119, Cabo USB-C 29,90").\n' +
+                    '2) Vá em "Meus Produtos" e envie 1 foto real e nítida para cada item.\n' +
+                    '3) Coloque pelo menos 1 oferta em Promoção para atrair cliques no Marketplace.\n' +
                     '4) Sempre toque no botão verde SALVAR no topo para publicar!'
                 );
                 return;
@@ -1331,7 +1450,7 @@
                     if (!api.config.TEXTOS) api.config.TEXTOS = {};
                     const nomeLoja = api.config.NOME_LOJA || 'Sua Loja';
                     if (!api.config.TEXTOS.HERO_TITULO) api.config.TEXTOS.HERO_TITULO = 'Bem-vindo à ' + nomeLoja;
-                    if (!api.config.TEXTOS.HERO_SUBTITULO) api.config.TEXTOS.HERO_SUBTITULO = 'Peça direto pelo cardápio digital sem taxas extras e receba rapidinho.';
+                    if (!api.config.TEXTOS.HERO_SUBTITULO) api.config.TEXTOS.HERO_SUBTITULO = 'Compre direto da loja pelo catálogo online sem taxas extras e receba rapidinho.';
                 }
                 const cardAtual = api && api.getCardapio ? api.getCardapio() : {};
                 const temItens = Object.values(cardAtual).some((arr) => Array.isArray(arr) && arr.length > 0);
@@ -1339,7 +1458,7 @@
                     this.aplicarCardapioBase(nichoPag);
                 } else {
                     api && api.salvar && api.salvar();
-                    this.falar('Atualizei os textos de boas-vindas da sua página e mantive os pratos que você já cadastrou! Toque em "Salvar" no topo para publicar.');
+                    this.falar('Atualizei os textos de boas-vindas da sua página e mantive os itens que você já cadastrou! Toque em "Salvar" no topo para publicar.');
                 }
                 return;
             }
@@ -1355,8 +1474,8 @@
                 return;
             }
 
-            // 4. Cardápio inicial / Sugestões culinárias por nicho
-            if (/monta(r)? cardapio|cardapio inicial|cardapio base|sugere prato|ideia de prato|popular cardapio|exemplos de prato/.test(n)) {
+            // 4. Catálogo / Cardápio inicial por segmento (alimentação, varejo e serviços)
+            if (/monta(r)? (cardapio|catalogo|vitrine|loja)|cardapio inicial|catalogo inicial|cardapio base|sugere (prato|produto|item)|ideia de (prato|produto|item)|popular (cardapio|catalogo)|exemplos de (prato|produto|item)/.test(n)) {
                 const nicho = this.detectarNicho(entrada) || (api && api.config && api.config.NICHO) || 'lanchonete';
                 const listaBase = CARDAPIOS_BASE[nicho] || CARDAPIOS_BASE.lanchonete;
                 const preview = listaBase.slice(0, 5).map((i) => '• ' + i.nome + ' — ' + formatarMoeda(i.preco)).join('\n');
@@ -1365,13 +1484,13 @@
                 } else {
                     this.aguardando = { tipo: 'confirmar_cardapio_base', nicho: nicho };
                     this.renderAtalhos(['SIM, adicionar tudo', 'Não']);
-                    this.falar('Para ' + (NICHOS_INFO[nicho] ? NICHOS_INFO[nicho].rotulo : nicho) + ', sugiro estes pratos iniciais:\n' + preview + '\n(...total de ' + listaBase.length + ' itens)\n\nQuer que eu adicione todos eles no seu cardápio agora? (SIM / NÃO)');
+                    this.falar('Para ' + (NICHOS_INFO[nicho] ? NICHOS_INFO[nicho].rotulo : nicho) + ', sugiro estes itens iniciais:\n' + preview + '\n(...total de ' + listaBase.length + ' itens)\n\nQuer que eu adicione todos eles na sua loja agora? (SIM / NÃO)');
                 }
                 return;
             }
 
-            // 5. Consultar o cardápio atual
-            if (/o que tem no (meu )?cardapio|listar pratos|ver cardapio|quantos pratos|meus pratos|quais (itens|pratos|bebidas|lanches|pizzas|marmitas)/.test(n)) {
+            // 5. Consultar o catálogo / cardápio atual
+            if (/o que tem (no|na) (meu |minha )?(cardapio|catalogo|loja|vitrine)|listar (pratos|produtos|itens)|ver (cardapio|catalogo)|quantos (pratos|produtos|itens)|meus (pratos|produtos)|quais (itens|pratos|produtos|bebidas|lanches|pizzas|marmitas)/.test(n)) {
                 const cardapio = api ? api.getCardapio() : {};
                 const cats = Object.keys(cardapio);
                 const linhas = [];
@@ -1699,7 +1818,7 @@
             if (digitos.length === 14) {
                 const ok = validarCnpjLocal(digitos);
                 this.falar(ok
-                    ? 'O CNPJ ' + digitos + ' é matematicamente válido! Como nosso sistema funciona 100% independente sem APIs externas, me diga o nome e o tipo de comida da loja que eu configuro tudo por aqui.'
+                    ? 'O CNPJ ' + digitos + ' é matematicamente válido! Me diga o nome e o tipo de negócio (lanchonete, mercado, farmácia, pet shop, moda, serviços, etc.) que eu monto sua loja por aqui.'
                     : 'Esse CNPJ (' + digitos + ') não passou na validação dos dígitos verificadores. Confira os números.');
                 return;
             }
@@ -1707,13 +1826,12 @@
             // 15. Ajuda geral
             if (/ajuda|o que (voce|você) faz|comandos|menu/.test(n)) {
                 this.falar(
-                    'Sou 100% local e consigo fazer quase tudo por conversa:\n' +
-                    '• Cadastrar pratos: "Cadastra X-Bacon 28, Coca 6"\n' +
-                    '• Editar/pausar/apagar: "Muda preço do X-Bacon para 30", "Pausa Coca", "Apaga Suco"\n' +
-                    '• Montar cardápio pronto: "Montar cardápio inicial"\n' +
-                    '• Loja e contato: "Nome da loja...", "WhatsApp 119...", "Endereço Rua X, 10, Centro, SP"\n' +
-                    '• Entrega e PIX: "Taxa fixa 5", "Frete grátis", "Chave pix ..."\n' +
-                    '• Auditoria: "Analisar minha loja"\n' +
+                    'Ajudo em qualquer ramo (comida, varejo ou serviços):\n' +
+                    '• Cadastrar itens: "Cadastra Ração 10kg 119, Coca 6" ou "Cadastra X-Bacon 28"\n' +
+                    '• Editar/pausar/apagar: "Muda preço do produto para 30", "Pausa ...", "Apaga ..."\n' +
+                    '• Montar vitrine pronta: "Montar loja de farmácia / moda / mercado / lanchonete"\n' +
+                    '• Loja, entrega e WhatsApp: "Nome da loja...", "WhatsApp 219...", "Taxa fixa 5", "Chave pix ..."\n' +
+                    '• Conceitos e números: pergunte sobre CMV, margem, ticket médio, Shadowban, WhatsApp Ao Vivo ou NFC-e\n' +
                     '• Desfazer erro: "Desfazer" | Publicar: "Salvar"'
                 );
                 return;

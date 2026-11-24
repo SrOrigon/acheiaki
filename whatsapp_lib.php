@@ -823,6 +823,29 @@ function pz_wpp_gerar_resposta_ia($slug, $telefone, $textoRecebido, $nomeCliente
         ];
     }
 
+    // 2B. Endereço / Localização / Garantia / Trocas / Tamanhos (comércio, varejo, serviços e comida)
+    if (preg_match('/\b(endereco|onde fica|localizacao|troca|garantia|original|nota fiscal|nfce|tamanho|numeracao|modelo|voltagem)\b/', $n) && strpos($n, 'entrega') === false) {
+        $endArr = is_array($config['ENDERECO'] ?? null) ? $config['ENDERECO'] : [];
+        $endTxt = trim(implode(', ', array_filter([
+            trim(($endArr['rua'] ?? '') . (!empty($endArr['numero']) ? ', ' . $endArr['numero'] : '')),
+            $endArr['bairro'] ?? '',
+            $endArr['cidade'] ?? '',
+        ])));
+        if (preg_match('/\b(troca|garantia|original|nota fiscal|nfce)\b/', $n)) {
+            $msgExtra = "Os produtos da *{$nomeLoja}* têm garantia e política de troca conforme o atendimento da loja"
+                . ($endTxt !== '' ? " (endereço: *{$endTxt}*)" : '')
+                . ". Para conferir detalhes de um item específico, fale aqui que a equipe confirma rapidinho!";
+        } else {
+            $msgExtra = $endTxt !== ''
+                ? "A *{$nomeLoja}* fica em:\n*{$endTxt}*\nVocê pode comprar para entrega ou retirar no local!"
+                : "A *{$nomeLoja}* atende no horário *{$horario}* com entrega na região e retirada no local.";
+        }
+        return [
+            'intencao' => 'info_loja',
+            'resposta' => $oiPrefix . $msgExtra . "\n\nVeja o catálogo direto:\n{$linkLoja}",
+        ];
+    }
+
     // 3. Horário de funcionamento
     if (preg_match('/\b(horario|aberto|aberta|abre|fecha|funcionando|hoje)\b/', $n) && strpos($n, 'entrega') === false) {
         return [

@@ -49,8 +49,8 @@ function pedidozap_default_tutorial_passos()
         ],
         [
             'id' => 'cardapio',
-            'titulo' => 'Pratos, preços e fotos',
-            'texto' => 'Cadastre os itens com preço e foto. Use a aba Cardápio.',
+            'titulo' => 'Produtos, preços e fotos',
+            'texto' => 'Cadastre seus produtos, pratos ou serviços com preço e foto na aba Meus Produtos.',
             'aba' => 'cardapio',
             'link' => '',
         ],
@@ -71,28 +71,28 @@ function pedidozap_default_tutorial_passos()
         [
             'id' => 'relatorios',
             'titulo' => 'Ver o que mais vendeu',
-            'texto' => 'Abra Relatórios, escolha o mês e veja quais pratos saíram mais e quais saíram menos.',
+            'texto' => 'Abra O que vendeu, escolha o mês e veja quais itens saíram mais e quais saíram menos.',
             'aba' => 'relatorios',
             'link' => '',
         ],
         [
             'id' => 'pedidos',
             'titulo' => 'Painel de pedidos',
-            'texto' => 'Quando alguém pedir, o pedido aparece aqui. Você arrasta ou toca no botão laranja para avançar.',
+            'texto' => 'Quando alguém comprar, o pedido aparece aqui. Você arrasta ou toca no botão laranja para avançar.',
             'aba' => '',
             'link' => 'painel.html',
         ],
         [
             'id' => 'cozinha',
-            'titulo' => 'Cozinha e comanda',
-            'texto' => 'Copie o link da cozinha no painel de pedidos. A comanda imprime na térmica quando o pedido vai para preparo.',
+            'titulo' => 'Preparo / Expedição e comanda',
+            'texto' => 'Copie o link da tela de preparo/expedição no painel de pedidos. A comanda imprime na térmica quando o pedido vai para separação ou preparo.',
             'aba' => 'comandas',
             'link' => '',
         ],
         [
             'id' => 'teste',
             'titulo' => 'Testar como cliente',
-            'texto' => 'Abra o cardápio em outra aba e faça um pedido de teste. Confira se chegou no painel.',
+            'texto' => 'Abra sua vitrine em outra aba e faça um pedido de teste. Confira se chegou no painel.',
             'aba' => '',
             'link' => 'index.html',
         ],
@@ -103,21 +103,21 @@ function pedidozap_default_ajuda_painel_ferramentas()
 {
     return [
         ['id' => 'som', 'titulo' => 'Som de novo pedido', 'texto' => 'Deixe ligado. Quando chegar pedido novo, o celular ou computador faz um barulho para você perceber.'],
-        ['id' => 'atendimento', 'titulo' => 'Pedido no balcão ou telefone', 'texto' => 'Use quando alguém pede aí na loja ou por telefone. Você coloca o nome e abre o cardápio para montar o pedido.'],
-        ['id' => 'cozinha', 'titulo' => 'Link da cozinha', 'texto' => 'Toque uma vez para copiar o endereço. Cole no tablet ou no computador da cozinha. Lá aparecem só os pedidos que estão sendo preparados.'],
-        ['id' => 'impressao', 'titulo' => 'Imprimir comanda automaticamente', 'texto' => 'Ligado = ao mandar para a cozinha, a impressora de 80 mm pode imprimir sozinha. Desligado = só imprime na tela da cozinha.'],
+        ['id' => 'atendimento', 'titulo' => 'Pedido no balcão ou telefone', 'texto' => 'Use quando alguém compra aí na loja, WhatsApp ou telefone. Você coloca o nome e abre o catálogo para montar o pedido.'],
+        ['id' => 'cozinha', 'titulo' => 'Link do preparo / expedição', 'texto' => 'Toque uma vez para copiar o endereço. Cole no tablet ou no computador da cozinha/balcão. Lá aparecem só os pedidos que estão sendo preparados ou separados.'],
+        ['id' => 'impressao', 'titulo' => 'Imprimir comanda automaticamente', 'texto' => 'Ligado = ao mandar para preparo/separação, a impressora de 80 mm pode imprimir sozinha. Desligado = só imprime na tela de preparo.'],
         ['id' => 'entregador', 'titulo' => 'Link do entregador', 'texto' => 'Copia o endereço para o celular de quem faz entrega. A pessoa escolhe o pedido e o cliente acompanha no mapa.'],
         ['id' => 'trocar_entregador', 'titulo' => 'Trocar link do entregador', 'texto' => 'Só use se o link antigo vazou ou não funciona mais. O link anterior para de valer.'],
         ['id' => 'atualizar', 'titulo' => 'Atualizar lista', 'texto' => 'Busca de novo os pedidos no servidor. Use se a tela parecer desatualizada.'],
-        ['id' => 'voltar', 'titulo' => 'Voltar ao painel da loja', 'texto' => 'Para mudar preço, horário, foto ou nome da loja.'],
+        ['id' => 'voltar', 'titulo' => 'Voltar ao painel da loja', 'texto' => 'Para mudar preço, produto, horário, foto ou nome da loja.'],
     ];
 }
 
 function pedidozap_default_ajuda_painel_colunas()
 {
     return [
-        ['id' => 'novo', 'titulo' => 'Pedidos novos', 'texto' => 'Acabaram de chegar. Toque no botão laranja do pedido para começar a preparar.'],
-        ['id' => 'preparo', 'titulo' => 'Na cozinha', 'texto' => 'Estão sendo feitos agora. Quando ficarem prontos, avance para “saiu para entrega” ou “entregue”.'],
+        ['id' => 'novo', 'titulo' => 'Pedidos novos', 'texto' => 'Acabaram de chegar. Toque no botão laranja do pedido para aceitar e iniciar preparo ou separação.'],
+        ['id' => 'preparo', 'titulo' => 'Em preparo / separação', 'texto' => 'Estão sendo montados agora. Quando ficarem prontos, avance para “saiu para entrega” ou “entregue”.'],
         ['id' => 'em-rota', 'titulo' => 'Saiu para entrega', 'texto' => 'O entregador já saiu. Quando o cliente receber, marque como entregue.'],
         ['id' => 'concluido', 'titulo' => 'Entregues', 'texto' => 'Pedidos finalizados hoje. Pode guardar para consultar depois.'],
         ['id' => 'arquivado', 'titulo' => 'Guardados', 'texto' => 'Pedidos que você arquivou. O botão vermelho embaixo apaga tudo desta lista.'],
@@ -148,15 +148,15 @@ function pedidozap_default_ajuda()
         'admin' => [
             'tutorial' => 'Personalize o passo a passo e os textos de ajuda. Tudo que o lojista lê pode ser mudado aqui.',
             'identidade' => 'Na aba Nome e Foto, coloque o nome da loja, envie a logo e escolha as cores. Depois toque em Salvar.',
-            'contato' => 'Na aba WhatsApp e Horário, coloque seu número com DDD, horários e endereço da loja.',
-            'cardapio' => 'Na aba Meus Pratos, adicione seus lanches e bebidas. Em cada item use o botão laranja Enviar foto e defina o preço.',
+            'contato' => 'Na aba WhatsApp e Horário, conecte seu WhatsApp + IA Ao Vivo, informe seu número com DDD, horários e endereço da loja.',
+            'cardapio' => 'Na aba Meus Produtos, cadastre seus produtos, pratos ou serviços. Em cada item envie uma foto e defina o preço.',
             'frete' => 'Diga se entrega, se o cliente busca na loja e quanto cobrar de entrega.',
             'pagamentos' => 'Na aba Como Receber, marque as formas de pagamento que você aceita (PIX, dinheiro, cartão).',
             'relatorios' => 'Escolha o mês e veja quais itens venderam mais ou menos — ajuda a planejar compras.',
-            'comandas' => 'Textos da impressora da cozinha e botões da tela da cozinha.',
-            'atendimento' => 'Tela para balconista registrar pedido com nome e telefone do cliente.',
-            'textos' => 'Frases que aparecem no site do cardápio (banner, títulos das seções).',
-            'segmento' => 'Tipo de comida e categorias que aparecem no site.',
+            'comandas' => 'Textos da impressora térmica e botões da tela de preparo/expedição.',
+            'atendimento' => 'Tela para atendente registrar venda no balcão, loja ou telefone com nome e WhatsApp do cliente.',
+            'textos' => 'Frases que aparecem na vitrine pública (banner e títulos das seções).',
+            'segmento' => 'Tipo de negócio (alimentação, varejo ou serviços) e categorias exibidas na vitrine.',
             'conta' => 'Na aba Meu Plano, acompanhe seu plano, teste grátis e formas de pagamento.',
             'seguranca' => 'Troque usuário e senha de entrada. Não apague nada aqui sem ter certeza.',
         ],
@@ -474,7 +474,7 @@ function pedidozap_default_config()
         ],
         'CATEGORIAS' => pedidozap_default_categorias(),
         'AGENTE_IA' => [
-            'nome' => 'Agente Food Gestão',
+            'nome' => 'Copiloto AcheIAki IA',
             'vitrine_ativo' => true,
             'tom' => 'profissional_amigavel',
             'alerta_margem_minima' => 25,

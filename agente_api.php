@@ -58,8 +58,8 @@ function pz_chamar_gemini_hibrido($pergunta, array $contextoSeguro, $nomeAgente,
         return null;
     }
 
-    $instrucao = "Você é {$nomeAgente}, o Agente de Gestão e Operações integrado ao sistema da lanchonete/restaurante. "
-        . "Responda em português do Brasil, de forma objetiva e prática (tom: {$tom}). "
+    $instrucao = "Você é {$nomeAgente}, o Agente de Gestão, Vendas e Operações integrado ao sistema da empresa (lanchonete, restaurante, mercado, farmácia, pet shop, moda, eletrônicos, varejo ou serviços). "
+        . "Responda em português do Brasil, de forma simples, objetiva e prática (tom: {$tom}). "
         . "REGRAS CRÍTICAS: 1) Use EXCLUSIVAMENTE os números e fatos do JSON de contexto real abaixo; "
         . "2) NUNCA invente vendas, saldos, produtos ou clientes que não estejam no JSON; "
         . "3) Sempre cite ao final a origem dos dados consultados (ex.: pedidos.json, caixa.json, estoque.json). "
@@ -121,7 +121,10 @@ pedidozap_bootstrap_tenant($req);
 $action = trim((string) ($_GET['action'] ?? $req['action'] ?? 'perguntar'));
 $config = pedidozap_normalizar_config(Database::readStrict('config.json'), Database::getTenant());
 $agenteCfg = is_array($config['AGENTE_IA'] ?? null) ? $config['AGENTE_IA'] : [];
-$nomeAgente = trim((string) ($agenteCfg['nome'] ?? 'Copiloto Food IA')) ?: 'Copiloto Food IA';
+$nomeAgente = trim((string) ($agenteCfg['nome'] ?? 'Copiloto AcheIAki IA')) ?: 'Copiloto AcheIAki IA';
+if (stripos($nomeAgente, 'Food') !== false && $nomeAgente === 'Agente Food Gestão') {
+    $nomeAgente = 'Copiloto AcheIAki IA';
+}
 $tomAgente = trim((string) ($agenteCfg['tom'] ?? 'profissional'));
 
 // =====================================================================
@@ -162,6 +165,9 @@ if ($action === 'vitrine_responder') {
     $empresa = $config['EMPRESA'] ?? [];
     $nomeLoja = trim((string) ($config['NOME_LOJA'] ?? $empresa['nome'] ?? 'nossa loja'));
     if ($nomeLoja === '') $nomeLoja = 'nossa loja';
+    $nichoLoja = strtolower(trim((string) ($config['NICHO'] ?? 'lanchonete')));
+    $ehAlimentacao = in_array($nichoLoja, ['lanchonete', 'pizzaria', 'marmitaria', 'pensao', 'acai', 'confeitaria', 'bebidas'], true);
+    $termoItens = $ehAlimentacao ? 'opções e pratos' : 'produtos e ofertas';
 
     $hor = $config['HORARIOS'] ?? [];
     $horario = trim((string) ($hor['TEXTO'] ?? ''));
@@ -240,7 +246,7 @@ if ($action === 'vitrine_responder') {
         $dicaPerfil = $perfilTags ? "\n✨ Já selecionei opções alinhadas ao que você mais curte!" : '';
         echo json_encode([
             'success' => true,
-            'resposta' => "Olá! Sou a **IA AcheIAki** da **{$nomeLoja}**. Posso indicar os melhores pratos para você, consultar preços, entrega, pagamento ou horário!"
+            'resposta' => "Olá! Sou a **IA AcheIAki** da **{$nomeLoja}**. Posso indicar os melhores {$termoItens} para você, consultar preços, entrega, retirada, pagamento ou horário!"
                 . $dicaPerfil
                 . ($listaTxt ? "\n\nSugestões para você agora: {$listaTxt}." : ''),
             'sugestoes' => ['O que você recomenda hoje?', 'Opções mais baratas', 'Qual o horário de funcionamento?', 'Como funciona a entrega?'],
@@ -259,8 +265,30 @@ if ($action === 'vitrine_responder') {
     if (strpos($n, 'sem taxa') !== false || strpos($n, 'taxa zero') !== false || strpos($n, 'comissao') !== false) {
         echo json_encode([
             'success' => true,
-            'resposta' => "Aqui na **{$nomeLoja}** você pede **direto da cozinha sem comissão abusiva de aplicativo** — por isso o preço é de balcão!",
+            'resposta' => "Aqui na **{$nomeLoja}** você compra e pede **direto da loja sem comissão abusiva de aplicativo** — por isso o preço é real de balcão!",
             'sugestoes' => ['Opções mais baratas', 'O que você recomenda hoje?', 'Como funciona a entrega?'],
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if (preg_match('/\b(endereco|onde fica|localizacao|bairro|cidade|troca|garantia|original|nota fiscal|nfce|tamanho|numeracao|modelo)\b/', $n) && strpos($n, 'entrega') === false) {
+        $endArr = is_array($config['ENDERECO'] ?? null) ? $config['ENDERECO'] : [];
+        $endStr = trim(implode(', ', array_filter([
+            trim(($endArr['rua'] ?? '') . (!empty($endArr['numero']) ? ', ' . $endArr['numero'] : '')),
+            $endArr['bairro'] ?? '',
+            $endArr['cidade'] ?? '',
+        ])));
+        if (preg_match('/\b(troca|garantia|original|nota fiscal|nfce)\b/', $n)) {
+            $respExtra = "Os produtos da **{$nomeLoja}** seguem a garantia e política de troca do estabelecimento" . ($endStr ? " (loja física em **{$endStr}**)" : '') . ". Qualquer dúvida específica de modelo, tamanho ou validade, finalize seu pedido ou chame no WhatsApp da loja.";
+        } else {
+            $respExtra = $endStr !== ''
+                ? "A **{$nomeLoja}** fica em: **{$endStr}**. Você pode receber em casa ou retirar direto no local!"
+                : "A **{$nomeLoja}** atende com entrega na região e retirada no local no horário: **{$horario}**.";
+        }
+        echo json_encode([
+            'success' => true,
+            'resposta' => $respExtra,
+            'sugestoes' => ['O que você recomenda hoje?', 'Qual o horário de funcionamento?', 'Como funciona a entrega?'],
         ], JSON_UNESCAPED_UNICODE);
         exit;
     }
@@ -1240,7 +1268,7 @@ elseif (strpos($n, 'otimiz') !== false || strpos($n, 'descri') !== false || strp
         $partesResp[] = "📉 **Termômetro de preço:** **{$ap0['nome']}** está em " . pz_brl($ap0['preco_atual']) . " (acima da média da região de " . pz_brl($ap0['media_regiao']) . "). Sugestão: ajustar para ~**" . pz_brl($ap0['preco_sugerido']) . "** aumenta conversão no bairro.";
     }
     $resposta = implode("\n\n", $partesResp);
-    $acoesUI[] = ['label' => 'Abrir Meus Pratos', 'aba' => 'cardapio'];
+    $acoesUI[] = ['label' => 'Abrir Meus Produtos', 'aba' => 'cardapio'];
 }
 // ---------------------------------------------------------------------
 // 11. CONSULTA: CLIENTES, FIDELIDADE, CUPONS E RECUPERAÇÃO DE CARRINHO
@@ -1298,6 +1326,56 @@ elseif (strpos($n, 'territorio') !== false || strpos($n, 'concorrenc') !== false
     }
 }
 // ---------------------------------------------------------------------
+// 11C. ENCICLOPÉDIA INTELIGENTE DE CONCEITOS DE NEGÓCIO & SISTEMA (MULTI-SETOR)
+// ---------------------------------------------------------------------
+elseif (preg_match('/\b(o que e|como funciona|conceito|explica|significa|diferenca|entender)\b/', $n) && preg_match('/\b(cmv|margem|markup|dre|ticket|shadowban|tolerancia|multa|10%|taxa zero|whatsapp|wpp|qr|nfce|nota fiscal|pdv|ficha tecnica|fluxo de caixa|recuperacao|modo facil|modo completo|algoritmo)\b/', $n)) {
+    $origem = ['financeiro.json', 'config.json', 'saas_config'];
+    $cmvAtual = (float) ($resumo['mes']['cmv_total'] ?? 0);
+    $fatAtual = (float) ($resumo['mes']['faturamento_bruto'] ?? 0);
+    $mgPct = (float) ($resumo['mes']['margem_contribuicao_pct'] ?? 0);
+    $ticketAtual = (float) ($resumo['mes']['ticket_medio'] ?? 0);
+
+    if (strpos($n, 'cmv') !== false || strpos($n, 'ficha tecnica') !== false) {
+        $resposta = "📘 **O que é CMV (Custo da Mercadoria Vendida):**\n"
+            . "• Em **alimentação/produção**, é quanto custam os ingredientes de cada receita (Ficha Técnica).\n"
+            . "• Em **varejo/lojas** (mercado, farmácia, moda, pet shop, eletrônicos), é quanto você pagou ao fornecedor pelo produto revendido.\n"
+            . ($fatAtual > 0 ? "• **Na sua loja este mês:** CMV de **" . pz_brl($cmvAtual) . "** sobre **" . pz_brl($fatAtual) . "** vendidos." : "• Cadastre seus itens/custos em **Estoque & CMV** para o sistema calcular seu lucro real automaticamente.");
+        $acoesUI[] = ['label' => 'Abrir Estoque & CMV', 'aba' => 'estoque'];
+    } elseif (strpos($n, 'margem') !== false || strpos($n, 'markup') !== false) {
+        $resposta = "📊 **Margem de Contribuição vs Markup:**\n"
+            . "• **Markup** é o multiplicador em cima do custo (ex.: comprou por R$ 20 e vende por R$ 40 = markup 2x).\n"
+            . "• **Margem de Contribuição** é quanto sobra da venda depois de pagar o custo do produto (**no seu mês atual: {$mgPct}%**). É essa sobra que paga aluguel, luz, equipe e vira lucro!";
+        $acoesUI[] = ['label' => 'Ver Caixa & DRE', 'aba' => 'financeiro'];
+    } elseif (strpos($n, 'ticket') !== false) {
+        $resposta = "🧾 **Ticket Médio** é o valor médio que cada cliente gasta por pedido (**o seu neste mês é " . pz_brl($ticketAtual) . "**).\n"
+            . "• Para subir sem perder clientes, ative **Sugestão no carrinho** (upsell) ou monte **Kits / Combos** na aba **Meus Produtos** e crie um cupom com valor mínimo um pouco acima do seu ticket atual.";
+        $acoesUI[] = ['label' => 'Abrir Meus Produtos', 'aba' => 'cardapio'];
+    } elseif (preg_match('/(shadowban|tolerancia|multa|10%|atraso)/', $n)) {
+        $resposta = "🛡️ **Regra de Cobrança, Tolerância e Shadowban:**\n"
+            . "• Toda loja nova começa com **7 dias grátis** completos.\n"
+            . "• Após o vencimento, existe **tolerância máxima de 2 dias** com avisos no painel antes de bloquear.\n"
+            . "• Passando de 2 dias, entra o **Shadowban**: sua vitrine some temporariamente para compradores, mas **100% dos produtos, pedidos e clientes continuam salvos**.\n"
+            . "• Para reativar após os 2 dias incide o encargo contratual de **+10%** sobre o plano, ou você pode deixar o **pagamento automático recorrente** ligado para nunca atrasar.";
+        $acoesUI[] = ['label' => 'Abrir Meu Plano', 'aba' => 'conta'];
+    } elseif (strpos($n, 'whatsapp') !== false || strpos($n, 'wpp') !== false || strpos($n, 'qr') !== false) {
+        $resposta = "💬 **WhatsApp + IA Ao Vivo & QR Code na Sacola:**\n"
+            . "• Na aba **WhatsApp e Horário**, você conecta o WhatsApp da loja (Evolution API QR Code, Meta Oficial ou Z-API) para a IA responder clientes 24h com seus produtos e preços reais e avisar cada etapa do pedido.\n"
+            . "• E no botão **Imprimir Panfleto da Sacola** (tela **Hoje**), você imprime o QR Code para colocar nas entregas e puxar clientes de outros apps para o seu link com **0% de comissão**.";
+        $acoesUI[] = ['label' => 'Abrir WhatsApp + IA', 'aba' => 'contato'];
+    } elseif (strpos($n, 'nfce') !== false || strpos($n, 'nota') !== false || strpos($n, 'pdv') !== false) {
+        $resposta = "🧾 **PDV/ERP, NFC-e & Operação Multissetor:**\n"
+            . "• Na aba **PDV, Fiscal & Escala** (modo Completo), você conecta sistemas externos via webhook Open Delivery / API e configura emissão automática de **NFC-e** ao preparar ou concluir vendas.\n"
+            . "• A tela de **Preparo / Expedição** (`cozinha.html`) e o **Painel de Pedidos** funcionam tanto para cozinha de lanchonetes quanto para separação de caixas/sacolas no varejo, farmácia ou pet shop!";
+        $acoesUI[] = ['label' => 'Abrir PDV & Fiscal', 'aba' => 'integracoes'];
+    } else {
+        $resposta = "💡 **Visão Completa do AcheIAki (Comida + Varejo + Serviços):**\n"
+            . "• **Taxa Zero:** 0% de comissão sobre vendas; sua receita é 100% sua.\n"
+            . "• **Algoritmo Local + Território:** coloca lojas verificadas por CNPJ na frente dos compradores próximos.\n"
+            . "• **IA em 3 frentes:** atende seus clientes na Vitrine, conversa ao vivo no WhatsApp e ajuda você no Painel com vendas, estoque, DRE e preços.";
+        $acoesUI[] = ['label' => 'Ver Hoje', 'aba' => 'visao-geral'];
+    }
+}
+// ---------------------------------------------------------------------
 // 12. SAUDAÇÃO / BRIEFING PROATIVO COMPLETO OU GEMINI HÍBRIDO
 // ---------------------------------------------------------------------
 else {
@@ -1327,8 +1405,8 @@ else {
     }
 
     if ($resposta === '') {
-        // Verifica se é intenção de edição local de cardápio/configuração (delegada ao motor local do assistente-ia.js)
-        if (preg_match('/\b(cor|cores|telefone|whatsapp|horario|endereco|cardapio|produto|prato|lanche|pizza|bebida|categoria|preco|preço|nome da loja|abrir aba|ir para)\b/', $n)) {
+        // Verifica se é intenção de edição local de catálogo/configuração (delegada ao motor local do assistente-ia.js)
+        if (preg_match('/\b(cor|cores|telefone|whatsapp|horario|endereco|cardapio|catalogo|vitrine|produto|produtos|item|itens|prato|lanche|pizza|bebida|categoria|preco|preço|nome da loja|segmento|nicho|abrir aba|ir para|mercado|farmacia|petshop|moda|eletronico|ferragem|beleza|papelaria|servico)\b/', $n)) {
             echo json_encode([
                 'success' => true,
                 'delegar_local' => true,

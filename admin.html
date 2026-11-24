@@ -470,11 +470,11 @@
         </div>
 
         <div class="admin-card pz-basico-ia-hero" id="card-basico-ia-guia" data-painel-basico="1">
-            <h3 style="margin:0 0 6px;color:#9a3412;"><i class="fa-solid fa-wand-magic-sparkles"></i> Quer ajuda automática para montar seu cardápio?</h3>
-            <p style="margin:0;color:#431407;font-size:0.96rem;">Toque no botão verde se quiser que a nossa ajuda monte seus primeiros itens, ou vá direto nos 4 botões grandes abaixo.</p>
+            <h3 style="margin:0 0 6px;color:#9a3412;"><i class="fa-solid fa-wand-magic-sparkles"></i> Quer ajuda da IA para montar sua loja?</h3>
+            <p style="margin:0;color:#431407;font-size:0.96rem;">Toque no botão verde para a IA preencher produtos, categorias e textos do seu ramo, ou use os 4 botões abaixo.</p>
             <div class="pz-basico-ia-acoes">
                 <button type="button" id="btn-basico-ia-montar" class="btn-save-file" style="width:auto;background:#15803d;"><i class="fa-solid fa-wand-magic-sparkles"></i> Montar página inicial sozinho</button>
-                <button type="button" id="btn-basico-ia-ensinar" class="btn-save-file" style="width:auto;background:#ea580c;"><i class="fa-solid fa-graduation-cap"></i> Como fazer meu cardápio</button>
+                <button type="button" id="btn-basico-ia-ensinar" class="btn-save-file" style="width:auto;background:#ea580c;"><i class="fa-solid fa-graduation-cap"></i> Como montar meu catálogo</button>
                 <button type="button" id="btn-basico-ia-auditar" class="btn-save-file" style="width:auto;background:#231915;"><i class="fa-solid fa-list-check"></i> Ver o que falta</button>
             </div>
         </div>
@@ -487,11 +487,11 @@
             <div class="aki-admin-bento">
                 <button type="button" onclick="document.getElementById('link-kanban').click()" class="aki-bento-btn">
                     <span class="aki-bento-ico" style="background:#fff7ed;color:#c2410c;"><i class="fa-solid fa-bell"></i></span>
-                    <span><strong>1. Ver pedidos novos</strong><small>Aceitar pedido e mandar pra cozinha</small></span>
+                    <span><strong>1. Ver pedidos novos</strong><small>Aceitar pedido e mandar para preparo/expedição</small></span>
                 </button>
                 <button type="button" onclick="var t=document.querySelector('#admin-tabs [data-tab=cardapio]');if(t){t.click();t.scrollIntoView({behavior:'smooth'});}" class="aki-bento-btn">
-                    <span class="aki-bento-ico" style="background:#ffedd5;color:#ea580c;"><i class="fa-solid fa-burger"></i></span>
-                    <span><strong>2. Mudar pratos e preços</strong><small>Colocar foto, preço ou pausar lanche</small></span>
+                    <span class="aki-bento-ico" style="background:#ffedd5;color:#ea580c;"><i class="fa-solid fa-tags"></i></span>
+                    <span><strong>2. Produtos e preços</strong><small>Colocar foto, preço, promoção ou pausar item</small></span>
                 </button>
                 <button type="button" onclick="var t=document.querySelector('#admin-tabs [data-tab=contato]');if(t){t.click();t.scrollIntoView({behavior:'smooth'});}" class="aki-bento-btn">
                     <span class="aki-bento-ico" style="background:#ecfdf5;color:#15803d;"><i class="fa-brands fa-whatsapp"></i></span>
@@ -499,7 +499,7 @@
                 </button>
                 <button type="button" onclick="document.getElementById('link-ver-site').click()" class="aki-bento-btn">
                     <span class="aki-bento-ico" style="background:#f5f2ed;color:#231915;"><i class="fa-solid fa-eye"></i></span>
-                    <span><strong>4. Ver meu cardápio</strong><small>Abrir como o cliente vê no celular</small></span>
+                    <span><strong>4. Ver minha loja</strong><small>Abrir sua vitrine como o cliente vê no celular</small></span>
                 </button>
             </div>
         </div>
@@ -588,7 +588,7 @@
 
         <nav class="admin-tabs" id="admin-tabs" aria-label="Áreas do painel">
             <button type="button" data-tab="visao-geral" class="ativo"><i class="fa-solid fa-chart-pie"></i> Hoje</button>
-            <button type="button" data-tab="cardapio"><i class="fa-solid fa-utensils"></i> Meus Pratos</button>
+            <button type="button" data-tab="cardapio"><i class="fa-solid fa-tags"></i> Meus Produtos</button>
             <button type="button" data-tab="identidade"><i class="fa-solid fa-store"></i> Nome e Foto</button>
             <button type="button" data-tab="contato"><i class="fa-solid fa-location-dot"></i> WhatsApp e Horário</button>
             <button type="button" data-tab="pagamentos"><i class="fa-regular fa-credit-card"></i> Como Receber</button>
@@ -605,7 +605,7 @@
             <button type="button" data-tab="estoque" data-modo="expert">Estoque &amp; CMV</button>
             <button type="button" data-tab="financeiro" data-modo="expert">Caixa &amp; DRE</button>
             <button type="button" data-tab="equipe" data-modo="expert">Equipe &amp; Backup</button>
-            <button type="button" data-tab="comandas" data-modo="expert">Cozinha / comanda</button>
+            <button type="button" data-tab="comandas" data-modo="expert">Preparo / Comanda</button>
             <button type="button" data-tab="tutorial" data-modo="expert">Textos do sistema &amp; Guia</button>
             <button type="button" data-tab="integracoes" data-modo="expert"><i class="fa-solid fa-plug-circle-bolt"></i> PDV, Fiscal &amp; Escala</button>
             <button type="button" data-tab="expert-dados" data-modo="expert"><i class="fa-solid fa-code"></i> Cadastro &amp; JSON (Expert)</button>
@@ -1287,7 +1287,7 @@
             <hr style="margin:20px 0;border:none;border-top:1px solid #e5e7eb;">
             <h4 style="margin-top:0;"><i class="fa-solid fa-robot"></i> Comportamento do Agente IA da Loja</h4>
             <div class="grade-admin">
-                <div class="form-group-admin"><label for="input-agente-nome">Nome do Agente IA</label><input type="text" id="input-agente-nome" placeholder="Copiloto Food IA"></div>
+                <div class="form-group-admin"><label for="input-agente-nome">Nome do Agente IA</label><input type="text" id="input-agente-nome" placeholder="Copiloto AcheIAki IA"></div>
                 <div class="form-group-admin"><label for="input-agente-margem">Alertar margem abaixo de (%)</label><input type="number" step="1" id="input-agente-margem" value="25"></div>
             </div>
             <label style="display:block;margin-bottom:14px;"><input type="checkbox" id="chk-agente-vitrine" checked> Ativar Atendente Virtual IA no cardápio público (index.html)</label>

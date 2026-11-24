@@ -41,13 +41,13 @@
         box.hidden = true;
         box.innerHTML = ''
             + '<div class="pz-assist-topo">'
-            + '<div><h2>' + esc(nomeBot) + '</h2><p>Recomendações, preços, entrega, horário e cupons</p></div>'
+            + '<div><h2>' + esc(nomeBot) + '</h2><p>Produtos, preços, entrega, retirada, garantia e cupons</p></div>'
             + '<button type="button" class="pz-assist-fechar" aria-label="Fechar">×</button>'
             + '</div>'
             + '<div class="pz-assist-mensagens" id="pz-vit-msgs"></div>'
             + '<div class="pz-assist-atalhos" id="pz-vit-atalhos"></div>'
             + '<div class="pz-assist-entrada">'
-            + '<input type="text" id="pz-vit-input" placeholder="Ex.: o que você recomenda ou opções baratas?" autocomplete="off">'
+            + '<input type="text" id="pz-vit-input" placeholder="Ex.: o que recomenda, opções baratas ou entrega?" autocomplete="off">'
             + '<button type="button" id="pz-vit-enviar">→</button>'
             + '</div>';
 

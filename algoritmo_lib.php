@@ -124,8 +124,10 @@ function pz_alg_expandir_intencao($texto)
         'eletronicos' => ['celular', 'capinha', 'pelicula', 'carregador', 'cabo', 'fone', 'bluetooth', 'caixa de som', 'mouse', 'teclado', 'relogio', 'smartwatch'],
         'beleza' => ['maquiagem', 'batom', 'base', 'skincare', 'creme', 'perfume', 'cabelo', 'hidratante', 'esmalte', 'cosmetico'],
         'papelaria' => ['presente', 'cesta', 'flor', 'buque', 'caderno', 'caneta', 'mochila', 'brinquedo', 'papelaria', 'livro'],
-        'ferragens' => ['ferramenta', 'martelo', 'furadeira', 'parafuso', 'lampada', 'tomada', 'fio', 'tinta', 'torneira', 'cano', 'construcao'],
-        'comercio' => ['loja', 'produto', 'kit', 'presente', 'novidade', 'acessorio', 'utilidade'],
+        'ferragens' => ['ferramenta', 'martelo', 'furadeira', 'parafuso', 'lampada', 'tomada', 'fio', 'tinta', 'torneira', 'cano', 'construcao', 'chave', 'broca', 'extensao', 'eletrica'],
+        'comercio' => ['loja', 'produto', 'kit', 'presente', 'novidade', 'acessorio', 'utilidade', 'casa', 'organizacao', 'embalagem', 'garantia', 'troca'],
+        'servicos' => ['servico', 'corte', 'barba', 'manicure', 'sobrancelha', 'escova', 'manutencao', 'conserto', 'reparo', 'formatacao', 'lavagem', 'instalacao', 'agendar'],
+        'variacao' => ['tamanho', 'numero', 'numeracao', 'cor', 'modelo', 'voltagem', '110v', '220v', 'sabor', 'fragancia', 'original', 'lacrado'],
     ];
 
     foreach ($sinonimos as $grupo => $termos) {
@@ -135,9 +137,11 @@ function pz_alg_expandir_intencao($texto)
                     $economia = true;
                 } elseif ($grupo === 'rapidez') {
                     $rapidez = true;
+                } elseif ($grupo === 'variacao') {
+                    $extraTags[$t] = true;
                 } else {
                     $nichosInferidos[$grupo] = true;
-                    foreach (array_slice($termos, 0, 4) as $sin) {
+                    foreach (array_slice($termos, 0, 5) as $sin) {
                         $extraTags[$sin] = true;
                     }
                 }
