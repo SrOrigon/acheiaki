@@ -127,9 +127,9 @@ function pedidozap_default_ajuda_painel_colunas()
 function pedidozap_default_ajuda_cardapio_passos()
 {
     return [
-        ['id' => 'escolher', 'titulo' => '1. Toque no prato', 'texto' => 'Abra o item que você quer. Se pedir tamanho ou complemento, marque e confirme.'],
+        ['id' => 'escolher', 'titulo' => '1. Escolha o produto', 'texto' => 'Toque no item que você deseja. Se pedir tamanho, cor, sabor ou opcional, marque e confirme.'],
         ['id' => 'carrinho', 'titulo' => '2. Olhe o carrinho', 'texto' => 'A faixa laranja embaixo mostra o valor. Toque em Ver pedido para revisar tudo.'],
-        ['id' => 'entrega', 'titulo' => '3. Entrega ou buscar', 'texto' => 'Escolha receber em casa ou buscar na loja. Para entrega, preencha nome, telefone e endereço com calma.'],
+        ['id' => 'entrega', 'titulo' => '3. Entrega ou buscar', 'texto' => 'Escolha receber em casa ou buscar na loja. Para entrega, preencha nome, WhatsApp e endereço.'],
         ['id' => 'finalizar', 'titulo' => '4. Confirmar e enviar', 'texto' => 'Confira itens e forma de pagamento. Ao enviar, a loja recebe na hora — não precisa mandar print no WhatsApp.'],
     ];
 }
@@ -169,12 +169,12 @@ function pedidozap_default_ajuda()
             'colunas' => pedidozap_default_ajuda_painel_colunas(),
         ],
         'cozinha' => [
-            'titulo' => 'Tela da cozinha',
-            'intro' => 'Só aparecem pedidos que alguém já mandou para preparar. Imprima ou marque pronto quando sair.',
-            'sem_link' => 'Abra esta página pelo botão marrom “Link da cozinha” na tela de pedidos. Se digitar o endereço na mão, não funciona.',
+            'titulo' => 'Tela de Preparo / Expedição',
+            'intro' => 'Só aparecem pedidos já encaminhados para preparo ou separação. Imprima ou marque pronto quando sair.',
+            'sem_link' => 'Abra esta página pelo botão marrom na tela de pedidos. Se digitar o endereço na mão, não funciona.',
             'ferramentas' => [
                 ['id' => 'impressao', 'titulo' => 'Impressão automática', 'texto' => 'Ligada = pedido novo imprime na térmica 80 mm sozinho. Mantenha o papel na impressora.'],
-                ['id' => 'som', 'titulo' => 'Som', 'texto' => 'Avisa com um bip quando entra pedido novo na cozinha.'],
+                ['id' => 'som', 'titulo' => 'Som', 'texto' => 'Avisa com um bip quando entra pedido novo na fila de preparo/separação.'],
                 ['id' => 'atualizar', 'titulo' => 'Atualizar', 'texto' => 'Busca pedidos de novo. Use se a tela parou de mudar.'],
             ],
             'fichas_titulo' => 'Botões em cada pedido da lista',
@@ -182,12 +182,12 @@ function pedidozap_default_ajuda()
         ],
         'cardapio' => [
             'ativo' => true,
-            'titulo' => 'Como pedir — é fácil',
-            'intro' => 'Siga os 4 passos abaixo. Qualquer dúvida, fale com a loja pelo WhatsApp no final da página.',
+            'titulo' => 'Como comprar — é fácil',
+            'intro' => 'Siga os 4 passos abaixo para pedir produtos, serviços ou alimentos. Qualquer dúvida, fale com a loja pelo WhatsApp.',
             'passos' => pedidozap_default_ajuda_cardapio_passos(),
             'carrinho_flutuante' => 'Seu pedido fica nesta faixa. Toque em Ver pedido para continuar.',
             'modal_carrinho' => 'Confira cada item. Você pode mudar quantidade antes de seguir.',
-            'modal_endereco' => 'Coloque nome, telefone e endereço corretos para a entrega chegar certa.',
+            'modal_endereco' => 'Coloque nome, WhatsApp e endereço corretos para a entrega chegar certa.',
             'checkout_frete' => 'O valor da entrega (se houver) aparece no resumo antes de você confirmar.',
             'checkout_final' => 'Escolha como quer receber e toque para enviar o pedido para a loja.',
         ],
@@ -199,7 +199,7 @@ function pedidozap_default_ajuda()
             'gps' => 'O celular pode pedir permissão de localização. Toque em Permitir — sem isso o mapa não funciona.',
         ],
         'atendimento' => [
-            'extra' => 'Primeiro coloque nome e telefone de quem está pedindo. Depois toque no botão grande para abrir o cardápio igual ao do cliente.',
+            'extra' => 'Primeiro coloque nome e telefone do cliente. Depois toque no botão grande para abrir o catálogo igual ao do comprador.',
         ],
     ];
 }
@@ -597,6 +597,25 @@ function pedidozap_normalizar_config($saved, $tenant = 'default')
     }
     if (!is_array($config['TUTORIAL']['passos'] ?? null) || $config['TUTORIAL']['passos'] === []) {
         $config['TUTORIAL']['passos'] = pedidozap_default_tutorial_passos();
+    } else {
+        $tutMap = [];
+        foreach (pedidozap_default_tutorial_passos() as $tp) {
+            $tutMap[$tp['id']] = $tp;
+        }
+        foreach ($config['TUTORIAL']['passos'] as &$tpSalvo) {
+            if (!is_array($tpSalvo)) continue;
+            $tId = (string) ($tpSalvo['id'] ?? '');
+            if ($tId === 'cardapio' && stripos((string) ($tpSalvo['titulo'] ?? ''), 'Pratos') !== false) {
+                $tpSalvo = $tutMap['cardapio'];
+            } elseif ($tId === 'cozinha' && stripos((string) ($tpSalvo['titulo'] ?? ''), 'Cozinha e comanda') !== false) {
+                $tpSalvo = $tutMap['cozinha'];
+            } elseif ($tId === 'relatorios' && stripos((string) ($tpSalvo['texto'] ?? ''), 'pratos') !== false) {
+                $tpSalvo = $tutMap['relatorios'];
+            } elseif ($tId === 'teste' && stripos((string) ($tpSalvo['texto'] ?? ''), 'cardápio') !== false) {
+                $tpSalvo = $tutMap['teste'];
+            }
+        }
+        unset($tpSalvo);
     }
     if (!isset($config['SIMPLICIDADE']) || !is_array($config['SIMPLICIDADE'])) {
         $config['SIMPLICIDADE'] = pedidozap_default_config()['SIMPLICIDADE'];
@@ -617,11 +636,39 @@ function pedidozap_normalizar_config($saved, $tenant = 'default')
     if (!is_array($config['AJUDA']['cozinha']['fichas'] ?? null) || $config['AJUDA']['cozinha']['fichas'] === []) {
         $config['AJUDA']['cozinha']['fichas'] = $ajudaPadrao['cozinha']['fichas'];
     }
+    if (($config['AJUDA']['cozinha']['titulo'] ?? '') === 'Tela da cozinha') {
+        $config['AJUDA']['cozinha']['titulo'] = $ajudaPadrao['cozinha']['titulo'];
+        $config['AJUDA']['cozinha']['intro'] = $ajudaPadrao['cozinha']['intro'];
+    }
     if (!isset($config['AJUDA']['cardapio']) || !is_array($config['AJUDA']['cardapio'])) {
         $config['AJUDA']['cardapio'] = $ajudaPadrao['cardapio'];
     }
+    if (($config['AJUDA']['cardapio']['titulo'] ?? '') === 'Como pedir — é fácil') {
+        $config['AJUDA']['cardapio']['titulo'] = $ajudaPadrao['cardapio']['titulo'];
+    }
+    if (strpos((string) ($config['AJUDA']['cardapio']['intro'] ?? ''), 'fale com a loja pelo WhatsApp no final da página') !== false) {
+        $config['AJUDA']['cardapio']['intro'] = $ajudaPadrao['cardapio']['intro'];
+    }
     if (!is_array($config['AJUDA']['cardapio']['passos'] ?? null) || $config['AJUDA']['cardapio']['passos'] === []) {
         $config['AJUDA']['cardapio']['passos'] = $ajudaPadrao['cardapio']['passos'];
+    } else {
+        $padPassos = $ajudaPadrao['cardapio']['passos'];
+        foreach ($config['AJUDA']['cardapio']['passos'] as $idx => &$pSalvo) {
+            if (is_array($pSalvo) && (($pSalvo['titulo'] ?? '') === '1. Toque no prato' || stripos((string) ($pSalvo['titulo'] ?? ''), 'prato') !== false)) {
+                $pSalvo['titulo'] = $padPassos[0]['titulo'];
+                $pSalvo['texto'] = $padPassos[0]['texto'];
+            }
+        }
+        unset($pSalvo);
+    }
+    if (stripos((string) ($config['AJUDA']['atendimento']['extra'] ?? ''), 'abrir o cardápio igual') !== false) {
+        $config['AJUDA']['atendimento']['extra'] = $ajudaPadrao['atendimento']['extra'];
+    }
+    if (stripos((string) ($config['AJUDA']['admin']['cardapio'] ?? ''), 'Meus Pratos') !== false) {
+        $config['AJUDA']['admin']['cardapio'] = $ajudaPadrao['admin']['cardapio'];
+    }
+    if (stripos((string) ($config['AJUDA']['admin']['segmento'] ?? ''), 'Tipo de comida') !== false) {
+        $config['AJUDA']['admin']['segmento'] = $ajudaPadrao['admin']['segmento'];
     }
 
     foreach (['ADMIN_AUTH', 'ADMIN_PASS', 'ADMIN_USER', 'PASS', 'USER', 'SENHA', 'pass_hash'] as $secret) {

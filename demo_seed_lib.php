@@ -13,7 +13,7 @@ require_once __DIR__ . '/saas_lib.php';
 function pedidozap_garantir_loja_demo($forcar = false)
 {
     $slug = 'loja-demonstracao-acheiaki';
-    $versaoAlvo = 3;
+    $versaoAlvo = 4;
     $anterior = Database::getTenant();
 
     try {
@@ -56,6 +56,8 @@ function pedidozap_garantir_loja_demo($forcar = false)
         $config['NIVEL_EXPERIENCIA'] = 'basico';
         $config['NIVEL_EXPERIENCIA_CONFIRMADO'] = true;
         $config['DEMO_PACK_VERSION'] = $versaoAlvo;
+        $config['AJUDA'] = pedidozap_default_ajuda();
+        $config['TUTORIAL']['passos'] = pedidozap_default_tutorial_passos();
 
         $config['IDENTIDADE'] = [
             'LOGO' => 'assets/images/acheiaki-icon.jpg?v=4',

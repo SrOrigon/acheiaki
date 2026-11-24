@@ -89,14 +89,19 @@ function aplicarAjudaCardapioCliente() {
     if (sec) sec.hidden = aj.ativo === false;
     const tit = document.getElementById('ajuda-cardapio-titulo');
     const intro = document.getElementById('ajuda-cardapio-intro');
-    if (tit && aj.titulo) tit.textContent = aj.titulo;
+    if (tit && aj.titulo) {
+        tit.textContent = aj.titulo === 'Como pedir — é fácil' ? 'Como comprar — é fácil' : aj.titulo;
+    }
     if (intro && aj.intro) intro.textContent = aj.intro;
     const lista = document.getElementById('lista-ajuda-cardapio-passos');
     if (lista && Array.isArray(aj.passos)) {
         lista.innerHTML = aj.passos.map((p, i) => {
             const n = i + 1;
+            const titP = (p.titulo === '1. Toque no prato' || /\bprato\b/i.test(p.titulo || ''))
+                ? '1. Escolha o produto'
+                : (p.titulo || '');
             return '<li><span class="num" aria-hidden="true">' + n + '</span><div><strong>'
-                + String(p.titulo || '').replace(/</g, '&lt;') + '</strong><span>'
+                + String(titP).replace(/</g, '&lt;') + '</strong><span>'
                 + String(p.texto || '').replace(/</g, '&lt;') + '</span></div></li>';
         }).join('');
     }
