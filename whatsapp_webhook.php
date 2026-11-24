@@ -44,11 +44,16 @@ function pz_wpp_resolver_tenant_webhook($instanceHint = '', $phoneIdHint = '', $
     return Database::getTenant();
 }
 
-function pz_wpp_verificar_segredo_webhook()
+function pz_wpp_verificar_segredo_webhook($slugHint = '')
 {
     $int = pedidozap_integracoes_config();
-    $segredo = trim((string) ($int['wpp_webhook_secret'] ?? ''));
-    if ($segredo === '') {
+    $segredoPlat = trim((string) ($int['wpp_webhook_secret'] ?? ''));
+    $segredoLoja = '';
+    if ($slugHint !== '') {
+        $lojaCfg = pz_wpp_ler_config($slugHint);
+        $segredoLoja = trim((string) ($lojaCfg['webhook_secret'] ?? ''));
+    }
+    if ($segredoPlat === '' && $segredoLoja === '') {
         return true;
     }
     $recebido = trim((string) (
@@ -59,7 +64,16 @@ function pz_wpp_verificar_segredo_webhook()
         ?? $_SERVER['HTTP_APIKEY']
         ?? ''
     ));
-    return $recebido !== '' && hash_equals($segredo, $recebido);
+    if ($recebido === '') {
+        return false;
+    }
+    if ($segredoPlat !== '' && hash_equals($segredoPlat, $recebido)) {
+        return true;
+    }
+    if ($segredoLoja !== '' && hash_equals($segredoLoja, $recebido)) {
+        return true;
+    }
+    return false;
 }
 
 $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
@@ -69,11 +83,16 @@ if ($method === 'GET') {
     $hubMode = (string) ($_GET['hub_mode'] ?? $_GET['hub.mode'] ?? '');
     $challenge = (string) ($_GET['hub_challenge'] ?? $_GET['hub.challenge'] ?? '');
     $verifyToken = (string) ($_GET['hub_verify_token'] ?? $_GET['hub.verify_token'] ?? '');
+    $slugGet = (string) ($_GET['tenant'] ?? '');
 
     if ($hubMode === 'subscribe' && $challenge !== '') {
         $int = pedidozap_integracoes_config();
-        $segredo = trim((string) ($int['wpp_webhook_secret'] ?? ''));
-        if ($segredo !== '' && !hash_equals($segredo, $verifyToken)) {
+        $segredoPlat = trim((string) ($int['wpp_webhook_secret'] ?? ''));
+        $segredoLoja = $slugGet !== '' ? trim((string) (pz_wpp_ler_config($slugGet)['webhook_secret'] ?? '')) : '';
+        $okToken = ($segredoPlat === '' && $segredoLoja === '')
+            || ($segredoPlat !== '' && hash_equals($segredoPlat, $verifyToken))
+            || ($segredoLoja !== '' && hash_equals($segredoLoja, $verifyToken));
+        if (!$okToken) {
             http_response_code(403);
             header('Content-Type: text/plain; charset=utf-8');
             echo 'Verify token inválido.';
@@ -102,12 +121,6 @@ if ($method !== 'POST') {
     exit;
 }
 
-if (!pz_wpp_verificar_segredo_webhook()) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Segredo do webhook inválido.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
 $raw = file_get_contents('php://input');
 $body = json_decode((string) $raw, true);
 if (!is_array($body)) {
@@ -117,6 +130,15 @@ if (!is_array($body)) {
 }
 
 $slugQuery = (string) ($_GET['tenant'] ?? '');
+$instHintPre = (string) ($body['instance'] ?? ($body['data']['instance'] ?? $body['instanceId'] ?? ''));
+$phoneIdPre = (string) ($body['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'] ?? '');
+$slugPreResolvido = pz_wpp_resolver_tenant_webhook($instHintPre, $phoneIdPre, $slugQuery);
+
+if (!pz_wpp_verificar_segredo_webhook($slugPreResolvido)) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Segredo do webhook inválido.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 $eventosProcessados = 0;
 $respostasEnviadas = 0;
 

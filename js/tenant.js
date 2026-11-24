@@ -20,6 +20,8 @@
             const pathMatch = global.location.pathname.match(/\/loja\/([a-z0-9_-]+)/i);
             if (pathMatch && pathMatch[1]) return sanitizeTenantSlug(pathMatch[1]);
 
+            if (global.__PZ_TENANT_SLUG__) return sanitizeTenantSlug(global.__PZ_TENANT_SLUG__);
+
             const host = (global.location.hostname || '').toLowerCase();
             const plataforma = host.endsWith('.up.railway.app') || host.endsWith('.railway.app');
             if (plataforma) {

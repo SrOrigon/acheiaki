@@ -327,3 +327,27 @@ function pz_plano_contar_produtos_cardapio($cardapio): int
     }
     return $total;
 }
+
+function pz_planos_em_breve(): array
+{
+    return [
+        [
+            'slug' => 'rede_entregadores',
+            'titulo' => 'Rede de Entregadores Parceiros',
+            'badge' => 'Em breve',
+            'descricao' => 'Chame motoboys disponíveis na região nos horários de pico com rastreio ao vivo no painel.',
+        ],
+        [
+            'slug' => 'split_automatico',
+            'titulo' => 'Split Automático Pix & Cartão',
+            'badge' => 'Em breve',
+            'descricao' => 'Recebimento direto na sua conta bancária no ato do pedido online com conciliação automática.',
+        ],
+        [
+            'slug' => 'clube_cashback',
+            'titulo' => 'Clube de Cashback do Bairro',
+            'badge' => 'Em breve',
+            'descricao' => 'Clientes acumulam saldo direto para recompra nas lojas parceiras da região sem custo de comissão.',
+        ],
+    ];
+}

@@ -21,4 +21,5 @@ echo json_encode([
     'dias_teste_gratis' => max(1, min(7, (int) ($saas['dias_teste_gratis'] ?? 7))),
     'desconto_anual_pct' => (int) ($saas['desconto_anual_pct'] ?? 20),
     'planos' => array_values(pz_planos_catalogo($saas)),
+    'em_breve' => pz_planos_em_breve(),
 ], JSON_UNESCAPED_UNICODE);

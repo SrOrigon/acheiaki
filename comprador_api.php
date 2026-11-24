@@ -159,9 +159,6 @@ function pz_comprador_pendencias(array $c)
     if (strlen(pz_comprador_normalizar_tel($c['telefone'] ?? '')) < 10) {
         $pend[] = 'WhatsApp com DDD (obrigatório para contato e pedidos)';
     }
-    if (!filter_var((string) ($c['email'] ?? ''), FILTER_VALIDATE_EMAIL)) {
-        $pend[] = 'Conta Google / E-mail válido';
-    }
     return $pend;
 }
 
@@ -411,6 +408,8 @@ if ($acao === 'entrar_google') {
         'senha_hash' => '',
         'enderecos' => $endsOpt,
         'favoritos' => [],
+        'wpp_notificar_pedidos' => !array_key_exists('wpp_notificar_pedidos', $body) || !empty($body['wpp_notificar_pedidos']),
+        'wpp_notificar_ofertas' => !array_key_exists('wpp_notificar_ofertas', $body) || !empty($body['wpp_notificar_ofertas']),
         'perfil_completo' => true,
         'consentimento_lgpd' => [
             'termos_aceitos' => true,
@@ -455,9 +454,9 @@ if ($acao === 'cadastrar') {
         ? $body['endereco']
         : (is_array($body['enderecos'][0] ?? null) ? $body['enderecos'][0] : []);
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Informe um e-mail da sua conta Google válido.'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['success' => false, 'message' => 'E-mail inválido (ou deixe em branco para cadastrar só com WhatsApp).'], JSON_UNESCAPED_UNICODE);
         exit;
     }
     if (strlen($tel) < 10 || strlen($tel) > 11) {
@@ -499,6 +498,8 @@ if ($acao === 'cadastrar') {
         'senha_hash' => $hash,
         'enderecos' => $endsOpt,
         'favoritos' => [],
+        'wpp_notificar_pedidos' => !array_key_exists('wpp_notificar_pedidos', $body) || !empty($body['wpp_notificar_pedidos']),
+        'wpp_notificar_ofertas' => !array_key_exists('wpp_notificar_ofertas', $body) || !empty($body['wpp_notificar_ofertas']),
         'perfil_completo' => true,
         'consentimento_lgpd' => [
             'termos_aceitos' => true,
@@ -692,14 +693,20 @@ if (in_array($acao, ['atualizar_perfil', 'salvar_endereco', 'remover_endereco', 
         $nomeUp = trim(strip_tags((string) ($body['nome'] ?? '')));
         $cpfUp = preg_replace('/\D/', '', (string) ($body['cpf'] ?? ''));
         $emailUp = strtolower(trim(strip_tags((string) ($body['email'] ?? ''))));
+        $telUp = array_key_exists('telefone', $body) ? pz_comprador_normalizar_tel($body['telefone'] ?? '') : '';
         if ($cpfUp !== '' && !pz_comprador_validar_cpf($cpfUp)) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'CPF inválido (ou deixe em branco).'], JSON_UNESCAPED_UNICODE);
             exit;
         }
-        if (!filter_var($emailUp, FILTER_VALIDATE_EMAIL)) {
+        if ($emailUp !== '' && !filter_var($emailUp, FILTER_VALIDATE_EMAIL)) {
             http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Informe um e-mail da conta Google válido.'], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['success' => false, 'message' => 'E-mail inválido (ou deixe em branco).'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        if (array_key_exists('telefone', $body) && (strlen($telUp) < 10 || strlen($telUp) > 11)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Informe um WhatsApp válido com DDD (10 ou 11 números).'], JSON_UNESCAPED_UNICODE);
             exit;
         }
         if (is_array($body['endereco'] ?? null)) {
@@ -716,12 +723,37 @@ if (in_array($acao, ['atualizar_perfil', 'salvar_endereco', 'remover_endereco', 
         if (!is_array($lista)) {
             return false;
         }
+        if ($acao === 'atualizar_perfil' && array_key_exists('telefone', $body)) {
+            $telCheck = pz_comprador_normalizar_tel($body['telefone'] ?? '');
+            if ($telCheck !== '' && $telCheck !== $telAuth) {
+                foreach ($lista as $outro) {
+                    if (is_array($outro) && pz_comprador_normalizar_tel($outro['telefone'] ?? '') === $telCheck) {
+                        $erroRegra = 'Esse número de WhatsApp já está vinculado a outra conta.';
+                        return false;
+                    }
+                }
+            }
+        }
         foreach ($lista as &$c) {
             if (!is_array($c) || ($c['telefone'] ?? '') !== $telAuth) {
                 continue;
             }
             if ($acao === 'atualizar_perfil') {
-                $emailNovo = strtolower(trim(strip_tags((string) ($body['email'] ?? $c['email'] ?? ''))));
+                if (array_key_exists('telefone', $body)) {
+                    $telCheck = pz_comprador_normalizar_tel($body['telefone'] ?? '');
+                    if (strlen($telCheck) >= 10 && strlen($telCheck) <= 11) {
+                        $c['telefone'] = $telCheck;
+                    }
+                }
+                if (array_key_exists('wpp_notificar_pedidos', $body)) {
+                    $c['wpp_notificar_pedidos'] = !empty($body['wpp_notificar_pedidos']);
+                }
+                if (array_key_exists('wpp_notificar_ofertas', $body)) {
+                    $c['wpp_notificar_ofertas'] = !empty($body['wpp_notificar_ofertas']);
+                }
+                $emailNovo = array_key_exists('email', $body)
+                    ? strtolower(trim(strip_tags((string) ($body['email'] ?? ''))))
+                    : strtolower(trim((string) ($c['email'] ?? '')));
                 $c['email'] = $emailNovo;
                 $c['nome'] = pz_comprador_nome_padrao($body['nome'] ?? $c['nome'], $emailNovo);
                 $c['cpf'] = preg_replace('/\D/', '', (string) ($body['cpf'] ?? $c['cpf'] ?? ''));
@@ -782,7 +814,12 @@ if (in_array($acao, ['atualizar_perfil', 'salvar_endereco', 'remover_endereco', 
         exit;
     }
     pz_comprador_sync_sql($atualizado);
-    echo json_encode(['success' => true, 'comprador' => pz_comprador_publico($atualizado)], JSON_UNESCAPED_UNICODE);
+    $novoToken = ($atualizado['telefone'] ?? '') !== '' ? pz_comprador_gerar_token($atualizado['telefone']) : null;
+    $respPerfil = ['success' => true, 'comprador' => pz_comprador_publico($atualizado)];
+    if ($novoToken) {
+        $respPerfil['token'] = $novoToken;
+    }
+    echo json_encode($respPerfil, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -819,7 +856,12 @@ if ($acao === 'atualizar_consentimento_lgpd') {
         exit;
     }
     pz_comprador_sync_sql($atualizado);
-    echo json_encode(['success' => true, 'comprador' => pz_comprador_publico($atualizado)], JSON_UNESCAPED_UNICODE);
+    $novoToken = ($atualizado['telefone'] ?? '') !== '' ? pz_comprador_gerar_token($atualizado['telefone']) : null;
+    $respPerfil = ['success' => true, 'comprador' => pz_comprador_publico($atualizado)];
+    if ($novoToken) {
+        $respPerfil['token'] = $novoToken;
+    }
+    echo json_encode($respPerfil, JSON_UNESCAPED_UNICODE);
     exit;
 }
 

@@ -62,10 +62,16 @@
             if (el('wpp-chk-ia')) el('wpp-chk-ia').checked = !!cfg.ia_auto_responder;
             if (el('wpp-chk-notif')) el('wpp-chk-notif').checked = !!cfg.notificar_pedidos;
             if (el('wpp-provider')) el('wpp-provider').value = cfg.provider || 'plataforma';
+            if (el('wpp-numero-conectado')) {
+                el('wpp-numero-conectado').value = cfg.numero_conectado || ((el('input-whatsapp') || {}).value || '');
+            }
             if (el('wpp-instance')) el('wpp-instance').value = cfg.instance || '';
             if (el('wpp-api-url')) el('wpp-api-url').value = cfg.api_url || '';
             if (el('wpp-phone-id')) el('wpp-phone-id').value = cfg.phone_id || '';
             if (el('wpp-saudacao')) el('wpp-saudacao').value = cfg.saudacao_personalizada || '';
+            if (el('wpp-api-avancado') && cfg.provider && cfg.provider !== 'plataforma') {
+                el('wpp-api-avancado').hidden = false;
+            }
             if (el('wpp-api-key')) {
                 el('wpp-api-key').placeholder = cfg.api_key_configurada
                     ? 'Token salvo. Deixe em branco para manter.'
@@ -201,6 +207,7 @@
                         ia_auto_responder: !!(el('wpp-chk-ia') && el('wpp-chk-ia').checked),
                         notificar_pedidos: !!(el('wpp-chk-notif') && el('wpp-chk-notif').checked),
                         provider: (el('wpp-provider') || {}).value || 'plataforma',
+                        numero_conectado: ((el('wpp-numero-conectado') || {}).value || '').trim(),
                         instance: ((el('wpp-instance') || {}).value || '').trim(),
                         api_url: ((el('wpp-api-url') || {}).value || '').trim(),
                         phone_id: ((el('wpp-phone-id') || {}).value || '').trim(),
@@ -214,6 +221,74 @@
                     avisar(r.message || (r.success ? 'Salvo!' : 'Erro ao salvar.'), !r.success);
                 } finally {
                     btnSalvar.disabled = false;
+                }
+            });
+        }
+
+        const btnCopiarWh = el('wpp-btn-copiar-webhook');
+        if (btnCopiarWh) {
+            btnCopiarWh.addEventListener('click', function () {
+                const txt = ((el('wpp-webhook-url') || {}).textContent || '').trim();
+                if (!txt) return;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(txt).then(function () {
+                        avisar('URL de Webhook copiada para a área de transferência!');
+                    }).catch(function () { avisar('Copie manualmente: ' + txt); });
+                } else {
+                    avisar('Webhook: ' + txt);
+                }
+            });
+        }
+
+        const btnNovoSec = el('wpp-btn-novo-secret');
+        if (btnNovoSec) {
+            btnNovoSec.addEventListener('click', async function () {
+                btnNovoSec.disabled = true;
+                try {
+                    const r = await apiWpp({ acao: 'salvar_config', config: { regenerar_webhook_secret: true } });
+                    if (r.config) preencherConfig(r.config, r.status_conexao);
+                    avisar(r.success ? 'Nova chave secreta do webhook gerada!' : (r.message || 'Erro'), !r.success);
+                } finally {
+                    btnNovoSec.disabled = false;
+                }
+            });
+        }
+
+        const btnLimparKey = el('wpp-btn-limpar-key');
+        if (btnLimparKey) {
+            btnLimparKey.addEventListener('click', async function () {
+                btnLimparKey.disabled = true;
+                try {
+                    const r = await apiWpp({ acao: 'salvar_config', config: { remover_api_key: true, desconectar: true } });
+                    if (el('wpp-api-key')) el('wpp-api-key').value = '';
+                    if (r.config) preencherConfig(r.config, r.status_conexao);
+                    avisar(r.success ? 'Token próprio removido.' : (r.message || 'Erro'), !r.success);
+                } finally {
+                    btnLimparKey.disabled = false;
+                }
+            });
+        }
+
+        const btnEnviarTeste = el('wpp-btn-enviar-teste');
+        if (btnEnviarTeste) {
+            btnEnviarTeste.addEventListener('click', async function () {
+                const telDefault = ((el('wpp-numero-conectado') || {}).value || (el('input-whatsapp') || {}).value || '').replace(/\D/g, '');
+                const tel = prompt('Digite o número com DDD para enviar a mensagem de teste:', telDefault || '5521999990000');
+                if (tel === null) return;
+                btnEnviarTeste.disabled = true;
+                try {
+                    const r = await apiWpp({ acao: 'enviar_teste', telefone: tel });
+                    if (r.conversas) renderizarConversas(r.conversas);
+                    if (r.success) {
+                        avisar('Mensagem de teste enviada pelo seu gateway WhatsApp!');
+                    } else if (r.wa_link) {
+                        avisar('Gateway externo ainda não conectado; abertura direta via wa.me disponível.', false);
+                        window.open(r.wa_link, '_blank', 'noopener');
+                    } else {
+                        avisar(r.message || 'Não foi possível enviar o teste.', true);
+                    }
+                } finally {
+                    btnEnviarTeste.disabled = false;
                 }
             });
         }

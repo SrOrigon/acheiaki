@@ -300,14 +300,22 @@
                         <label>Seu nome
                             <input type="text" id="mkt-p-nome" placeholder="Como prefere ser chamado">
                         </label>
-                        <label>WhatsApp de contato
-                            <input type="tel" id="mkt-p-tel" readonly>
+                        <label>WhatsApp com DDD (para status dos pedidos e IA) *
+                            <input type="tel" id="mkt-p-tel" placeholder="Ex.: (21) 99999-9999" required>
                         </label>
-                        <label>E-mail *
-                            <input type="email" id="mkt-p-email" required placeholder="seuemail@gmail.com">
+                        <label>E-mail (opcional)
+                            <input type="email" id="mkt-p-email" placeholder="seuemail@gmail.com">
                         </label>
                         <label>CPF (opcional, para nota)
                             <input type="text" id="mkt-p-cpf" maxlength="14" placeholder="000.000.000-00">
+                        </label>
+                        <label class="aki-check-gigante" style="margin:4px 0 0;">
+                            <input type="checkbox" id="mkt-p-wpp-pedidos" checked>
+                            <span>Receber atualizações dos meus pedidos no WhatsApp</span>
+                        </label>
+                        <label class="aki-check-gigante" style="margin:4px 0 8px;">
+                            <input type="checkbox" id="mkt-p-wpp-ofertas" checked>
+                            <span>Receber ofertas e cupons das lojas no WhatsApp</span>
                         </label>
                         <button type="submit" class="mkt-btn-prim aki-btn-grande"><i class="fa-solid fa-check"></i> Salvar alterações</button>
                         <p id="mkt-p-msg" class="mkt-msg"></p>
@@ -497,10 +505,10 @@
                         <input type="text" name="nome" id="mkt-cad-nome" placeholder="Ex.: Maria da Silva" required>
                     </label>
                     <label>WhatsApp com DDD *
-                        <input type="tel" name="telefone" id="mkt-cad-tel" placeholder="Ex.: (62) 99999-9999" required>
+                        <input type="tel" name="telefone" id="mkt-cad-tel" placeholder="Ex.: (21) 99999-9999" required>
                     </label>
-                    <label>E-mail *
-                        <input type="email" name="email" id="mkt-cad-email" placeholder="Ex.: maria@gmail.com" required>
+                    <label>E-mail (opcional)
+                        <input type="email" name="email" id="mkt-cad-email" placeholder="Opcional (ou para login Google)">
                     </label>
                     <div id="mkt-cad-senhas-row">
                         <label>Crie uma senha (mínimo 6 caracteres) *
@@ -541,6 +549,10 @@
                         <input type="hidden" id="mkt-cad-lng" value="0">
                     </div>
 
+                    <label class="aki-check-gigante">
+                        <input type="checkbox" id="mkt-cad-wpp-optin" checked>
+                        <span>Receber avisos de preparo/entrega e atendimento direto no meu WhatsApp.</span>
+                    </label>
                     <label class="aki-check-gigante">
                         <input type="checkbox" id="mkt-cad-termos" checked required>
                         <span>Concordo com os <a href="termos.html" target="_blank">Termos de Uso</a> e autorizo recomendações de preços na minha região (<a href="privacidade.html" target="_blank">Privacidade</a>).</span>

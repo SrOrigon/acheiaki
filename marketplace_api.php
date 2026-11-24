@@ -33,7 +33,11 @@ if (!pedidozap_limite_requisicao('marketplace_' . $acao, 120, 60)) {
 }
 
 if ($acao === 'listar_lojas') {
-    if (is_file(__DIR__ . '/demo_seed_lib.php')) {
+    $appEnvMkt = strtolower(trim((string) (function_exists('pz_db_env_val') ? pz_db_env_val('APP_ENV') : (getenv('APP_ENV') ?: ''))));
+    $flagOcultarDemo = trim((string) (function_exists('pz_db_env_val') ? pz_db_env_val('ACHEIAKI_OCULTAR_DEMO_VITRINE') : (getenv('ACHEIAKI_OCULTAR_DEMO_VITRINE') ?: '')));
+    $ocultarDemoVitrine = (($flagOcultarDemo === '1' || $appEnvMkt === 'production') && empty($_GET['incluir_demo']));
+
+    if (!$ocultarDemoVitrine && is_file(__DIR__ . '/demo_seed_lib.php')) {
         require_once __DIR__ . '/demo_seed_lib.php';
         pedidozap_garantir_loja_demo();
     }
@@ -137,6 +141,17 @@ if ($acao === 'listar_lojas') {
 
     $resultado = [];
     foreach ($todas as $l) {
+        $slugItem = strtolower((string) ($l['slug'] ?? ''));
+        $ehDefaultVazio = ($slugItem === 'default')
+            && (trim((string) ($l['nome'] ?? '')) === ''
+                || stripos((string) ($l['nome'] ?? ''), 'Nome da Sua Loja') !== false
+                || (trim((string) ($l['bairro'] ?? '')) === '' && trim((string) ($l['cidade'] ?? '')) === ''));
+        if ($ehDefaultVazio) {
+            continue;
+        }
+        if ($ocultarDemoVitrine && ($slugItem === 'loja-demonstracao-acheiaki' || !empty($l['eh_demo']))) {
+            continue;
+        }
         if ($soAbertas && !$l['aberto']) {
             continue;
         }

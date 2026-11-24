@@ -41,7 +41,7 @@ $bloqueados = [
     '#^/scripts(/|$)#i',
     '#^/mobile-capacitor(/|$)#i',
     '#^/\.#',
-    '#^(?:/loja/[a-zA-Z0-9_-]+)?/(router\.php|auth_config\.php|verificar_sistema\.php|go_live_smoke\.php|worker\.php|db_pdo\.php|Database\.php|store_schema\.php|tenant_init\.php|pedido_acesso\.php|.*_lib\.php|configurar-producao\.html|openapi-pdv\.json|Dockerfile|Procfile|railway\.json|nixpacks\.toml|composer\.(json|lock))$#i',
+    '#^(?:/loja/[a-zA-Z0-9_-]+)?/(router\.php|auth_config\.php|verificar_sistema\.php|go_live_smoke\.php|worker\.php|db_pdo\.php|Database\.php|store_schema\.php|tenant_init\.php|pedido_acesso\.php|.*_lib\.php|check_braces\.js|configurar-producao\.html|openapi-pdv\.json|Dockerfile|Procfile|railway\.json|nixpacks\.toml|composer\.(json|lock))$#i',
     '#^/loja/[a-zA-Z0-9_-]+/saas_admin\.php$#i',
     '#\.(md|log|sql|bak|env|map|sh|ps1|yml|yaml)$#i',
 ];
@@ -304,6 +304,35 @@ if ($target && $root && strpos($target, $root) === 0 && is_file($target)) {
         return true;
     }
     return false; // deixa o servidor PHP nativo servir normalmente
+}
+
+// URL curta limpa na raiz: /{slug} ou /{slug}/ (apenas para lojas existentes)
+if (preg_match('#^/([a-zA-Z0-9_-]{2,64})/?$#', $decodedPath, $mCurto)) {
+    $slugCurto = strtolower((string) $mCurto[1]);
+    try {
+        require_once __DIR__ . '/tenant_init.php';
+        require_once __DIR__ . '/saas_lib.php';
+        if ($slugCurto === 'loja-demonstracao-acheiaki' || Database::tenantDataExists($slugCurto)) {
+            if (pedidozap_loja_bloqueada($slugCurto)) {
+                http_response_code(404);
+                header('X-Robots-Tag: noindex, nofollow, noarchive');
+                header('Content-Type: text/html; charset=utf-8');
+                echo '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Indisponível — AcheIAki</title></head><body style="margin:0;font-family:Inter,system-ui,sans-serif;background:#231915;color:#faf7f2;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center;"><div><h1>Estabelecimento indisponível no momento</h1><p><a href="/" style="color:#fb923c;">Voltar ao Marketplace AcheIAki</a></p></div></body></html>';
+                return true;
+            }
+            $htmlCurto = @file_get_contents(__DIR__ . '/index.html');
+            if ($htmlCurto !== false) {
+                $inj = '<base href="/">' . "\n" . '<script>window.__PZ_TENANT_SLUG__=' . json_encode($slugCurto) . ';</script>' . "\n</head>";
+                $htmlCurto = preg_replace('/<\/head>/i', $inj, $htmlCurto, 1) ?? $htmlCurto;
+                header('Cache-Control: no-cache, no-store, must-revalidate');
+                header('Content-Type: text/html; charset=utf-8');
+                echo $htmlCurto;
+                return true;
+            }
+        }
+    } catch (Throwable $eCurto) {
+        // segue fluxo 404
+    }
 }
 
 http_response_code(404);

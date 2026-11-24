@@ -1363,6 +1363,8 @@
         if ($('mkt-p-cpf')) $('mkt-p-cpf').value = c.cpf || '';
         if ($('mkt-p-tel')) $('mkt-p-tel').value = c.telefone || '';
         if ($('mkt-p-email')) $('mkt-p-email').value = c.email || '';
+        if ($('mkt-p-wpp-pedidos')) $('mkt-p-wpp-pedidos').checked = c.wpp_notificar_pedidos !== false;
+        if ($('mkt-p-wpp-ofertas')) $('mkt-p-wpp-ofertas').checked = c.wpp_notificar_ofertas !== false;
         if ($('mkt-conta-ia-chk')) {
             const lgpd = c.consentimento_lgpd || {};
             $('mkt-conta-ia-chk').checked = lgpd.ia_personalizacao !== undefined
@@ -1771,12 +1773,12 @@
             }
             if (telefone.replace(/\D/g, '').length < 10) {
                 msg.style.color = '#dc2626';
-                msg.textContent = 'Digite seu WhatsApp com DDD (ex.: 62 99999-9999).';
+                msg.textContent = 'Digite seu WhatsApp com DDD (ex.: 21 99999-9999).';
                 return;
             }
-            if (!email || email.indexOf('@') === -1) {
+            if (email && email.indexOf('@') === -1) {
                 msg.style.color = '#dc2626';
-                msg.textContent = 'Digite um e-mail válido.';
+                msg.textContent = 'Digite um e-mail válido (ou deixe em branco).';
                 return;
             }
             if (!STATE.modoEdicaoGate && senha.length < 6) {
@@ -1813,11 +1815,31 @@
             msg.style.color = '#334155';
             msg.textContent = 'Criando sua conta...';
 
+            const wppOptIn = $('mkt-cad-wpp-optin') ? $('mkt-cad-wpp-optin').checked : true;
             let url = 'comprador_api.php?action=cadastrar';
-            let payload = { nome, cpf, telefone, email, senha, endereco, ia_personalizacao: iaOptIn };
+            let payload = {
+                nome,
+                cpf,
+                telefone,
+                email,
+                senha,
+                endereco,
+                ia_personalizacao: iaOptIn,
+                wpp_notificar_pedidos: wppOptIn,
+                wpp_notificar_ofertas: wppOptIn
+            };
             if (STATE.modoEdicaoGate) {
                 url = 'comprador_api.php?action=atualizar_perfil';
-                payload = { token: STATE.token, nome, cpf, email, endereco };
+                payload = {
+                    token: STATE.token,
+                    nome,
+                    cpf,
+                    telefone,
+                    email,
+                    endereco,
+                    wpp_notificar_pedidos: wppOptIn,
+                    wpp_notificar_ofertas: wppOptIn
+                };
             } else if (senha === '') {
                 url = 'comprador_api.php?action=entrar_google';
                 payload = { nome, cpf, telefone, email, endereco, ia_personalizacao: iaOptIn };
@@ -1851,20 +1873,29 @@
                 msg.textContent = 'CPF inválido (ou deixe em branco).';
                 return;
             }
+            const telNovo = ($('mkt-p-tel') ? $('mkt-p-tel').value : '').trim();
+            if (telNovo.replace(/\D/g, '').length < 10) {
+                msg.style.color = '#dc2626';
+                msg.textContent = 'Informe um WhatsApp válido com DDD (10 ou 11 dígitos).';
+                return;
+            }
             fetch('comprador_api.php?action=atualizar_perfil', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     token: STATE.token,
                     nome: $('mkt-p-nome').value.trim(),
+                    telefone: telNovo,
                     cpf,
                     email: $('mkt-p-email').value.trim(),
+                    wpp_notificar_pedidos: $('mkt-p-wpp-pedidos') ? $('mkt-p-wpp-pedidos').checked : true,
+                    wpp_notificar_ofertas: $('mkt-p-wpp-ofertas') ? $('mkt-p-wpp-ofertas').checked : true,
                 }),
             }).then((r) => r.json()).then((d) => {
                 msg.style.color = d.success ? '#16a34a' : '#dc2626';
-                msg.textContent = d.success ? 'Dados salvos!' : (d.message || 'Erro ao atualizar.');
+                msg.textContent = d.success ? 'Dados e WhatsApp salvos!' : (d.message || 'Erro ao atualizar.');
                 if (d.success && d.comprador) {
-                    salvarSessaoComprador(STATE.token, d.comprador);
+                    salvarSessaoComprador(d.token || STATE.token, d.comprador);
                     atualizarUiConta();
                 }
             });

@@ -841,8 +841,9 @@
                 <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
                     <button type="button" id="wpp-btn-salvar" class="btn-save-file" style="width:auto;background:#15803d;min-height:42px;"><i class="fa-solid fa-check"></i> Salvar WhatsApp + IA</button>
                     <button type="button" id="wpp-btn-qr" class="btn-save-file" style="width:auto;background:#0f766e;min-height:42px;"><i class="fa-solid fa-qrcode"></i> Conectar QR Code</button>
+                    <button type="button" id="wpp-btn-enviar-teste" class="btn-save-file" style="width:auto;background:#0369a1;min-height:42px;"><i class="fa-brands fa-whatsapp"></i> Enviar Msg Teste</button>
                     <button type="button" id="wpp-btn-testar" class="btn-save-file" style="width:auto;background:#ea580c;min-height:42px;"><i class="fa-solid fa-robot"></i> Testar IA agora</button>
-                    <button type="button" id="wpp-btn-toggle-api" class="btn-mini btn-edit" style="min-height:40px;"><i class="fa-solid fa-plug"></i> Configurar API / Saudação</button>
+                    <button type="button" id="wpp-btn-toggle-api" class="btn-mini btn-edit" style="min-height:40px;"><i class="fa-solid fa-plug"></i> Configurar API própria / Saudação</button>
                 </div>
 
                 <div id="wpp-qr-box" hidden style="margin-top:12px;padding:14px;background:#f8fafc;border:1px dashed #0f766e;border-radius:12px;text-align:center;">
@@ -852,15 +853,20 @@
                 </div>
 
                 <div id="wpp-api-avancado" hidden style="margin-top:12px;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
+                    <p style="margin:0 0 10px;font-size:0.84rem;color:#334155;"><strong>Cadastro autônomo da empresa:</strong> use o gateway da plataforma via QR Code ou conecte a sua própria conta (Evolution API, Meta Cloud Oficial ou Z-API) preenchendo seus dados abaixo.</p>
                     <div class="grade-admin">
                         <div class="form-group-admin" style="margin-bottom:0;">
                             <label for="wpp-provider">Conexão WhatsApp</label>
                             <select id="wpp-provider">
                                 <option value="plataforma">Automático da Plataforma (QR Code fácil)</option>
-                                <option value="evolution">Minha Evolution API</option>
-                                <option value="meta">Meta Cloud API Oficial</option>
-                                <option value="zapi">Z-API Brasil</option>
+                                <option value="evolution">Minha Evolution API (Autônomo)</option>
+                                <option value="meta">Meta Cloud API Oficial (Autônomo)</option>
+                                <option value="zapi">Z-API Brasil (Autônomo)</option>
                             </select>
+                        </div>
+                        <div class="form-group-admin" style="margin-bottom:0;">
+                            <label for="wpp-numero-conectado">Seu número WhatsApp com DDD (para envio/teste)</label>
+                            <input type="tel" id="wpp-numero-conectado" placeholder="Ex: 5521999990000">
                         </div>
                         <div class="form-group-admin" style="margin-bottom:0;">
                             <label for="wpp-instance">Nome da Instância / Instance ID</label>
@@ -872,18 +878,30 @@
                         </div>
                         <div class="form-group-admin" style="margin-bottom:0;">
                             <label for="wpp-api-key">Token / API Key (se usar API própria)</label>
-                            <input type="password" id="wpp-api-key" autocomplete="off" placeholder="Deixe vazio para usar da plataforma">
+                            <div style="display:flex;gap:6px;">
+                                <input type="password" id="wpp-api-key" autocomplete="off" placeholder="Deixe vazio para manter ou usar da plataforma" style="flex:1;">
+                                <button type="button" id="wpp-btn-limpar-key" class="btn-mini btn-delete" title="Limpar Token salvo" style="min-height:42px;padding:0 12px;">Limpar</button>
+                            </div>
                         </div>
                         <div class="form-group-admin" style="margin-bottom:0;">
                             <label for="wpp-phone-id">Phone Number ID (só para Meta Oficial)</label>
                             <input type="text" id="wpp-phone-id" placeholder="Opcional">
                         </div>
-                        <div class="form-group-admin" style="margin-bottom:0;">
+                        <div class="form-group-admin" style="margin-bottom:0;grid-column:1 / -1;">
                             <label for="wpp-saudacao">Saudação da IA no 1º oi (opcional)</label>
-                            <input type="text" id="wpp-saudacao" placeholder="Ex: Oi! Tudo bem? Já vou te mandar nosso cardápio!">
+                            <input type="text" id="wpp-saudacao" placeholder="Ex: Oi! Tudo bem? Já vou te mandar nosso catálogo!">
                         </div>
                     </div>
-                    <p style="margin:10px 0 0;font-size:0.8rem;color:#475569;">Webhook desta loja: <code id="wpp-webhook-url" style="user-select:all;"></code></p>
+                    <div style="margin:12px 0 0;padding:10px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;">
+                        <div style="font-size:0.8rem;color:#475569;word-break:break-all;flex:1;">
+                            <strong>Webhook exclusivo da sua loja (já autenticado):</strong><br>
+                            <code id="wpp-webhook-url" style="user-select:all;"></code>
+                        </div>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                            <button type="button" id="wpp-btn-copiar-webhook" class="btn-mini btn-edit" style="padding:6px 10px;"><i class="fa-regular fa-copy"></i> Copiar Webhook</button>
+                            <button type="button" id="wpp-btn-novo-secret" class="btn-mini" style="padding:6px 10px;background:#e2e8f0;color:#1e293b;" title="Gerar nova chave secreta do webhook"><i class="fa-solid fa-rotate"></i> Nova chave</button>
+                        </div>
+                    </div>
                 </div>
 
                 <p id="wpp-feedback" hidden style="margin:10px 0 0;padding:8px 12px;border-radius:8px;background:#ecfdf5;color:#14532d;font-size:0.86rem;font-weight:600;"></p>
@@ -1235,6 +1253,33 @@
             </div>
 
             <div id="conta-planos-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px;margin:12px 0 18px;"></div>
+
+            <div style="margin:14px 0 18px;padding:14px;border-radius:14px;background:#f8fafc;border:1px dashed #cbd5e1;">
+                <strong style="display:block;font-size:0.96rem;color:#0f172a;margin-bottom:8px;"><i class="fa-solid fa-rocket" style="color:#ea580c;"></i> Próximos recursos — Em Breve para lojas parceiras</strong>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:10px;">
+                    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:11px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px;">
+                            <strong style="font-size:0.9rem;color:#1e293b;">Rede de Entregadores</strong>
+                            <span style="font-size:0.7rem;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;padding:2px 7px;border-radius:999px;font-weight:700;">Em breve</span>
+                        </div>
+                        <small style="color:#475569;line-height:1.4;display:block;">Motoboys e entregadores do bairro sob demanda nos horários de pico.</small>
+                    </div>
+                    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:11px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px;">
+                            <strong style="font-size:0.9rem;color:#1e293b;">Split Automático Pix</strong>
+                            <span style="font-size:0.7rem;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;padding:2px 7px;border-radius:999px;font-weight:700;">Em breve</span>
+                        </div>
+                        <small style="color:#475569;line-height:1.4;display:block;">Pagamento online direto na conta da loja com baixa automática.</small>
+                    </div>
+                    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:11px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px;">
+                            <strong style="font-size:0.9rem;color:#1e293b;">Clube de Cashback</strong>
+                            <span style="font-size:0.7rem;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;padding:2px 7px;border-radius:999px;font-weight:700;">Em breve</span>
+                        </div>
+                        <small style="color:#475569;line-height:1.4;display:block;">Cashback local para trazer clientes do bairro de volta sem pagar taxas.</small>
+                    </div>
+                </div>
+            </div>
 
             <div id="conta-pagamento" style="display:none;margin:14px 0;padding:16px;border-radius:14px;background:#faf7f2;border:1px solid #e7e5e4;">
                 <p id="conta-valor" style="font-size:1.08em;font-weight:800;margin:0 0 10px;color:#231915;"></p>

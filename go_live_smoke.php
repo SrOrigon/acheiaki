@@ -240,6 +240,14 @@ if ($baseUrl !== '') {
         is_array($health) ? json_encode($health, JSON_UNESCAPED_UNICODE) : 'Sem resposta de ' . $healthUrl,
         'Confira DNS, HTTPS e se o host aponta para router.php / Apache com .htaccess.'
     );
+    $workerAtivoHttp = is_array($health) && !empty($health['worker']['ativo']);
+    $registrar(
+        'http_worker',
+        'Worker de fila/WhatsApp ativo no container',
+        $workerAtivoHttp,
+        is_array($health) ? ('ultimo_batimento_seg=' . (string) ($health['worker']['ultimo_batimento_seg'] ?? 'null')) : 'Sem resposta',
+        'Garanta CMD com worker.php em loop no Dockerfile e PZ_WORKER_DAEMON=1.'
+    );
 
     $mktUrl = $baseUrl . '/marketplace_api.php?action=listar_lojas';
     $rawMkt = @file_get_contents($mktUrl, false, $ctx);

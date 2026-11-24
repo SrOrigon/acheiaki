@@ -1127,6 +1127,24 @@ if (sessionStorage.getItem('admin_logado')) {
             }
         });
     }
+
+    const btnCopiarLoja = document.getElementById('btn-copiar-link-loja');
+    if (btnCopiarLoja) {
+        btnCopiarLoja.addEventListener('click', () => {
+            const slugAtual = (typeof TENANT !== 'undefined') ? TENANT.slug : 'default';
+            const linkLimpo = window.location.origin + '/' + (slugAtual === 'default' ? '' : encodeURIComponent(slugAtual));
+            const feedback = () => {
+                const orig = btnCopiarLoja.innerHTML;
+                btnCopiarLoja.innerHTML = '<i class="fa-solid fa-check"></i> Link copiado!';
+                setTimeout(() => { btnCopiarLoja.innerHTML = orig; }, 2200);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(linkLimpo).then(feedback).catch(() => prompt('Copie o link da sua loja:', linkLimpo));
+            } else {
+                prompt('Copie o link da sua loja:', linkLimpo);
+            }
+        });
+    }
     if (window.PedidoZapCelulas && window.PedidoZapCelulas.escutar) {
         window.PedidoZapCelulas.escutar((ev) => {
             if (!ev || !ev.tipo) return;

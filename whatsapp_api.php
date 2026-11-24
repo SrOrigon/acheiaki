@@ -140,5 +140,32 @@ if ($acao === 'simular_cliente') {
     exit;
 }
 
+if ($acao === 'enviar_teste') {
+    $storeCfg = pedidozap_normalizar_config(Database::readStrict('config.json'), $slug);
+    $nomeLoja = trim((string) ($storeCfg['NOME_LOJA'] ?? $storeCfg['EMPRESA']['nome'] ?? 'Minha Loja'));
+    $telRaw = trim((string) ($req['telefone'] ?? ($storeCfg['WHATSAPP_NUMBER'] ?? ($storeCfg['REDES']['whatsapp'] ?? ''))));
+    $telNorm = pz_wpp_normalizar_telefone($telRaw);
+    if (strlen($telNorm) < 12) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Informe um número de WhatsApp com DDD para enviar o teste.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $msgTeste = trim((string) ($req['mensagem'] ?? ''));
+    if ($msgTeste === '') {
+        $msgTeste = "✅ Teste AcheIAki ({$nomeLoja}): seu WhatsApp + IA autônomo está pronto para atender clientes e avisar sobre pedidos sem taxa!";
+    }
+    $res = pz_wpp_enviar_texto($slug, $telNorm, $msgTeste, [
+        'autor' => 'sistema',
+        'nome' => 'Teste da Loja',
+    ]);
+    $waLink = 'https://wa.me/' . rawurlencode($telNorm) . '?text=' . rawurlencode($msgTeste);
+    echo json_encode(array_merge($res, [
+        'wa_link' => $waLink,
+        'telefone' => $telNorm,
+        'conversas' => pz_wpp_listar_conversas($slug),
+    ]), JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 http_response_code(400);
 echo json_encode(['success' => false, 'message' => 'Ação inválida.'], JSON_UNESCAPED_UNICODE);

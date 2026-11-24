@@ -125,6 +125,22 @@
 
         const km = opts.distanciaKm;
         if (km == null || !Number.isFinite(Number(km))) {
+            if (opts.fallbackDistancia) {
+                const alvoBairro = normalizar(opts.bairro);
+                if (alvoBairro && r.bairros.length) {
+                    const achouB = r.bairros.find((b) => normalizar(b.nome) === alvoBairro);
+                    if (achouB) {
+                        base.valor = Math.max(0, num(achouB.valor));
+                        base.rotulo = 'Taxa por bairro (fallback)';
+                        base.detalhe = achouB.nome || 'Bairro';
+                        return aplicarGratis(base, r, subtotal);
+                    }
+                }
+                base.valor = Math.max(0, r.taxaBase > 0 ? r.taxaBase : r.taxaFixa);
+                base.rotulo = 'Taxa padrão (sem GPS)';
+                base.detalhe = 'Contingência aplicada para concluir seu pedido';
+                return aplicarGratis(base, r, subtotal);
+            }
             base.ok = false;
             base.rotulo = 'Frete a calcular';
             base.detalhe = 'Informe o endereço completo para calcular a entrega.';

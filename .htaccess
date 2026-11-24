@@ -8,7 +8,7 @@ DirectoryIndex marketplace.html index.php index.html
 # 2. Desabilitar listagem de diretório e bloquear arquivos sensíveis por segurança
 Options -Indexes
 
-<FilesMatch "^(router\.php|auth_config\.php|verificar_sistema\.php|go_live_smoke\.php|worker\.php|db_pdo\.php|Database\.php|store_schema\.php|tenant_init\.php|pedido_acesso\.php|.*_lib\.php|configurar-producao\.html|openapi-pdv\.json|Dockerfile|Procfile|railway\.json|\.env.*|.*\.(md|log|sql|bak|map|sh|ps1|yml|yaml))$">
+<FilesMatch "^(router\.php|auth_config\.php|verificar_sistema\.php|go_live_smoke\.php|worker\.php|db_pdo\.php|Database\.php|store_schema\.php|tenant_init\.php|pedido_acesso\.php|.*_lib\.php|check_braces\.js|configurar-producao\.html|openapi-pdv\.json|Dockerfile|Procfile|railway\.json|\.env.*|.*\.(md|log|sql|bak|map|sh|ps1|yml|yaml))$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>

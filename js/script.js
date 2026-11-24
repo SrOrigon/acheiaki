@@ -1259,26 +1259,28 @@ function iniciarVitrine() {
         };
 
         const modoFrete = (config.FRETE && config.FRETE.modo) || 'gratis';
+        let usarFallbackDistancia = false;
         if (!retirada && modoFrete === 'distancia' && window.PedidoZapFrete) {
             const loja = config.ENDERECO || {};
             if (loja.lat == null || loja.lng == null) {
-                showToast('Cadastre a latitude e a longitude da loja para calcular o frete por distância.', 'erro');
-                return;
-            }
-            const preview = document.getElementById('frete-preview');
-            if (preview) preview.textContent = 'Calculando distância...';
-            try {
-                const destino = await PedidoZapFrete.geocode([rua, numero, bairro, cidade, cepRaw, 'Brasil'].filter(Boolean).join(', '));
-                enderecoCliente.lat = destino.lat;
-                enderecoCliente.lng = destino.lng;
-                enderecoCliente.distanciaKm = PedidoZapFrete.haversineKm(Number(loja.lat), Number(loja.lng), destino.lat, destino.lng);
-            } catch (err) {
-                showToast(err.message || 'Não foi possível localizar o endereço.', 'erro');
-                return;
+                usarFallbackDistancia = true;
+            } else {
+                const preview = document.getElementById('frete-preview');
+                if (preview) preview.textContent = 'Calculando distância...';
+                try {
+                    const destino = await PedidoZapFrete.geocode([rua, numero, bairro, cidade, cepRaw, 'Brasil'].filter(Boolean).join(', '));
+                    enderecoCliente.lat = destino.lat;
+                    enderecoCliente.lng = destino.lng;
+                    enderecoCliente.distanciaKm = PedidoZapFrete.haversineKm(Number(loja.lat), Number(loja.lng), destino.lat, destino.lng);
+                } catch (err) {
+                    enderecoCliente.distanciaKm = null;
+                    usarFallbackDistancia = true;
+                    showToast('Endereço sem ponto exato no mapa — aplicando taxa padrão/bairro para não travar seu pedido.', 'aviso');
+                }
             }
         }
 
-        const infoFrete = calcularFreteAtual();
+        const infoFrete = calcularFreteAtual(usarFallbackDistancia ? { fallbackDistancia: true } : undefined);
         const preview = document.getElementById('frete-preview');
         if (preview) preview.textContent = infoFrete.rotulo + ': ' + formatarMoeda(infoFrete.valor);
         if (!infoFrete.ok) {

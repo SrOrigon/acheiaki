@@ -80,6 +80,7 @@ function pz_wpp_ler_config($slug = null)
         'conectado' => false,
         'numero_conectado' => '',
         'ultimo_check' => '',
+        'webhook_secret' => '',
     ], $salvo);
 }
 
@@ -174,6 +175,23 @@ function pz_wpp_salvar_config($slug, array $patch)
     if (array_key_exists('ultimo_check', $patch)) {
         $atual['ultimo_check'] = (string) $patch['ultimo_check'];
     }
+    if (array_key_exists('webhook_secret', $patch)) {
+        $ws = preg_replace('/[^a-zA-Z0-9._-]/', '', trim((string) $patch['webhook_secret']));
+        if ($ws !== '') {
+            $atual['webhook_secret'] = substr($ws, 0, 64);
+        }
+    }
+    if (!empty($patch['regenerar_webhook_secret']) || trim((string) ($atual['webhook_secret'] ?? '')) === '') {
+        try {
+            $atual['webhook_secret'] = 'wh_' . bin2hex(random_bytes(10));
+        } catch (Throwable $e) {
+            $atual['webhook_secret'] = 'wh_' . substr(sha1($slug . '|' . microtime(true)), 0, 20);
+        }
+    }
+    if (!empty($patch['desconectar'])) {
+        $atual['conectado'] = false;
+        $atual['numero_conectado'] = '';
+    }
 
     $anterior = Database::getTenant();
     Database::setTenant($slug);
@@ -187,6 +205,13 @@ function pz_wpp_config_publica($slug = null)
     $slug = pz_wpp_normalizar_slug($slug ?: Database::getTenant());
     $gw = pz_wpp_resolver_gateway($slug);
     $cfg = $gw['loja_cfg'];
+    $secretLoja = trim((string) ($cfg['webhook_secret'] ?? ''));
+    if ($secretLoja === '') {
+        $atualizado = pz_wpp_salvar_config($slug, ['regenerar_webhook_secret' => true]);
+        if (is_array($atualizado) && !empty($atualizado['webhook_secret'])) {
+            $secretLoja = (string) $atualizado['webhook_secret'];
+        }
+    }
     $base = function_exists('pedidozap_base_url') ? pedidozap_base_url() : '';
 
     return [
@@ -205,7 +230,8 @@ function pz_wpp_config_publica($slug = null)
         'saudacao_personalizada' => (string) ($cfg['saudacao_personalizada'] ?? ''),
         'conectado' => !empty($cfg['conectado']),
         'numero_conectado' => (string) ($cfg['numero_conectado'] ?? ''),
-        'webhook_url' => ($base !== '' ? $base : '') . '/whatsapp_webhook.php?tenant=' . rawurlencode($slug),
+        'webhook_secret' => $secretLoja,
+        'webhook_url' => ($base !== '' ? $base : '') . '/whatsapp_webhook.php?tenant=' . rawurlencode($slug) . ($secretLoja !== '' ? '&secret=' . rawurlencode($secretLoja) : ''),
     ];
 }
 
@@ -370,8 +396,8 @@ function pz_wpp_qr_ou_conectar($slug = null)
         ];
     }
 
-    $baseUrl = function_exists('pedidozap_base_url') ? pedidozap_base_url() : '';
-    $webhookUrl = ($baseUrl !== '' ? $baseUrl : '') . '/whatsapp_webhook.php?tenant=' . rawurlencode($gw['slug']);
+    $pubCfg = pz_wpp_config_publica($gw['slug']);
+    $webhookUrl = $pubCfg['webhook_url'] ?: ((function_exists('pedidozap_base_url') ? pedidozap_base_url() : '') . '/whatsapp_webhook.php?tenant=' . rawurlencode($gw['slug']));
 
     if ($gw['provider'] === 'evolution') {
         $hdr = ['apikey: ' . $gw['api_key']];
