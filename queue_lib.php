@@ -265,6 +265,14 @@ function pz_queue_executar_job(array $job)
             require_once __DIR__ . '/push_lib.php';
             return pz_push_processar_job($tenant, $type, $payload);
 
+        case 'whatsapp.order_status':
+            require_once __DIR__ . '/whatsapp_lib.php';
+            return pz_wpp_notificar_status_pedido(
+                $tenant,
+                is_array($payload['pedido'] ?? null) ? $payload['pedido'] : [],
+                (string) ($payload['status'] ?? 'novo')
+            );
+
         case 'alg.recompute':
             if (is_file(__DIR__ . '/territorio_lib.php')) {
                 require_once __DIR__ . '/territorio_lib.php';

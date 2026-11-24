@@ -31,6 +31,11 @@ function pedidozap_integracoes_config()
         'cnpj_habilitado' => true,
         'ia_provider' => 'local',
         'ia_api_key' => '',
+        'wpp_provider' => 'evolution',
+        'wpp_api_url' => '',
+        'wpp_api_key' => '',
+        'wpp_webhook_secret' => '',
+        'wpp_phone_id' => '',
     ], $data);
 
     if (function_exists('pz_db_env_val')) {
@@ -47,6 +52,22 @@ function pedidozap_integracoes_config()
         if ($iaKey !== '') {
             $cfg['ia_api_key'] = $iaKey;
         }
+        $wppProv = strtolower(pz_db_env_val('ACHEIAKI_WPP_PROVIDER'));
+        if (in_array($wppProv, ['evolution', 'meta', 'zapi'], true)) {
+            $cfg['wpp_provider'] = $wppProv;
+        }
+        $wppUrl = pz_db_env_val('ACHEIAKI_WPP_API_URL');
+        if ($wppUrl !== '') {
+            $cfg['wpp_api_url'] = rtrim($wppUrl, '/');
+        }
+        $wppKey = pz_db_env_val('ACHEIAKI_WPP_API_KEY');
+        if ($wppKey !== '') {
+            $cfg['wpp_api_key'] = $wppKey;
+        }
+        $wppSecret = pz_db_env_val('ACHEIAKI_WPP_WEBHOOK_SECRET');
+        if ($wppSecret !== '') {
+            $cfg['wpp_webhook_secret'] = $wppSecret;
+        }
     }
     return $cfg;
 }
@@ -58,6 +79,14 @@ function pedidozap_integracoes_publicas()
     $temChaveIa = trim((string) ($cfg['ia_api_key'] ?? '')) !== '';
     $providerIa = $cfg['ia_provider'] ?? 'local';
     $geminiAtivo = $providerIa === 'gemini' && $temChaveIa;
+    $wppUrl = trim((string) ($cfg['wpp_api_url'] ?? ''));
+    $wppKey = trim((string) ($cfg['wpp_api_key'] ?? ''));
+    $wppProv = strtolower(trim((string) ($cfg['wpp_provider'] ?? 'evolution')));
+    $wppConfigurado = $wppProv === 'meta'
+        ? ($wppKey !== '' && trim((string) ($cfg['wpp_phone_id'] ?? '')) !== '')
+        : ($wppUrl !== '' && $wppKey !== '');
+    $baseUrl = function_exists('pedidozap_base_url') ? pedidozap_base_url() : '';
+
     return [
         'google_maps_configurado' => $temChaveGoogle,
         'google_maps_habilitado' => $temChaveGoogle && (!empty($cfg['google_maps_habilitado']) || $temChaveGoogle),
@@ -66,6 +95,13 @@ function pedidozap_integracoes_publicas()
         'ia_provider' => $providerIa,
         'ia_api_configurado' => $temChaveIa,
         'gemini_configurado' => $geminiAtivo,
+        'wpp_provider' => in_array($wppProv, ['evolution', 'meta', 'zapi'], true) ? $wppProv : 'evolution',
+        'wpp_api_url' => $wppUrl,
+        'wpp_api_key_configurada' => $wppKey !== '',
+        'wpp_webhook_secret_configurado' => trim((string) ($cfg['wpp_webhook_secret'] ?? '')) !== '',
+        'wpp_phone_id' => trim((string) ($cfg['wpp_phone_id'] ?? '')),
+        'wpp_configurado' => $wppConfigurado,
+        'wpp_webhook_url' => ($baseUrl !== '' ? $baseUrl : '') . '/whatsapp_webhook.php',
     ];
 }
 
@@ -94,6 +130,33 @@ function pedidozap_salvar_integracoes(array $patch)
     if (!empty($patch['ia_remover_key'])) {
         $atual['ia_api_key'] = '';
         $atual['ia_provider'] = 'local';
+    }
+    if (array_key_exists('wpp_provider', $patch)) {
+        $wp = strtolower(trim((string) $patch['wpp_provider']));
+        if (in_array($wp, ['evolution', 'meta', 'zapi'], true)) {
+            $atual['wpp_provider'] = $wp;
+        }
+    }
+    if (array_key_exists('wpp_api_url', $patch)) {
+        $wu = rtrim(trim((string) $patch['wpp_api_url']), '/');
+        if ($wu === '' || preg_match('#^https?://#i', $wu)) {
+            $atual['wpp_api_url'] = $wu;
+        }
+    }
+    if (array_key_exists('wpp_api_key', $patch)) {
+        $wk = trim((string) $patch['wpp_api_key']);
+        if ($wk !== '') {
+            $atual['wpp_api_key'] = $wk;
+        }
+    }
+    if (array_key_exists('wpp_webhook_secret', $patch)) {
+        $ws = trim((string) $patch['wpp_webhook_secret']);
+        if ($ws !== '') {
+            $atual['wpp_webhook_secret'] = $ws;
+        }
+    }
+    if (array_key_exists('wpp_phone_id', $patch)) {
+        $atual['wpp_phone_id'] = preg_replace('/[^a-zA-Z0-9._-]/', '', trim((string) $patch['wpp_phone_id']));
     }
     if (class_exists('Database')) {
         $anterior = Database::getTenant();

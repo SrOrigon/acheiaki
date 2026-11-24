@@ -175,15 +175,28 @@
         const okMaps = integracoes.google_maps_configurado && integracoes.google_maps_habilitado;
         const provIa = integracoes.ia_provider || 'local';
         const okGemini = !!integracoes.gemini_configurado;
+        const okWpp = !!integracoes.wpp_configurado;
+        const provWpp = integracoes.wpp_provider || 'evolution';
         st.textContent = 'CNPJ: ' + (integracoes.cnpj_habilitado ? 'ativo' : 'off')
             + ' · Google Maps: ' + (okMaps ? 'configurado' : 'pendente')
-            + ' · Agente IA: ' + (provIa === 'gemini' ? (okGemini ? 'Gemini híbrido ativo' : 'Gemini selecionado (falta chave)') : '100% local');
+            + ' · Agente IA: ' + (provIa === 'gemini' ? (okGemini ? 'Gemini híbrido ativo' : 'Gemini selecionado (falta chave)') : '100% local')
+            + ' · WhatsApp API (' + provWpp + '): ' + (okWpp ? 'conectado' : 'aguardando URL/Token');
         const campo = document.getElementById('int-google-key');
         if (campo) campo.placeholder = okMaps ? 'Chave salva. Digite outra para trocar.' : 'Cole a chave aqui';
         const selIa = document.getElementById('int-ia-provider');
         if (selIa) selIa.value = provIa;
         const campoIa = document.getElementById('int-ia-key');
         if (campoIa) campoIa.placeholder = okGemini ? 'Chave Gemini salva. Deixe em branco para manter.' : 'Opcional (AIza...)';
+        const selWpp = document.getElementById('int-wpp-provider');
+        if (selWpp) selWpp.value = provWpp;
+        const inpWppUrl = document.getElementById('int-wpp-url');
+        if (inpWppUrl) inpWppUrl.value = integracoes.wpp_api_url || '';
+        const inpWppKey = document.getElementById('int-wpp-key');
+        if (inpWppKey) inpWppKey.placeholder = integracoes.wpp_api_key_configurada ? 'Chave WhatsApp salva. Deixe em branco para manter.' : 'Global API Key ou Bearer Token';
+        const inpWppSec = document.getElementById('int-wpp-secret');
+        if (inpWppSec) inpWppSec.placeholder = integracoes.wpp_webhook_secret_configurado ? 'Segredo salvo. Deixe em branco para manter.' : 'Opcional (recomendado para Meta/Evolution)';
+        const codeWppWh = document.getElementById('int-wpp-webhook');
+        if (codeWppWh) codeWppWh.textContent = integracoes.wpp_webhook_url || (window.location.origin + '/whatsapp_webhook.php');
     }
 
     function mostrarCobranca(saas) {
@@ -275,14 +288,32 @@
         const key = (document.getElementById('int-google-key').value || '').trim();
         const iaProv = (document.getElementById('int-ia-provider') || {}).value || 'local';
         const iaKey = ((document.getElementById('int-ia-key') || {}).value || '').trim();
-        const body = { acao: 'salvar_integracoes', integracoes: { cnpj_habilitado: true, ia_provider: iaProv } };
+        const wppProv = (document.getElementById('int-wpp-provider') || {}).value || 'evolution';
+        const wppUrl = ((document.getElementById('int-wpp-url') || {}).value || '').trim();
+        const wppKey = ((document.getElementById('int-wpp-key') || {}).value || '').trim();
+        const wppSec = ((document.getElementById('int-wpp-secret') || {}).value || '').trim();
+        const body = {
+            acao: 'salvar_integracoes',
+            integracoes: {
+                cnpj_habilitado: true,
+                ia_provider: iaProv,
+                wpp_provider: wppProv,
+                wpp_api_url: wppUrl
+            }
+        };
         if (key) body.integracoes.google_maps_api_key = key;
         if (iaKey) body.integracoes.ia_api_key = iaKey;
+        if (wppKey) body.integracoes.wpp_api_key = wppKey;
+        if (wppSec) body.integracoes.wpp_webhook_secret = wppSec;
         api(body).then((data) => {
             if (data.integracoes) mostrarIntegracoes(data.integracoes);
             document.getElementById('int-google-key').value = '';
             const campoIa = document.getElementById('int-ia-key');
             if (campoIa) campoIa.value = '';
+            const campoWppKey = document.getElementById('int-wpp-key');
+            if (campoWppKey) campoWppKey.value = '';
+            const campoWppSec = document.getElementById('int-wpp-secret');
+            if (campoWppSec) campoWppSec.value = '';
             alert(data.success ? 'Integrações salvas.' : 'Não foi possível salvar.');
         });
     });

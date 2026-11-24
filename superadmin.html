@@ -138,6 +138,31 @@
                     <input id="int-google-key" type="password" autocomplete="off" placeholder="AIza...">
                 </div>
             </div>
+            <h3 style="margin:18px 0 6px;font-size:1.05rem;color:#15803d;">WhatsApp API Central da Plataforma (Evolution API / Meta Oficial / Z-API)</h3>
+            <p style="font-size:0.88rem;color:#4b5563;margin:0 0 10px;">Configure aqui UMA API central para todas as lojas conectarem o WhatsApp via QR Code em 1 clique — ou deixe vazio para cada loja usar a própria chave.</p>
+            <div class="grade">
+                <div>
+                    <label for="int-wpp-provider">Provedor WhatsApp</label>
+                    <select id="int-wpp-provider">
+                        <option value="evolution">Evolution API (Open-Source + QR Code)</option>
+                        <option value="meta">Meta Cloud API Oficial (WhatsApp Business)</option>
+                        <option value="zapi">Z-API (QR Code Brasil)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="int-wpp-url">URL do Servidor WhatsApp</label>
+                    <input id="int-wpp-url" type="url" placeholder="https://sua-evolution.up.railway.app">
+                </div>
+                <div>
+                    <label for="int-wpp-key">API Key / Token Global</label>
+                    <input id="int-wpp-key" type="password" autocomplete="off" placeholder="Global API Key ou Bearer Token">
+                </div>
+                <div>
+                    <label for="int-wpp-secret">Segredo do Webhook (opcional)</label>
+                    <input id="int-wpp-secret" type="password" autocomplete="off" placeholder="Token de verificação (Meta / Evolution)">
+                </div>
+            </div>
+            <p style="font-size:0.85rem;color:#4b5563;margin-top:8px;">Webhook único da plataforma: <code id="int-wpp-webhook">/whatsapp_webhook.php</code></p>
             <p id="int-status" style="font-size:0.9rem;color:#374151;"></p>
             <p><button id="btn-integracoes" class="sec" type="button">Salvar integrações</button></p>
         </section>

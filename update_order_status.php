@@ -135,6 +135,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 pz_pdv_enfileirar_evento($slugAtual, $cancelar ? 'order.cancelled' : 'order.status_changed', $pedidoAtual);
                 pz_push_notificar_status_pedido($slugAtual, $pedidoAtual, $statusPersistir);
+                if (is_file(__DIR__ . '/whatsapp_lib.php')) {
+                    require_once __DIR__ . '/whatsapp_lib.php';
+                    pz_wpp_enfileirar_status_pedido($slugAtual, $pedidoAtual, $statusPersistir);
+                }
                 if (!$cancelar && in_array($statusPersistir, ['preparo', 'concluido'], true)) {
                     pz_fiscal_agendar_se_automatico($slugAtual, (string) $req['id'], $statusPersistir === 'concluido' ? 'ao_concluir' : 'ao_preparar');
                 }

@@ -495,7 +495,7 @@
                 </button>
                 <button type="button" onclick="var t=document.querySelector('#admin-tabs [data-tab=contato]');if(t){t.click();t.scrollIntoView({behavior:'smooth'});}" class="aki-bento-btn">
                     <span class="aki-bento-ico" style="background:#ecfdf5;color:#15803d;"><i class="fa-brands fa-whatsapp"></i></span>
-                    <span><strong>3. WhatsApp e horário</strong><small>Onde você atende e hora que abre</small></span>
+                    <span><strong>3. WhatsApp + IA ao vivo</strong><small>Ligar robô IA, ver conversas e horário</small></span>
                 </button>
                 <button type="button" onclick="document.getElementById('link-ver-site').click()" class="aki-bento-btn">
                     <span class="aki-bento-ico" style="background:#f5f2ed;color:#231915;"><i class="fa-solid fa-eye"></i></span>
@@ -815,6 +815,104 @@
             <div class="form-group-admin" style="margin-top: 15px;">
                 <label for="input-whatsapp">Número do WhatsApp (com DDD, apenas números):</label>
                 <input type="text" id="input-whatsapp" placeholder="Ex: 5521969271316">
+            </div>
+
+            <!-- WhatsApp API + IA Ao Vivo Compacto -->
+            <div id="wpp-aovivo-card" style="margin-top:18px;padding:18px;background:#ffffff;border:1px solid rgba(21,128,61,0.22);border-left:5px solid #15803d;border-radius:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+                    <div>
+                        <h4 style="margin:0;color:#14532d;font-size:1.08rem;"><i class="fa-brands fa-whatsapp"></i> WhatsApp + IA Ao Vivo na Loja</h4>
+                        <p style="margin:3px 0 0;color:#475569;font-size:0.88rem;">A IA responde seus clientes no WhatsApp com seus produtos reais, consulta o status do pedido e envia seu link sem taxa.</p>
+                    </div>
+                    <span id="wpp-status-pill" style="font-size:0.78rem;font-weight:700;padding:4px 10px;border-radius:999px;background:#ecfdf5;color:#166534;">Carregando...</span>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:12px 0;">
+                    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:#f0fdf4;border:1px solid #bbf7d0;cursor:pointer;font-size:0.9rem;font-weight:600;color:#14532d;">
+                        <input type="checkbox" id="wpp-chk-ia" checked style="width:auto;">
+                        <span>🤖 Robô IA responde clientes sozinho no WhatsApp</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;cursor:pointer;font-size:0.9rem;font-weight:600;color:#9a3412;">
+                        <input type="checkbox" id="wpp-chk-notif" checked style="width:auto;">
+                        <span>📦 Avisar cliente no WhatsApp a cada etapa do pedido</span>
+                    </label>
+                </div>
+
+                <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                    <button type="button" id="wpp-btn-salvar" class="btn-save-file" style="width:auto;background:#15803d;min-height:42px;"><i class="fa-solid fa-check"></i> Salvar WhatsApp + IA</button>
+                    <button type="button" id="wpp-btn-qr" class="btn-save-file" style="width:auto;background:#0f766e;min-height:42px;"><i class="fa-solid fa-qrcode"></i> Conectar QR Code</button>
+                    <button type="button" id="wpp-btn-testar" class="btn-save-file" style="width:auto;background:#ea580c;min-height:42px;"><i class="fa-solid fa-robot"></i> Testar IA agora</button>
+                    <button type="button" id="wpp-btn-toggle-api" class="btn-mini btn-edit" style="min-height:40px;"><i class="fa-solid fa-plug"></i> Configurar API / Saudação</button>
+                </div>
+
+                <div id="wpp-qr-box" hidden style="margin-top:12px;padding:14px;background:#f8fafc;border:1px dashed #0f766e;border-radius:12px;text-align:center;">
+                    <p id="wpp-qr-msg" style="margin:0 0 10px;font-size:0.88rem;color:#0f172a;font-weight:600;"></p>
+                    <img id="wpp-qr-img" src="" alt="QR Code WhatsApp" style="max-width:210px;border-radius:10px;display:none;margin:0 auto;">
+                    <div id="wpp-pairing-code" style="font-size:1.15rem;font-weight:800;letter-spacing:2px;color:#0f766e;"></div>
+                </div>
+
+                <div id="wpp-api-avancado" hidden style="margin-top:12px;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
+                    <div class="grade-admin">
+                        <div class="form-group-admin" style="margin-bottom:0;">
+                            <label for="wpp-provider">Conexão WhatsApp</label>
+                            <select id="wpp-provider">
+                                <option value="plataforma">Automático da Plataforma (QR Code fácil)</option>
+                                <option value="evolution">Minha Evolution API</option>
+                                <option value="meta">Meta Cloud API Oficial</option>
+                                <option value="zapi">Z-API Brasil</option>
+                            </select>
+                        </div>
+                        <div class="form-group-admin" style="margin-bottom:0;">
+                            <label for="wpp-instance">Nome da Instância / Instance ID</label>
+                            <input type="text" id="wpp-instance" placeholder="acheiaki-sualoja">
+                        </div>
+                        <div class="form-group-admin" style="margin-bottom:0;">
+                            <label for="wpp-api-url">URL da API (se usar API própria)</label>
+                            <input type="url" id="wpp-api-url" placeholder="https://sua-evolution.up.railway.app">
+                        </div>
+                        <div class="form-group-admin" style="margin-bottom:0;">
+                            <label for="wpp-api-key">Token / API Key (se usar API própria)</label>
+                            <input type="password" id="wpp-api-key" autocomplete="off" placeholder="Deixe vazio para usar da plataforma">
+                        </div>
+                        <div class="form-group-admin" style="margin-bottom:0;">
+                            <label for="wpp-phone-id">Phone Number ID (só para Meta Oficial)</label>
+                            <input type="text" id="wpp-phone-id" placeholder="Opcional">
+                        </div>
+                        <div class="form-group-admin" style="margin-bottom:0;">
+                            <label for="wpp-saudacao">Saudação da IA no 1º oi (opcional)</label>
+                            <input type="text" id="wpp-saudacao" placeholder="Ex: Oi! Tudo bem? Já vou te mandar nosso cardápio!">
+                        </div>
+                    </div>
+                    <p style="margin:10px 0 0;font-size:0.8rem;color:#475569;">Webhook desta loja: <code id="wpp-webhook-url" style="user-select:all;"></code></p>
+                </div>
+
+                <p id="wpp-feedback" hidden style="margin:10px 0 0;padding:8px 12px;border-radius:8px;background:#ecfdf5;color:#14532d;font-size:0.86rem;font-weight:600;"></p>
+
+                <!-- Mini Caixa de Conversas Ao Vivo -->
+                <div style="margin-top:14px;border-top:1px solid #e2e8f0;padding-top:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">
+                        <strong style="font-size:0.92rem;color:#1e293b;"><i class="fa-regular fa-comments"></i> Conversas ao vivo no WhatsApp</strong>
+                        <button type="button" id="wpp-btn-atualizar-chat" class="btn-mini btn-edit" style="padding:4px 10px;font-size:0.78rem;"><i class="fa-solid fa-rotate"></i> Atualizar</button>
+                    </div>
+                    <div style="display:grid;grid-template-columns:minmax(160px,0.9fr) minmax(220px,1.5fr);gap:10px;align-items:stretch;">
+                        <div id="wpp-lista-conversas" style="max-height:230px;overflow-y:auto;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:5px;">
+                            <small style="color:#64748b;padding:8px;">Nenhuma conversa ainda. Toque em "Testar IA agora" ou conecte seu WhatsApp.</small>
+                        </div>
+                        <div style="display:flex;flex-direction:column;background:#efeae2;border:1px solid #e2e8f0;border-radius:10px;padding:8px;min-height:210px;max-height:260px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding-bottom:6px;border-bottom:1px solid rgba(0,0,0,0.08);margin-bottom:6px;">
+                                <span id="wpp-chat-titulo" style="font-size:0.84rem;font-weight:700;color:#1e293b;">Selecione uma conversa</span>
+                                <button type="button" id="wpp-btn-pausar-ia" hidden class="btn-mini btn-edit" style="padding:3px 8px;font-size:0.74rem;">Assumir conversa</button>
+                            </div>
+                            <div id="wpp-chat-mensagens" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;font-size:0.82rem;padding:2px;">
+                                <small style="color:#64748b;">As mensagens dos clientes e as respostas automáticas da IA aparecem aqui em tempo real.</small>
+                            </div>
+                            <div style="display:flex;gap:6px;margin-top:8px;">
+                                <input type="text" id="wpp-reply-input" placeholder="Responder manualmente pelo sistema..." style="flex:1;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;">
+                                <button type="button" id="wpp-reply-btn" class="btn-save-file" style="width:auto;min-height:36px;padding:6px 12px;background:#15803d;font-size:0.82rem;"><i class="fa-solid fa-paper-plane"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div style="display: flex; gap: 20px; align-items: center; margin-top: 20px; flex-wrap: wrap;">
@@ -1323,7 +1421,7 @@
         })();
     </script>
     <script>
-        PedidoZapStore.bootstrap(['js/admin.js', 'js/divulgar-loja.js', 'js/assistente-ia.js', 'js/gestao-admin.js', 'js/perfil-qualificado.js'], { fallbackStatic: true, showLoading: true, allowEmptyTenant: true });
+        PedidoZapStore.bootstrap(['js/admin.js', 'js/divulgar-loja.js', 'js/whatsapp-admin.js', 'js/assistente-ia.js', 'js/gestao-admin.js', 'js/perfil-qualificado.js'], { fallbackStatic: true, showLoading: true, allowEmptyTenant: true });
     </script>
 </body>
 

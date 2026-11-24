@@ -439,6 +439,10 @@ if (!empty($saveTx['success'])) {
     ]);
     pz_pdv_enfileirar_evento($slugSalvo, 'order.created', $registro);
     pz_push_notificar_status_pedido($slugSalvo, $registro, 'novo');
+    if (is_file(__DIR__ . '/whatsapp_lib.php')) {
+        require_once __DIR__ . '/whatsapp_lib.php';
+        pz_wpp_enfileirar_status_pedido($slugSalvo, $registro, 'novo');
+    }
 
     echo json_encode([
         'success' => true,
