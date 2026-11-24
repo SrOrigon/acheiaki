@@ -23,10 +23,12 @@ if (!is_array($req)) {
     $req = [];
 }
 
+pedidozap_bootstrap_tenant($req);
+
 $user = trim((string) ($req['auth']['user'] ?? $_GET['user'] ?? ''));
 $pass = (string) ($req['auth']['pass'] ?? $_GET['pass'] ?? '');
 $sessao = pedidozap_sessao_info($user, $pass);
-if (empty($sessao['autorizado'])) {
+if (!is_array($sessao) || empty($sessao['role'])) {
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Sessão expirada. Entre novamente no painel.'], JSON_UNESCAPED_UNICODE);
     exit;
