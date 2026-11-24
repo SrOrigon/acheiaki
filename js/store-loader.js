@@ -251,9 +251,9 @@
         const arquivoAtualPub = (global.location.pathname.split('/').pop() || 'index.html');
         const ehInternoPub = /admin|painel|motoboy|cozinha|superadmin|rastreio/.test(arquivoAtualPub);
         if (data.loja_bloqueada && !ehInternoPub) {
-            try { localStorage.removeItem('pz_offline_store_' + (slug || 'default')); } catch (eRm) {}
+            try { localStorage.removeItem('pz_offline_store_' + (slug || 'default')); } catch (eRm) { }
         } else if (global.PedidoZapOfflineCache && !data.offline && !data.loja_bloqueada) {
-            global.PedidoZapOfflineCache.salvarLoja(slug, data).catch(() => {});
+            global.PedidoZapOfflineCache.salvarLoja(slug, data).catch(() => { });
             global.PedidoZapOfflineCache.mostrarFaixaOffline(false);
         }
         publishStore();
@@ -297,7 +297,7 @@
                                 if (res && res.source === 'api' && global.PedidoZapOfflineCache) {
                                     global.PedidoZapOfflineCache.mostrarFaixaOffline(false);
                                 }
-                            }).catch(() => {});
+                            }).catch(() => { });
                         }, { once: true });
                     }
                     return { source: 'offline-cache', version: offlineSnap.version || 0 };
@@ -373,7 +373,7 @@
                 if (res && res.source === 'api' && global.PedidoZapHydrate && global.PedidoZapHydrate.apply) {
                     global.PedidoZapHydrate.apply(activeConfig, activeCardapio);
                 }
-            }).catch(() => {});
+            }).catch(() => { });
         } else {
             if (opts.showLoading) showLoading();
             try {

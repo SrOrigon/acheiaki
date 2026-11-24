@@ -245,14 +245,28 @@
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div>
-                    <label for="nicho">Segmento / Tipo de comida *</label>
+                    <label for="nicho">Ramo / Tipo de loja *</label>
                     <select id="nicho" name="nicho" required>
-                        <option value="pensao">Pensão / comida caseira</option>
-                        <option value="marmitaria">Marmita</option>
-                        <option value="lanchonete">Lanches</option>
-                        <option value="pizzaria">Pizzaria</option>
-                        <option value="acai">Açaí</option>
-                        <option value="confeitaria">Doceria</option>
+                        <optgroup label="🍔 Alimentação e Lanches">
+                            <option value="lanchonete">Lanchonete / Hamburgueria</option>
+                            <option value="pizzaria">Pizzaria / Esfiharia</option>
+                            <option value="marmitaria">Marmitaria / Restaurante</option>
+                            <option value="pensao">Pensão / Comida caseira</option>
+                            <option value="acai">Açaí / Sorveteria</option>
+                            <option value="confeitaria">Doceria / Confeitaria</option>
+                        </optgroup>
+                        <optgroup label="🛍️ Lojas, Mercados e Comércio em Geral">
+                            <option value="bebidas">Distribuidora / Adega / Bebidas</option>
+                            <option value="mercado">Mercado / Mercearia / Hortifruti</option>
+                            <option value="farmacia">Farmácia / Drogaria</option>
+                            <option value="petshop">Pet Shop / Agropecuária</option>
+                            <option value="moda">Roupas / Calçados / Acessórios</option>
+                            <option value="eletronicos">Celulares / Eletrônicos / Informática</option>
+                            <option value="beleza">Cosméticos / Perfumaria / Beleza</option>
+                            <option value="papelaria">Papelaria / Presentes / Floricultura</option>
+                            <option value="ferragens">Ferragens / Material de Construção</option>
+                            <option value="comercio">Outra Loja / Comércio em Geral</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div>

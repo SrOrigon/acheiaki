@@ -68,6 +68,16 @@ if ($acao === 'listar_lojas') {
         'pensao' => 'Pensão & Caseira',
         'acai' => 'Açaí & Sorvetes',
         'confeitaria' => 'Confeitaria & Doces',
+        'bebidas' => 'Bebidas & Adega',
+        'mercado' => 'Mercado & Mercearia',
+        'farmacia' => 'Farmácia & Saúde',
+        'petshop' => 'Pet Shop',
+        'moda' => 'Roupas & Calçados',
+        'eletronicos' => 'Eletrônicos & Celulares',
+        'beleza' => 'Cosméticos & Beleza',
+        'papelaria' => 'Papelaria & Presentes',
+        'ferragens' => 'Construção & Casa',
+        'comercio' => 'Loja & Comércio Local',
     ];
 
     $montarItemLista = function (array $l, array $itensMatch, $dist) use ($rotulosNicho) {
@@ -533,6 +543,61 @@ if ($acao === 'avaliar') {
         http_response_code(400);
     }
     echo json_encode($res, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if ($acao === 'indicar_loja') {
+    $nomeInd = trim(strip_tags((string) ($body['nome_loja'] ?? '')));
+    $contatoInd = trim(strip_tags((string) ($body['contato'] ?? '')));
+    $bairroInd = trim(strip_tags((string) ($body['bairro'] ?? '')));
+    $quemInd = trim(strip_tags((string) ($body['quem_indicou'] ?? '')));
+    if (mb_strlen($nomeInd, 'UTF-8') < 2) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Informe o nome da lanchonete ou restaurante que você quer ver aqui.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $chaveInd = pz_territorio_norm($nomeInd . '_' . $bairroInd);
+    $qtdTotal = 1;
+    $antT = Database::getTenant();
+    try {
+        Database::setTenant('default');
+        Database::mutate('indicacoes_lojas.json', function (&$lista) use ($chaveInd, $nomeInd, $contatoInd, $bairroInd, $quemInd, &$qtdTotal) {
+            if (!is_array($lista)) {
+                $lista = [];
+            }
+            foreach ($lista as $i => $it) {
+                if (is_array($it) && ($it['chave'] ?? '') === $chaveInd) {
+                    $lista[$i]['pedidos_indicacao'] = (int) ($it['pedidos_indicacao'] ?? 1) + 1;
+                    $lista[$i]['ultimo_em'] = date('Y-m-d H:i:s');
+                    if ($contatoInd !== '' && empty($it['contato'])) {
+                        $lista[$i]['contato'] = $contatoInd;
+                    }
+                    $qtdTotal = $lista[$i]['pedidos_indicacao'];
+                    return true;
+                }
+            }
+            array_unshift($lista, [
+                'id' => 'ind_' . substr(md5($chaveInd . microtime(true)), 0, 8),
+                'chave' => $chaveInd,
+                'nome_loja' => $nomeInd,
+                'contato' => $contatoInd,
+                'bairro' => $bairroInd,
+                'quem_indicou' => $quemInd,
+                'pedidos_indicacao' => 1,
+                'criado_em' => date('Y-m-d H:i:s'),
+                'ultimo_em' => date('Y-m-d H:i:s'),
+            ]);
+            $lista = array_slice($lista, 0, 200);
+            return true;
+        });
+    } finally {
+        Database::setTenant($antT);
+    }
+    echo json_encode([
+        'success' => true,
+        'pedidos_indicacao' => $qtdTotal,
+        'message' => 'Indicação recebida! Nossa equipe vai convidar "' . $nomeInd . '" com prova social dos moradores (' . $qtdTotal . ' pedido(s)).',
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

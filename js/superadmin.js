@@ -103,6 +103,41 @@
             mostrarIntegracoes(data.integracoes || {});
             mostrarBanco(data.db_config || {});
             desenhar();
+            desenharIndicacoes(data.indicacoes || []);
+        });
+    }
+
+    function desenharIndicacoes(lista) {
+        const tb = document.getElementById('tabela-indicacoes');
+        if (!tb) return;
+        if (!Array.isArray(lista) || !lista.length) {
+            tb.innerHTML = '<tr><td colspan="4">Nenhuma indicação recebida dos moradores ainda.</td></tr>';
+            return;
+        }
+        tb.innerHTML = lista.map((ind) => {
+            const st = ind.status || 'pendente';
+            const votos = Number(ind.pedidos_indicacao || 1);
+            const telLimpo = String(ind.contato || '').replace(/\D/g, '');
+            const msgConv = 'Olá, pessoal da ' + (ind.nome_loja || 'loja') + '! ' + votos + ' morador(es) de ' + (ind.bairro || 'sua região') + ' indicaram vocês no AcheIAki para pedir direto sem taxa de aplicativo! Querem testar 7 dias grátis com tudo montado? ' + window.location.origin + '/cadastro.html';
+            const waUrl = telLimpo.length >= 10
+                ? 'https://wa.me/' + (telLimpo.length <= 11 ? '55' + telLimpo : telLimpo) + '?text=' + encodeURIComponent(msgConv)
+                : 'https://wa.me/?text=' + encodeURIComponent(msgConv);
+            return '<tr>'
+                + '<td><strong>' + escapar(ind.nome_loja) + '</strong><br><small>Por: ' + escapar(ind.quem_indicou || 'Morador') + '</small></td>'
+                + '<td>' + escapar(ind.bairro || '—') + '<br><small>' + escapar(ind.contato || 'sem contato') + '</small></td>'
+                + '<td><strong>' + votos + ' voto(s)</strong></td>'
+                + '<td class="acoes">'
+                + '<span class="pill ' + escapar(st) + '">' + escapar(st) + '</span> '
+                + '<a href="' + waUrl + '" target="_blank" rel="noopener" class="sec" style="display:inline-block;padding:6px 10px;border-radius:8px;background:#15803d;color:#fff;text-decoration:none;font-size:0.82rem;font-weight:700;">💬 Convidar no Zap</a> '
+                + '<button type="button" class="sec" data-ind-status="' + escapar(ind.id) + '" data-next="' + (st === 'abordada' ? 'cadastrada' : 'abordada') + '">' + (st === 'abordada' ? 'Marcar Cadastrada' : 'Marcar Abordada') + '</button>'
+                + '</td></tr>';
+        }).join('');
+        tb.querySelectorAll('[data-ind-status]').forEach((b) => {
+            b.addEventListener('click', () => {
+                api({ acao: 'indicar_status', id: b.dataset.indStatus, status: b.dataset.next }).then((r) => {
+                    if (r && r.indicacoes) desenharIndicacoes(r.indicacoes);
+                });
+            });
         });
     }
 

@@ -1256,6 +1256,67 @@ const NICHOS_LOJA = {
         { slug: 'bolos', nome: 'Bolos e fatias', subtitulo: 'Encomendas', emoji: '🎂', cor: '#db2777' },
         { slug: 'doces', nome: 'Doces', subtitulo: 'Para presentear', emoji: '🍬', cor: '#f59e0b' },
         { slug: 'bebidas', nome: 'Bebidas', subtitulo: 'Para acompanhar', emoji: '☕', cor: '#78350f' }
+    ]},
+    bebidas: { id: 'bebidas', categorias: [
+        { slug: 'cervejas', nome: 'Cervejas & Chopp', subtitulo: 'Bem geladas', emoji: '🍺', cor: '#d97706' },
+        { slug: 'refrigerantes', nome: 'Refrigerantes & Sucos', subtitulo: '2L, latas e fardos', emoji: '🥤', cor: '#ea580c' },
+        { slug: 'destilados', nome: 'Vinhos & Destilados', subtitulo: 'Seleção especial', emoji: '🍷', cor: '#991b1b' },
+        { slug: 'conveniencia', nome: 'Água, Gelo & Carvão', subtitulo: 'Para seu churrasco', emoji: '🧊', cor: '#0284c7' }
+    ]},
+    mercado: { id: 'mercado', categorias: [
+        { slug: 'hortifruti', nome: 'Hortifruti Fresco', subtitulo: 'Frutas e verduras', emoji: '🥬', cor: '#15803d' },
+        { slug: 'mercearia', nome: 'Mercearia & Despensa', subtitulo: 'Arroz, feijão e básicos', emoji: '🛒', cor: '#ea580c' },
+        { slug: 'acougue', nome: 'Carnes & Frios', subtitulo: 'Cortes e queijos', emoji: '🥩', cor: '#b91c1c' },
+        { slug: 'limpeza', nome: 'Limpeza & Higiene', subtitulo: 'Para casa toda', emoji: '🧼', cor: '#0f766e' },
+        { slug: 'bebidas', nome: 'Bebidas', subtitulo: 'Água, sucos e refri', emoji: '🥤', cor: '#2563eb' }
+    ]},
+    farmacia: { id: 'farmacia', categorias: [
+        { slug: 'medicamentos', nome: 'Saúde & Bem-Estar', subtitulo: 'Uso diário', emoji: '💊', cor: '#dc2626' },
+        { slug: 'higiene', nome: 'Higiene Pessoal', subtitulo: 'Cuidados diários', emoji: '🧴', cor: '#15803d' },
+        { slug: 'bebe', nome: 'Mamãe & Bebê', subtitulo: 'Fraldas e cuidados', emoji: '🍼', cor: '#d97706' },
+        { slug: 'suplementos', nome: 'Vitaminas & Suplementos', subtitulo: 'Energia e imunidade', emoji: '💪', cor: '#ea580c' }
+    ]},
+    petshop: { id: 'petshop', categorias: [
+        { slug: 'caes', nome: 'Rações para Cães', subtitulo: 'Filhotes e adultos', emoji: '🐶', cor: '#ea580c' },
+        { slug: 'gatos', nome: 'Rações & Areia Gatos', subtitulo: 'Sabores variados', emoji: '🐱', cor: '#b45309' },
+        { slug: 'petiscos', nome: 'Petiscos & Brinquedos', subtitulo: 'Para alegrar o pet', emoji: '🦴', cor: '#15803d' },
+        { slug: 'higiene_pet', nome: 'Higiene & Cuidados', subtitulo: 'Shampoo e antipulgas', emoji: '🛁', cor: '#0f766e' }
+    ]},
+    moda: { id: 'moda', categorias: [
+        { slug: 'feminino', nome: 'Moda Feminina', subtitulo: 'Lançamentos e looks', emoji: '👗', cor: '#db2777' },
+        { slug: 'masculino', nome: 'Moda Masculina', subtitulo: 'Camisetas, calças e kits', emoji: '👕', cor: '#231915' },
+        { slug: 'calcados', nome: 'Calçados & Tênis', subtitulo: 'Conforto e estilo', emoji: '👟', cor: '#ea580c' },
+        { slug: 'acessorios', nome: 'Bolsas & Acessórios', subtitulo: 'Para completar o visual', emoji: '👜', cor: '#b45309' }
+    ]},
+    eletronicos: { id: 'eletronicos', categorias: [
+        { slug: 'celulares', nome: 'Acessórios de Celular', subtitulo: 'Capinhas, películas e cabos', emoji: '📱', cor: '#ea580c' },
+        { slug: 'audio', nome: 'Fones & Caixas de Som', subtitulo: 'Bluetooth e áudio', emoji: '🎧', cor: '#231915' },
+        { slug: 'informatica', nome: 'Informática & Gamer', subtitulo: 'Mouses, teclados e hubs', emoji: '💻', cor: '#b45309' },
+        { slug: 'energia', nome: 'Carregadores & Baterias', subtitulo: 'Turbo e portáteis', emoji: '🔋', cor: '#15803d' }
+    ]},
+    beleza: { id: 'beleza', categorias: [
+        { slug: 'maquiagem', nome: 'Maquiagem', subtitulo: 'Bases, batons e paletas', emoji: '💄', cor: '#db2777' },
+        { slug: 'skincare', nome: 'Skincare & Rosto', subtitulo: 'Séruns e hidratantes', emoji: '✨', cor: '#ea580c' },
+        { slug: 'cabelos', nome: 'Cabelos & Finalizadores', subtitulo: 'Hidratação e brilho', emoji: '💆', cor: '#b45309' },
+        { slug: 'perfumes', nome: 'Perfumes & Kits', subtitulo: 'Presentes prontos', emoji: '🎁', cor: '#7e22ce' }
+    ]},
+    papelaria: { id: 'papelaria', categorias: [
+        { slug: 'presentes', nome: 'Presentes & Cestas', subtitulo: 'Prontos para surpreender', emoji: '🎁', cor: '#ea580c' },
+        { slug: 'flores', nome: 'Flores & Plantas', subtitulo: 'Buquês e vasos', emoji: '💐', cor: '#15803d' },
+        { slug: 'escolar', nome: 'Escolar & Escritório', subtitulo: 'Cadernos, canetas e kits', emoji: '✏️', cor: '#b45309' },
+        { slug: 'brinquedos', nome: 'Brinquedos & Jogos', subtitulo: 'Diversão para crianças', emoji: '🧸', cor: '#dc2626' }
+    ]},
+    ferragens: { id: 'ferragens', categorias: [
+        { slug: 'ferramentas', nome: 'Ferramentas', subtitulo: 'Manuais e elétricas', emoji: '🔧', cor: '#b45309' },
+        { slug: 'eletrica', nome: 'Elétrica & Iluminação', subtitulo: 'Lâmpadas, fios e tomadas', emoji: '💡', cor: '#f59e0b' },
+        { slug: 'hidraulica', nome: 'Hidráulica & Reparos', subtitulo: 'Torneiras e conexões', emoji: '🚿', cor: '#0f766e' },
+        { slug: 'utilidades', nome: 'Casa & Jardim', subtitulo: 'Utilidades do dia a dia', emoji: '🏡', cor: '#15803d' }
+    ]},
+    comercio: { id: 'comercio', categorias: [
+        { slug: 'destaques', nome: 'Ofertas & Destaques', subtitulo: 'Melhores preços da loja', emoji: '🏷️', cor: '#ea580c' },
+        { slug: 'catalogo', nome: 'Produtos Principais', subtitulo: 'Escolha e peça direto', emoji: '🛍️', cor: '#231915' },
+        { slug: 'novidades', nome: 'Novidades', subtitulo: 'Recém-chegados', emoji: '✨', cor: '#b45309' },
+        { slug: 'combos', nome: 'Kits & Combos', subtitulo: 'Mais economia juntos', emoji: '📦', cor: '#15803d' }
     ]}
 };
 

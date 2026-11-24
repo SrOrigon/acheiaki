@@ -67,10 +67,112 @@ function pedidozap_nicho_presets()
         ],
         'confeitaria' => [
             'rotulo' => 'Doceria / confeitaria',
+            'grupo' => 'alimentacao',
             'categorias' => [
                 $cat('bolos', 'Bolos e fatias', '🎂', '#db2777', 'Encomendas'),
                 $cat('doces', 'Doces', '🍬', '#f59e0b', 'Para presentear'),
                 $cat('bebidas', 'Bebidas', '☕', '#78350f', 'Para acompanhar'),
+            ],
+        ],
+        'bebidas' => [
+            'rotulo' => 'Distribuidora de Bebidas & Adega',
+            'grupo' => 'varejo',
+            'categorias' => [
+                $cat('cervejas', 'Cervejas & Chopp', '🍺', '#d97706', 'Bem geladas'),
+                $cat('refrigerantes', 'Refrigerantes & Sucos', '🥤', '#ea580c', '2L, latas e fardos'),
+                $cat('destilados', 'Vinhos & Destilados', '🍷', '#991b1b', 'Seleção especial'),
+                $cat('conveniencia', 'Água, Gelo & Carvão', '🧊', '#0284c7', 'Para seu churrasco'),
+            ],
+        ],
+        'mercado' => [
+            'rotulo' => 'Mercado, Mercearia & Hortifruti',
+            'grupo' => 'varejo',
+            'categorias' => [
+                $cat('hortifruti', 'Hortifruti Fresco', '🥬', '#15803d', 'Frutas e verduras'),
+                $cat('mercearia', 'Mercearia & Despensa', '🛒', '#ea580c', 'Arroz, feijão e básicos'),
+                $cat('acougue', 'Carnes & Frios', '🥩', '#b91c1c', 'Cortes e queijos'),
+                $cat('limpeza', 'Limpeza & Higiene', '🧼', '#0f766e', 'Para casa toda'),
+                $cat('bebidas', 'Bebidas', '🥤', '#2563eb', 'Água, sucos e refri'),
+            ],
+        ],
+        'farmacia' => [
+            'rotulo' => 'Farmácia, Saúde & Perfumaria',
+            'grupo' => 'varejo',
+            'categorias' => [
+                $cat('medicamentos', 'Saúde & Bem-Estar', '💊', '#dc2626', 'Uso diário'),
+                $cat('higiene', 'Higiene Pessoal', '🧴', '#15803d', 'Cuidados diários'),
+                $cat('bebe', 'Mamãe & Bebê', '🍼', '#d97706', 'Fraldas e cuidados'),
+                $cat('suplementos', 'Vitaminas & Suplementos', '💪', '#ea580c', 'Energia e imunidade'),
+            ],
+        ],
+        'petshop' => [
+            'rotulo' => 'Pet Shop & Casa de Ração',
+            'grupo' => 'varejo',
+            'categorias' => [
+                $cat('caes', 'Rações para Cães', '🐶', '#ea580c', 'Filhotes e adultos'),
+                $cat('gatos', 'Rações & Areia Gatos', '🐱', '#b45309', 'Sabores variados'),
+                $cat('petiscos', 'Petiscos & Brinquedos', '🦴', '#15803d', 'Para alegrar o pet'),
+                $cat('higiene_pet', 'Higiene & Cuidados', '🛁', '#0f766e', 'Shampoo e antipulgas'),
+            ],
+        ],
+        'moda' => [
+            'rotulo' => 'Roupas, Calçados & Acessórios',
+            'grupo' => 'varejo',
+            'categorias' => [
+                $cat('feminino', 'Moda Feminina', '👗', '#db2777', 'Lançamentos e looks'),
+                $cat('masculino', 'Moda Masculina', '👕', '#231915', 'Camisetas, calças e kits'),
+                $cat('calcados', 'Calçados & Tênis', '👟', '#ea580c', 'Conforto e estilo'),
+                $cat('acessorios', 'Bolsas & Acessórios', '👜', '#b45309', 'Para completar o visual'),
+            ],
+        ],
+        'eletronicos' => [
+            'rotulo' => 'Eletrônicos, Celulares & Informática',
+            'grupo' => 'varejo',
+            'categorias' => [
+                $cat('celulares', 'Acessórios de Celular', '📱', '#ea580c', 'Capinhas, películas e cabos'),
+                $cat('audio', 'Fones & Caixas de Som', '🎧', '#231915', 'Bluetooth e áudio'),
+                $cat('informatica', 'Informática & Gamer', '💻', '#b45309', 'Mouses, teclados e hubs'),
+                $cat('energia', 'Carregadores & Baterias', '🔋', '#15803d', 'Turbo e portáteis'),
+            ],
+        ],
+        'beleza' => [
+            'rotulo' => 'Cosméticos, Maquiagem & Perfumaria',
+            'grupo' => 'varejo',
+            'categorias' => [
+                $cat('maquiagem', 'Maquiagem', '💄', '#db2777', 'Bases, batons e paletas'),
+                $cat('skincare', 'Skincare & Rosto', '✨', '#ea580c', 'Séruns e hidratantes'),
+                $cat('cabelos', 'Cabelos & Finalizadores', '💆', '#b45309', 'Hidratação e brilho'),
+                $cat('perfumes', 'Perfumes & Kits', '🎁', '#7e22ce', 'Presentes prontos'),
+            ],
+        ],
+        'papelaria' => [
+            'rotulo' => 'Papelaria, Presentes & Floricultura',
+            'grupo' => 'varejo',
+            'categorias' => [
+                $cat('presentes', 'Presentes & Cestas', '🎁', '#ea580c', 'Prontos para surpreender'),
+                $cat('flores', 'Flores & Plantas', '💐', '#15803d', 'Buquês e vasos'),
+                $cat('escolar', 'Escolar & Escritório', '✏️', '#b45309', 'Cadernos, canetas e kits'),
+                $cat('brinquedos', 'Brinquedos & Jogos', '🧸', '#dc2626', 'Diversão para crianças'),
+            ],
+        ],
+        'ferragens' => [
+            'rotulo' => 'Construção, Ferragens & Utilidades',
+            'grupo' => 'varejo',
+            'categorias' => [
+                $cat('ferramentas', 'Ferramentas', '🔧', '#b45309', 'Manuais e elétricas'),
+                $cat('eletrica', 'Elétrica & Iluminação', '💡', '#f59e0b', 'Lâmpadas, fios e tomadas'),
+                $cat('hidraulica', 'Hidráulica & Reparos', '🚿', '#0f766e', 'Torneiras e conexões'),
+                $cat('utilidades', 'Casa & Jardim', '🏡', '#15803d', 'Utilidades do dia a dia'),
+            ],
+        ],
+        'comercio' => [
+            'rotulo' => 'Loja / Comércio em Geral (Qualquer Produto)',
+            'grupo' => 'varejo',
+            'categorias' => [
+                $cat('destaques', 'Ofertas & Destaques', '🏷️', '#ea580c', 'Melhores preços da loja'),
+                $cat('catalogo', 'Produtos Principais', '🛍️', '#231915', 'Escolha e peça direto'),
+                $cat('novidades', 'Novidades', '✨', '#b45309', 'Recém-chegados'),
+                $cat('combos', 'Kits & Combos', '📦', '#15803d', 'Mais economia juntos'),
             ],
         ],
     ];

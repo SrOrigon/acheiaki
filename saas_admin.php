@@ -30,6 +30,10 @@ if (pedidozap_autorizado($user, $pass) !== 'master') {
 $acao = $body['acao'] ?? $_GET['acao'] ?? 'listar';
 
 if ($acao === 'listar') {
+    $antInd = Database::getTenant();
+    Database::setTenant('default');
+    $indicacoes = Database::read('indicacoes_lojas.json');
+    Database::setTenant($antInd);
     echo json_encode([
         'success' => true,
         'lojas' => pedidozap_resumo_lojas(),
@@ -38,7 +42,31 @@ if ($acao === 'listar') {
         'planos' => array_values(pz_planos_catalogo()),
         'integracoes' => pedidozap_integracoes_publicas(),
         'db_config' => function_exists('pz_db_config_publica') ? pz_db_config_publica() : null,
+        'indicacoes' => is_array($indicacoes) ? $indicacoes : [],
     ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if ($acao === 'indicar_status') {
+    $idInd = trim((string) ($body['id'] ?? ''));
+    $stInd = in_array(($body['status'] ?? ''), ['pendente', 'abordada', 'cadastrada'], true) ? $body['status'] : 'abordada';
+    $antInd = Database::getTenant();
+    Database::setTenant('default');
+    Database::mutate('indicacoes_lojas.json', function (&$lista) use ($idInd, $stInd) {
+        if (!is_array($lista)) {
+            return false;
+        }
+        foreach ($lista as $i => $row) {
+            if (is_array($row) && ($row['id'] ?? '') === $idInd) {
+                $lista[$i]['status'] = $stInd;
+                return true;
+            }
+        }
+        return false;
+    });
+    $indicacoes = Database::read('indicacoes_lojas.json');
+    Database::setTenant($antInd);
+    echo json_encode(['success' => true, 'indicacoes' => is_array($indicacoes) ? $indicacoes : []], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

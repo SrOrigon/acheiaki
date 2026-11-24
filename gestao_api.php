@@ -95,6 +95,7 @@ $mapaPlanoAcoes = [
     'fiscal_emitir_pedido' => ['fiscal_nfce', 'Emissão Fiscal NFC-e / SAT', 'enterprise'],
     'push_campanha_enviar' => ['push_campanhas', 'Campanhas Push Notifications', 'enterprise'],
     'rede_resumo' => ['multi_unidades', 'Painel Consolidado Multi-Unidades (Rede)', 'enterprise'],
+    'rede_clonar_cardapio' => ['multi_unidades', 'Clonar Cardápio para Filial (Rede)', 'enterprise'],
 ];
 if (isset($mapaPlanoAcoes[$action])) {
     [$recReq, $rotReq, $minReq] = $mapaPlanoAcoes[$action];
@@ -724,39 +725,42 @@ switch ($action) {
         $totFatMes = 0.0;
         $totAbertos = 0;
         $antTenant = Database::getTenant();
-        foreach ($registro as $s => $m) {
-            if (!is_array($m)) {
-                continue;
+        try {
+            foreach ($registro as $s => $m) {
+                if (!is_array($m)) {
+                    continue;
+                }
+                $mesmoGrupo = ($s === $slugAtual)
+                    || ($grupoRede !== '' && strcasecmp(trim((string) ($m['grupo_rede'] ?? '')), $grupoRede) === 0);
+                if (!$mesmoGrupo) {
+                    continue;
+                }
+                Database::setTenant($s);
+                $resU = pz_resumo_executivo_loja();
+                $pedH = (int) ($resU['hoje']['pedidos'] ?? 0);
+                $fatH = (float) ($resU['hoje']['faturamento_bruto'] ?? 0);
+                $fatM = (float) ($resU['mes']['faturamento_bruto'] ?? 0);
+                $abU = (int) ($resU['pedidos_abertos'] ?? 0);
+                $totPedHoje += $pedH;
+                $totFatHoje += $fatH;
+                $totFatMes += $fatM;
+                $totAbertos += $abU;
+                $unidades[] = [
+                    'slug' => $s,
+                    'nome' => (string) ($m['nome_empresa'] ?? $s),
+                    'cidade' => (string) ($m['cidade'] ?? ''),
+                    'bairro' => (string) ($m['bairro'] ?? ''),
+                    'status' => pedidozap_status_efetivo($m)['status'],
+                    'pedidos_hoje' => $pedH,
+                    'pedidos_abertos' => $abU,
+                    'faturamento_hoje' => round($fatH, 2),
+                    'faturamento_mes' => round($fatM, 2),
+                    'url_painel' => 'admin.html?tenant=' . rawurlencode($s),
+                ];
             }
-            $mesmoGrupo = ($s === $slugAtual)
-                || ($grupoRede !== '' && strcasecmp(trim((string) ($m['grupo_rede'] ?? '')), $grupoRede) === 0);
-            if (!$mesmoGrupo) {
-                continue;
-            }
-            Database::setTenant($s);
-            $resU = pz_resumo_executivo_loja();
-            $pedH = (int) ($resU['hoje']['pedidos'] ?? 0);
-            $fatH = (float) ($resU['hoje']['faturamento_bruto'] ?? 0);
-            $fatM = (float) ($resU['mes']['faturamento_bruto'] ?? 0);
-            $abU = (int) ($resU['pedidos_abertos'] ?? 0);
-            $totPedHoje += $pedH;
-            $totFatHoje += $fatH;
-            $totFatMes += $fatM;
-            $totAbertos += $abU;
-            $unidades[] = [
-                'slug' => $s,
-                'nome' => (string) ($m['nome_empresa'] ?? $s),
-                'cidade' => (string) ($m['cidade'] ?? ''),
-                'bairro' => (string) ($m['bairro'] ?? ''),
-                'status' => pedidozap_status_efetivo($m)['status'],
-                'pedidos_hoje' => $pedH,
-                'pedidos_abertos' => $abU,
-                'faturamento_hoje' => round($fatH, 2),
-                'faturamento_mes' => round($fatM, 2),
-                'url_painel' => 'admin.html?tenant=' . rawurlencode($s),
-            ];
+        } finally {
+            Database::setTenant($antTenant);
         }
-        Database::setTenant($antTenant);
         echo json_encode([
             'success' => true,
             'grupo_rede' => $grupoRede,
@@ -769,6 +773,140 @@ switch ($action) {
             ],
             'unidades' => $unidades,
         ], JSON_UNESCAPED_UNICODE);
+        break;
+
+    case 'clientes_sumidos':
+        pz_exigir_perm($sessao, ['clientes', 'visao_geral', 'pedidos']);
+        $slugAtual = Database::getTenant();
+        $cfgAtual = pedidozap_normalizar_config(Database::readStrict('config.json'), $slugAtual);
+        $nomeAtual = trim((string) ($cfgAtual['NOME_LOJA'] ?? $slugAtual)) ?: $slugAtual;
+        $mkt = pz_ler_marketing();
+        $cupom = '';
+        foreach ($mkt['cupons'] as $c) {
+            if (!empty($c['ativo']) && (empty($c['validade']) || $c['validade'] >= date('Y-m-d'))) {
+                $cupom = (string) ($c['codigo'] ?? '');
+                break;
+            }
+        }
+        $diasMin = max(7, min(180, (int) ($req['dias'] ?? $_GET['dias'] ?? 15)));
+        $listaSumidos = pz_clientes_sumidos($diasMin, 40, $nomeAtual, $slugAtual, $cupom);
+        $liberado = pz_plano_tem_recurso('crm_cupons_fidelidade', null, $isMasterPlano);
+        if (!$liberado) {
+            $listaMascarada = array_map(function ($x) {
+                $x['telefone'] = $x['telefone_mascarado'];
+                $x['whatsapp_url'] = '';
+                $x['mensagem_sugerida'] = '';
+                return $x;
+            }, array_slice($listaSumidos, 0, 8));
+            echo json_encode([
+                'success' => true,
+                'liberado' => false,
+                'requer_upgrade_pro' => true,
+                'total' => count($listaSumidos),
+                'cupom_ativo' => $cupom,
+                'clientes' => $listaMascarada,
+            ], JSON_UNESCAPED_UNICODE);
+            break;
+        }
+        echo json_encode([
+            'success' => true,
+            'liberado' => true,
+            'total' => count($listaSumidos),
+            'cupom_ativo' => $cupom,
+            'clientes' => $listaSumidos,
+        ], JSON_UNESCAPED_UNICODE);
+        break;
+
+    case 'clientes_csv':
+        pz_exigir_perm($sessao, ['clientes', 'relatorios']);
+        if (!pz_plano_tem_recurso('crm_cupons_fidelidade', null, $isMasterPlano)) {
+            pz_plano_exigir('crm_cupons_fidelidade', 'Exportação da Base de Clientes (CSV)', 'pro', $isMasterPlano);
+        }
+        $cliLista = pz_ler_clientes();
+        $linhasCsv = ['Nome;WhatsApp;Pedidos;Total Gasto;Ultima Compra;Endereco'];
+        $limpCsv = static function ($s) {
+            $s = str_replace(["\r", "\n", ';'], [' ', ' ', ','], (string) $s);
+            if ($s !== '' && in_array($s[0], ['=', '+', '-', '@'], true)) {
+                $s = "'" . $s;
+            }
+            return $s;
+        };
+        foreach ($cliLista as $c) {
+            if (!is_array($c)) {
+                continue;
+            }
+            $linhasCsv[] = implode(';', [
+                $limpCsv($c['nome'] ?? ''),
+                $limpCsv($c['telefone'] ?? ''),
+                (int) ($c['total_pedidos'] ?? 0),
+                number_format((float) ($c['total_gasto'] ?? 0), 2, ',', ''),
+                $limpCsv($c['ultima_compra'] ?? ''),
+                $limpCsv($c['endereco'] ?? ''),
+            ]);
+        }
+        echo json_encode([
+            'success' => true,
+            'filename' => 'clientes-' . Database::getTenant() . '-' . date('Y-m-d') . '.csv',
+            'total' => count($cliLista),
+            'csv' => implode("\n", $linhasCsv),
+        ], JSON_UNESCAPED_UNICODE);
+        break;
+
+    case 'otimizar_cardapio_ia':
+        pz_exigir_perm($sessao, ['cardapio', 'config', 'visao_geral']);
+        $aplicar = !empty($req['aplicar']);
+        $slugAtual = Database::getTenant();
+        $resOtim = pz_otimizar_cardapio_sugestoes($slugAtual, $aplicar);
+        if ($aplicar && !empty($resOtim['alterados'])) {
+            pz_registrar_auditoria('cardapio', 'otimizacao_ia', $resOtim['alterados'] . ' descrição(ões) aprimorada(s) pela IA', $ator);
+        }
+        echo json_encode($resOtim, JSON_UNESCAPED_UNICODE);
+        break;
+
+    case 'rede_clonar_cardapio':
+        pz_exigir_perm($sessao, ['cardapio', 'config']);
+        $slugOrigem = Database::getTenant();
+        $slugDestino = strtolower(trim((string) ($req['destino'] ?? '')));
+        if ($slugDestino === '' || $slugDestino === $slugOrigem) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Selecione uma filial de destino diferente desta loja.'], JSON_UNESCAPED_UNICODE);
+            break;
+        }
+        $reg = pedidozap_ler_registro();
+        $mOrig = is_array($reg[$slugOrigem] ?? null) ? $reg[$slugOrigem] : [];
+        $mDest = is_array($reg[$slugDestino] ?? null) ? $reg[$slugDestino] : null;
+        $grupoOrig = trim((string) ($mOrig['grupo_rede'] ?? ''));
+        $grupoDest = $mDest ? trim((string) ($mDest['grupo_rede'] ?? '')) : '';
+        if (!$mDest || (!$isMasterPlano && ($grupoOrig === '' || strcasecmp($grupoOrig, $grupoDest) !== 0))) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Cada unidade precisa pertencer à mesma rede (mesmo grupo) e ter assinatura ativa própria.'], JSON_UNESCAPED_UNICODE);
+            break;
+        }
+        $menuOrig = Database::readStrict('cardapio.json');
+        $cfgOrig = pedidozap_normalizar_config(Database::readStrict('config.json'), $slugOrigem);
+        $antT = Database::getTenant();
+        try {
+            Database::setTenant($slugDestino);
+            Database::write('cardapio.json', is_array($menuOrig) ? $menuOrig : []);
+            Database::mutate('config.json', function (&$c) use ($cfgOrig) {
+                if (!is_array($c)) {
+                    $c = [];
+                }
+                if (!empty($cfgOrig['CATEGORIAS'])) {
+                    $c['CATEGORIAS'] = $cfgOrig['CATEGORIAS'];
+                }
+                $c['VERSION'] = time();
+                return true;
+            });
+        } finally {
+            Database::setTenant($antT);
+        }
+        if (function_exists('pz_cache_del')) {
+            pz_cache_del('pub_store_json_' . $slugDestino);
+            pz_cache_del('mkt_lojas_all');
+        }
+        pz_registrar_auditoria('rede', 'clonar_cardapio', 'Cardápio clonado para filial ' . $slugDestino, $ator);
+        echo json_encode(['success' => true, 'message' => 'Cardápio sincronizado para a unidade ' . ($mDest['nome_empresa'] ?? $slugDestino) . '!'], JSON_UNESCAPED_UNICODE);
         break;
 
     default:

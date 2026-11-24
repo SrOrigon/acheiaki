@@ -832,7 +832,7 @@ body.mkt-body { margin: 0; background: var(--aki-canvas, var(--mkt-bg)); font-fa
 
 .aki-quick-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 12px;
 }
 .aki-quick-btn {

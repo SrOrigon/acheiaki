@@ -160,9 +160,10 @@
         const root = document.getElementById('fg-visao-geral-root');
         if (!root) return;
 
-        const [resResumo, diag] = await Promise.all([
+        const [resResumo, diag, resSumidos] = await Promise.all([
             apiGestao('resumo'),
-            apiAgenteDiagnostico()
+            apiAgenteDiagnostico(),
+            apiGestao('clientes_sumidos', { dias: 15 })
         ]);
 
         if (resResumo && resResumo.sessao) {
@@ -286,7 +287,191 @@
                     </table>
                 </div>
             ` : ''}
+
+            ${(() => {
+                const econ = r.economia_taxas || { hoje: 0, semana: 0, mes: 0, taxa_ref_pct: 20 };
+                const baseCli = r.base_clientes || { total: 0, com_whatsapp: 0, novos_semana: 0, sumidos_15d: 0 };
+                const orig = r.origem_pedidos || { link_direto: 0, marketplace: 0, balcao: 0, recuperacao_ia: 0 };
+                const sumLista = (resSumidos && Array.isArray(resSumidos.clientes)) ? resSumidos.clientes : (baseCli.sumidos_preview || []);
+                const sumLiberado = !resSumidos || resSumidos.liberado !== false;
+                const sumTotal = (resSumidos && resSumidos.total != null) ? Number(resSumidos.total) : Number(baseCli.sumidos_15d || 0);
+                return `
+                    <div style="margin-top:16px;background:#fff7ed;border:1px solid #fdba74;border-radius:16px;padding:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+                            <div>
+                                <h4 style="margin:0;color:#9a3412;font-size:1.05rem;"><i class="fa-solid fa-sack-dollar"></i> Quanto o AcheIAki está salvando no seu bolso</h4>
+                                <small style="color:#7c2d12;">Economia automática comparada a ~20% de comissão de aplicativos tradicionais.</small>
+                            </div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <button type="button" class="fg-btn fg-btn-sec" id="fg-btn-copiar-resumo-wpp" style="font-size:0.82rem;"><i class="fa-brands fa-whatsapp"></i> Copiar Resumo Semanal</button>
+                                <button type="button" class="fg-btn fg-btn-prim" id="fg-btn-otimizar-ia" style="font-size:0.82rem;background:#ea580c;"><i class="fa-solid fa-wand-magic-sparkles"></i> Otimizar Cardápio com IA</button>
+                            </div>
+                        </div>
+
+                        <div class="fg-grid-kpis" style="margin-bottom:12px;">
+                            <div class="fg-kpi destaque-ok" style="background:#ecfdf5;border-color:#86efac;">
+                                <div class="fg-kpi-label">Economia em Taxas (Mês)</div>
+                                <div class="fg-kpi-valor" style="color:#15803d;">${brl(econ.mes)}</div>
+                                <div class="fg-kpi-sub">Hoje: ${brl(econ.hoje)} · 7 dias: ${brl(econ.semana)}</div>
+                            </div>
+                            <div class="fg-kpi" style="background:#fff;">
+                                <div class="fg-kpi-label">Sua Base Própria (100% sua)</div>
+                                <div class="fg-kpi-valor">${baseCli.com_whatsapp || 0} clientes</div>
+                                <div class="fg-kpi-sub">
+                                    <button type="button" id="fg-btn-exportar-csv" style="border:none;background:#231915;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;margin-top:4px;">
+                                        <i class="fa-solid fa-download"></i> ${sumLiberado ? 'Baixar Lista WhatsApp (CSV)' : '🔒 Exportar CSV (Plano Pro)'}
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="fg-kpi" style="background:#fff;">
+                                <div class="fg-kpi-label">Origem das Vendas (Mês)</div>
+                                <div class="fg-kpi-valor" style="font-size:1.1rem;">${orig.link_direto || 0} Direto · ${orig.marketplace || 0} Mkt</div>
+                                <div class="fg-kpi-sub">Balcão: ${orig.balcao || 0} · Recuperados IA: ${orig.recuperacao_ia || 0}</div>
+                            </div>
+                            <div class="fg-kpi ${sumTotal > 0 ? 'destaque-alerta' : ''}" style="background:#fff;">
+                                <div class="fg-kpi-label">Clientes Sumidos (15+ dias)</div>
+                                <div class="fg-kpi-valor" style="color:${sumTotal > 0 ? '#c2410c' : '#15803d'};">${sumTotal}</div>
+                                <div class="fg-kpi-sub">${sumTotal > 0 ? 'Prontos p/ chamar no Zap!' : 'Base em dia'}</div>
+                            </div>
+                        </div>
+
+                        <div id="fg-ia-otim-feedback" hidden style="background:#fff;border:1px solid #fed7aa;border-radius:12px;padding:12px;margin-bottom:12px;font-size:0.86rem;"></div>
+
+                        ${sumTotal > 0 ? `
+                            <div style="background:#fff;border:1px solid #fed7aa;border-radius:12px;padding:12px;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+                                    <strong style="color:#9a3412;"><i class="fa-solid fa-user-clock"></i> Radar Anti-Churn: clientes que já compraram e não pedem há 15+ dias</strong>
+                                    ${!sumLiberado ? '<button type="button" class="fg-btn fg-btn-prim fg-ir-plano-pro" style="font-size:0.78rem;padding:6px 12px;">🔒 Desbloquear no Plano Pro</button>' : ''}
+                                </div>
+                                <div style="display:grid;gap:8px;">
+                                    ${sumLista.slice(0, 5).map((s) => `
+                                        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;background:#faf7f2;border-radius:10px;border:1px solid rgba(35,25,21,0.08);">
+                                            <div>
+                                                <strong>${esc(s.nome)}</strong> · <small style="color:#9a3412;font-weight:700;">${s.dias_sem_pedir} dias sem pedir</small><br>
+                                                <small style="color:#6b615b;">${esc(s.telefone)} · Já gastou ${brl(s.total_gasto)} (${s.total_pedidos} pedido(s))</small>
+                                            </div>
+                                            ${sumLiberado && s.whatsapp_url
+                                                ? `<a href="${esc(s.whatsapp_url)}" target="_blank" rel="noopener" style="background:#15803d;color:#fff;padding:7px 12px;border-radius:8px;text-decoration:none;font-size:0.8rem;font-weight:700;"><i class="fa-brands fa-whatsapp"></i> Chamar agora</a>`
+                                                : `<button type="button" class="fg-ir-plano-pro" style="border:none;background:#ea580c;color:#fff;padding:7px 12px;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;">🔒 Liberar no Pro</button>`}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:10px;border-top:1px dashed #fdba74;">
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <button type="button" id="fg-btn-indicar-vizinho" style="border:1px solid #15803d;background:#ecfdf5;color:#15803d;padding:7px 12px;border-radius:9px;font-weight:700;font-size:0.8rem;cursor:pointer;"><i class="fa-solid fa-handshake"></i> Indicar loja vizinha (+7 dias grátis)</button>
+                                <button type="button" id="fg-btn-clonar-filial" style="border:1px solid #cbd5e1;background:#fff;color:#231915;padding:7px 12px;border-radius:9px;font-weight:700;font-size:0.8rem;cursor:pointer;"><i class="fa-solid fa-clone"></i> Clonar Cardápio p/ Nova Filial</button>
+                            </div>
+                            <small style="color:#7c2d12;">1 CNPJ / endereço físico = 1 assinatura ativa · Sincronize cardápios entre filiais.</small>
+                        </div>
+
+                        <div style="margin-top:12px;background:#231915;color:#faf7f2;border-radius:12px;padding:12px 14px;">
+                            <div style="font-size:0.78rem;font-weight:800;color:#fb923c;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">Em breve na sua região (já incluso para lojas ativas)</div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:8px;font-size:0.8rem;">
+                                <div style="background:rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;border:1px solid rgba(251,146,60,0.22);">🛵 <strong>Motoboys Parceiros</strong><br><small style="color:#d6d3d1;">Chame entregador do bairro em 1 clique</small></div>
+                                <div style="background:rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;border:1px solid rgba(251,146,60,0.22);">💳 <strong>Pix Automático + Split</strong><br><small style="color:#d6d3d1;">Sem conferir comprovante no WhatsApp</small></div>
+                                <div style="background:rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;border:1px solid rgba(251,146,60,0.22);">🎟️ <strong>Cashback do Bairro</strong><br><small style="color:#d6d3d1;">Cliente ganha pontos e volta na sua loja</small></div>
+                                <div style="background:rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;border:1px solid rgba(251,146,60,0.22);">📡 <strong>Radar de Fome Ao Vivo</strong><br><small style="color:#d6d3d1;">Veja onde estão buscando lanches agora</small></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            })()}
         `;
+
+        root.querySelectorAll('.fg-ir-plano-pro').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const abaConta = document.querySelector('#admin-tabs [data-tab="conta"]');
+                if (abaConta) abaConta.click();
+            });
+        });
+
+        const btnCopiarWpp = document.getElementById('fg-btn-copiar-resumo-wpp');
+        if (btnCopiarWpp) {
+            btnCopiarWpp.addEventListener('click', async () => {
+                const txt = r.resumo_semanal_wpp || ('Resumo AcheIAki: ' + brl((r.economia_taxas || {}).mes || 0) + ' economizados em taxas.');
+                try {
+                    await navigator.clipboard.writeText(txt);
+                    btnCopiarWpp.textContent = '✓ Resumo copiado!';
+                    setTimeout(() => { btnCopiarWpp.innerHTML = '<i class="fa-brands fa-whatsapp"></i> Copiar Resumo Semanal'; }, 2500);
+                } catch (e) {
+                    alert(txt);
+                }
+            });
+        }
+
+        const btnCsv = document.getElementById('fg-btn-exportar-csv');
+        if (btnCsv) {
+            btnCsv.addEventListener('click', async () => {
+                const resCsv = await apiGestao('clientes_csv');
+                if (!resCsv || !resCsv.success) {
+                    if (resCsv && resCsv.codigo_erro === 'upgrade_plano') {
+                        alert(resCsv.message || 'Disponível no Plano Pro.');
+                        const abaConta = document.querySelector('#admin-tabs [data-tab="conta"]');
+                        if (abaConta) abaConta.click();
+                        return;
+                    }
+                    return alert((resCsv && resCsv.message) || 'Não foi possível exportar.');
+                }
+                const blob = new Blob(["\uFEFF" + (resCsv.csv || '')], { type: 'text/csv;charset=utf-8;' });
+                const urlBlob = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = urlBlob;
+                a.download = resCsv.filename || 'clientes-acheiaki.csv';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(urlBlob);
+            });
+        }
+
+        const btnOtimIa = document.getElementById('fg-btn-otimizar-ia');
+        if (btnOtimIa) {
+            btnOtimIa.addEventListener('click', async () => {
+                const box = document.getElementById('fg-ia-otim-feedback');
+                btnOtimIa.disabled = true;
+                const prev = await apiGestao('otimizar_cardapio_ia', { aplicar: false });
+                btnOtimIa.disabled = false;
+                if (!box) return;
+                const qtdDesc = (prev && prev.sugestoes_descricao) ? prev.sugestoes_descricao.length : 0;
+                const qtdPrc = (prev && prev.alertas_preco) ? prev.alertas_preco.length : 0;
+                box.hidden = false;
+                if (!qtdDesc && !qtdPrc) {
+                    box.innerHTML = '<strong style="color:#15803d;">✅ Cardápio aprovado pela IA!</strong> Todos os itens já têm descrição vendedora e preços competitivos.';
+                    return;
+                }
+                box.innerHTML = '<div><strong>✨ Diagnóstico da IA no Cardápio:</strong> ' + qtdDesc + ' item(ns) sem descrição apetitosa e ' + qtdPrc + ' preço(s) acima da média regional.</div>'
+                    + (qtdDesc ? '<div style="margin-top:8px;"><button type="button" id="fg-btn-aplicar-otim" class="fg-btn fg-btn-prim" style="font-size:0.8rem;padding:6px 12px;">Aplicar ' + qtdDesc + ' descrição(ões) vendedora(s) agora</button></div>' : '')
+                    + (qtdPrc ? '<ul style="margin:6px 0 0;padding-left:18px;color:#9a3412;">' + prev.alertas_preco.slice(0, 4).map((p) => '<li><strong>' + esc(p.nome) + '</strong>: está ' + brl(p.preco_atual) + ' (sugestão ~' + brl(p.preco_sugerido) + ' p/ vender mais)</li>').join('') + '</ul>' : '');
+                const bAp = document.getElementById('fg-btn-aplicar-otim');
+                if (bAp) {
+                    bAp.addEventListener('click', async () => {
+                        const ap = await apiGestao('otimizar_cardapio_ia', { aplicar: true });
+                        box.innerHTML = '<strong style="color:#15803d;">✅ ' + (ap.alterados || 0) + ' descrição(ões) atualizada(s) no seu cardápio!</strong>';
+                    });
+                }
+            });
+        }
+
+        const btnIndViz = document.getElementById('fg-btn-indicar-vizinho');
+        if (btnIndViz) {
+            btnIndViz.addEventListener('click', () => {
+                const msg = 'Oi! Estou usando o AcheIAki na minha loja para receber pedidos direto sem pagar 25% de taxa pros apps. Cadastra a sua loja com 7 dias grátis por aqui: ' + window.location.origin + '/cadastro.html';
+                window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+            });
+        }
+
+        const btnClonar = document.getElementById('fg-btn-clonar-filial');
+        if (btnClonar) {
+            btnClonar.addEventListener('click', async () => {
+                const slugDest = prompt('Informe o endereço (slug) da filial já cadastrada na mesma rede para receber uma cópia deste cardápio:\n(Obs.: cada unidade física mantém sua própria assinatura ativa.)');
+                if (!slugDest || !slugDest.trim()) return;
+                const rCl = await apiGestao('rede_clonar_cardapio', { destino: slugDest.trim() });
+                alert((rCl && rCl.message) || 'Operação concluída.');
+            });
+        }
 
         const AssistCls = global.PedidoZapAssistenteCore && global.PedidoZapAssistenteCore.AssistenteIA;
         if (AssistCls) {

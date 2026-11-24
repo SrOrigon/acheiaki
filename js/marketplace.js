@@ -1997,6 +1997,44 @@
             });
         });
 
+        const formInd = $('mkt-form-indicar-loja');
+        if (formInd) {
+            formInd.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const nomeLoja = ($('ind-nome-loja') && $('ind-nome-loja').value || '').trim();
+                const bairroLoja = ($('ind-bairro-loja') && $('ind-bairro-loja').value || '').trim();
+                const contatoLoja = ($('ind-contato-loja') && $('ind-contato-loja').value || '').trim();
+                const msgEl = $('ind-loja-msg');
+                if (!nomeLoja || nomeLoja.length < 2) {
+                    if (msgEl) { msgEl.style.color = '#b91c1c'; msgEl.textContent = 'Digite o nome da loja para indicar.'; }
+                    return;
+                }
+                try {
+                    const res = await fetch('marketplace_api.php?action=indicar_loja', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nome_loja: nomeLoja,
+                            bairro: bairroLoja,
+                            contato: contatoLoja,
+                            quem_indicou: (STATE.comprador && STATE.comprador.nome) ? STATE.comprador.nome : 'Morador'
+                        })
+                    });
+                    const d = await res.json();
+                    if (msgEl) {
+                        msgEl.style.color = d.success ? '#15803d' : '#b91c1c';
+                        msgEl.textContent = d.message || (d.success ? 'Indicação enviada!' : 'Erro ao enviar.');
+                    }
+                    if (d.success) {
+                        formInd.reset();
+                        toast(d.message || 'Indicação salva com sucesso!');
+                    }
+                } catch (err) {
+                    if (msgEl) { msgEl.style.color = '#b91c1c'; msgEl.textContent = 'Sem conexão agora. Tente novamente.'; }
+                }
+            });
+        }
+
         window.addEventListener('pz:localizacao-atualizada', () => {
             atualizarPillLocal();
             carregarMarketplace();

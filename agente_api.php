@@ -256,6 +256,15 @@ if ($action === 'vitrine_responder') {
         exit;
     }
 
+    if (strpos($n, 'sem taxa') !== false || strpos($n, 'taxa zero') !== false || strpos($n, 'comissao') !== false) {
+        echo json_encode([
+            'success' => true,
+            'resposta' => "Aqui na **{$nomeLoja}** você pede **direto da cozinha sem comissão abusiva de aplicativo** — por isso o preço é de balcão!",
+            'sugestoes' => ['Opções mais baratas', 'O que você recomenda hoje?', 'Como funciona a entrega?'],
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     if (strpos($n, 'horario') !== false || strpos($n, 'aberto') !== false || strpos($n, 'fecha') !== false || strpos($n, 'abre') !== false) {
         echo json_encode([
             'success' => true,
@@ -446,19 +455,19 @@ $alertasFiltrados = array_values(array_filter($resumo['alertas_ia'], function ($
 if ($action === 'diagnostico') {
     $sugestoes = [];
     if ($permFin) {
+        $sugestoes[] = 'Quanto economizei em taxas (resumo semanal)?';
         $sugestoes[] = 'Quanto vendi e qual meu lucro hoje?';
         $sugestoes[] = 'Qual meu produto mais lucrativo?';
-        $sugestoes[] = 'Como está o caixa e contas da semana?';
     }
     if ($permEst) {
         $sugestoes[] = 'O que preciso comprar de estoque?';
     }
     if ($permOp) {
+        $sugestoes[] = 'Otimizar descrições e preços do cardápio';
         $sugestoes[] = 'Quais pedidos estão em aberto agora?';
-        $sugestoes[] = 'Resumo dos entregadores';
     }
     if ($permCli) {
-        $sugestoes[] = 'Carrinhos abandonados e clientes VIP';
+        $sugestoes[] = 'Quais clientes estão sumidos?';
     }
 
     echo json_encode([
@@ -1181,6 +1190,57 @@ elseif (strpos($n, 'entregador') !== false || strpos($n, 'motoboy') !== false ||
             . "\n\nVocê pode comandar por aqui, por exemplo: *\"Mover pedido #{$abertos[0]['id']} para preparo\"*.";
     }
     $sugestoes = ['Quanto vendi hoje?', 'O que preciso comprar de estoque?'];
+}
+// ---------------------------------------------------------------------
+// 11. CONSULTA: ECONOMIA EM TAXAS, RESUMO SEMANAL E CLIENTES SUMIDOS
+// ---------------------------------------------------------------------
+if (strpos($n, 'econom') !== false || strpos($n, 'ifood') !== false || strpos($n, '99') !== false || strpos($n, 'semanal') !== false || strpos($n, 'sumid') !== false || strpos($n, 'inativo') !== false || strpos($n, 'reativ') !== false) {
+    $econMes = (float) ($resumo['economia_taxas']['mes'] ?? 0);
+    $econSem = (float) ($resumo['economia_taxas']['semana'] ?? 0);
+    $baseCli = $resumo['base_clientes'] ?? [];
+    $qtdSumidos = (int) ($baseCli['sumidos_15d'] ?? 0);
+    $origem = ['pedidos.json', 'clientes.json', 'marketing.json'];
+    $cards = [
+        ['titulo' => 'Economia em Taxas (Mês)', 'valor' => pz_brl($econMes)],
+        ['titulo' => 'Base Própria (WhatsApp)', 'valor' => (int) ($baseCli['com_whatsapp'] ?? 0) . ' cliente(s)'],
+        ['titulo' => 'Sumidos (15+ dias)', 'valor' => $qtdSumidos],
+    ];
+    $sumidosLista = array_slice($baseCli['sumidos_preview'] ?? [], 0, 3);
+    $sumidosTxt = $sumidosLista
+        ? "\n\n**Prontos para chamar no WhatsApp agora:**\n" . implode("\n", array_map(function ($s) {
+            return "• **{$s['nome']}** ({$s['dias_sem_pedir']} dias sem pedir · já gastou " . pz_brl($s['total_gasto']) . ")";
+        }, $sumidosLista))
+        : '';
+    $resposta = "💰 **Economia real no seu bolso:** usando o AcheIAki sem comissão (~20% de outros apps), você já economizou **" . pz_brl($econMes) . "** neste mês (**" . pz_brl($econSem) . "** só nos últimos 7 dias)!"
+        . "\n📲 Sua base própria já tem **" . (int) ($baseCli['com_whatsapp'] ?? 0) . " cliente(s)** salvos com WhatsApp."
+        . ($qtdSumidos > 0 ? "\n🔄 Há **{$qtdSumidos} cliente(s)** sem pedir há 15+ dias." : '')
+        . $sumidosTxt;
+    $acoesUI[] = ['label' => 'Ver Clientes & Reativação', 'aba' => 'visao-geral'];
+}
+// ---------------------------------------------------------------------
+// 11A. CONSULTA: OTIMIZAR CARDÁPIO E PREÇOS COMPETITIVOS COM IA
+// ---------------------------------------------------------------------
+elseif (strpos($n, 'otimiz') !== false || strpos($n, 'descri') !== false || strpos($n, 'competitiv') !== false || strpos($n, 'melhorar cardapio') !== false) {
+    $otim = pz_otimizar_cardapio_sugestoes(Database::getTenant(), false);
+    $origem = ['cardapio.json', 'territorio_lib'];
+    $qtdDesc = count($otim['sugestoes_descricao'] ?? []);
+    $qtdPreco = count($otim['alertas_preco'] ?? []);
+    $cards = [
+        ['titulo' => 'Descrições p/ Melhorar', 'valor' => $qtdDesc],
+        ['titulo' => 'Preços Acima da Média', 'valor' => $qtdPreco],
+    ];
+    $partesResp = [];
+    if ($qtdDesc > 0) {
+        $partesResp[] = "✍️ Encontrei **{$qtdDesc} item(ns)** sem descrição apetitosa (ex.: **" . ($otim['sugestoes_descricao'][0]['nome'] ?? '') . "**). Toque no botão **Otimizar Cardápio com IA** no painel Hoje para preencher automaticamente!";
+    } else {
+        $partesResp[] = "✅ Todas as descrições do seu cardápio estão bem preenchidas e vendedoras!";
+    }
+    if ($qtdPreco > 0) {
+        $ap0 = $otim['alertas_preco'][0];
+        $partesResp[] = "📉 **Termômetro de preço:** **{$ap0['nome']}** está em " . pz_brl($ap0['preco_atual']) . " (acima da média da região de " . pz_brl($ap0['media_regiao']) . "). Sugestão: ajustar para ~**" . pz_brl($ap0['preco_sugerido']) . "** aumenta conversão no bairro.";
+    }
+    $resposta = implode("\n\n", $partesResp);
+    $acoesUI[] = ['label' => 'Abrir Meus Pratos', 'aba' => 'cardapio'];
 }
 // ---------------------------------------------------------------------
 // 11. CONSULTA: CLIENTES, FIDELIDADE, CUPONS E RECUPERAÇÃO DE CARRINHO

@@ -1953,7 +1953,63 @@ function pz_resumo_executivo_loja()
     }));
 
     $config = pedidozap_normalizar_config(Database::readStrict('config.json'), Database::getTenant());
+    $slugAtual = Database::getTenant();
+    $nomeLojaRes = trim((string) ($config['NOME_LOJA'] ?? $config['EMPRESA']['nome'] ?? $slugAtual)) ?: $slugAtual;
     $margemMin = (float) ($config['AGENTE_IA']['alerta_margem_minima'] ?? 25);
+
+    // Origem de pedidos no mês (mostra de onde vêm as vendas)
+    $origemMes = ['link_direto' => 0, 'marketplace' => 0, 'balcao' => 0, 'recuperacao_ia' => 0];
+    foreach ($pedidos as $p) {
+        if (!is_array($p) || !empty($p['cancelado'])) {
+            continue;
+        }
+        $tsPed = strtotime((string) ($p['timestamp'] ?? $p['criado_em'] ?? ''));
+        if (!$tsPed || date('Y-m', $tsPed) !== date('Y-m')) {
+            continue;
+        }
+        $canal = strtolower(trim((string) ($p['canal'] ?? $p['origem'] ?? '')));
+        if (!empty($p['cupom_usado']) && stripos((string) $p['cupom_usado'], 'VOLTA') !== false) {
+            $origemMes['recuperacao_ia']++;
+        } elseif ($canal === 'balcao' || $canal === 'atendimento' || $canal === 'pdv') {
+            $origemMes['balcao']++;
+        } elseif (strpos($canal, 'marketplace') !== false) {
+            $origemMes['marketplace']++;
+        } else {
+            $origemMes['link_direto']++;
+        }
+    }
+
+    // Economia estimada em comissões (~20% que seriam cobrados em apps de entrega tradicionais)
+    $taxaRef = 0.20;
+    $econHoje = round((float) ($dreHoje['faturamento_bruto'] ?? 0) * $taxaRef, 2);
+    $econSemana = round((float) ($dreSemana['faturamento_bruto'] ?? 0) * $taxaRef, 2);
+    $econMes = round((float) ($dreMes['faturamento_bruto'] ?? 0) * $taxaRef, 2);
+
+    // Base própria de clientes + radar de clientes sumidos (15+ dias sem pedir)
+    $clientesTodos = pz_ler_clientes();
+    $clientesWpp = count(array_filter($clientesTodos, function ($c) {
+        return is_array($c) && strlen(preg_replace('/\D/', '', (string) ($c['telefone'] ?? ''))) >= 10;
+    }));
+    $mktDados = pz_ler_marketing();
+    $cupomAtivo = '';
+    foreach ($mktDados['cupons'] as $cup) {
+        if (!empty($cup['ativo']) && (empty($cup['validade']) || $cup['validade'] >= date('Y-m-d'))) {
+            $cupomAtivo = (string) ($cup['codigo'] ?? '');
+            break;
+        }
+    }
+    $sumidos = pz_clientes_sumidos(15, 25, $nomeLojaRes, $slugAtual, $cupomAtivo);
+    $clientesNovosSemana = 0;
+    $limiteSemanaTs = strtotime('-6 days 00:00:00');
+    foreach ($clientesTodos as $c) {
+        if (!is_array($c)) {
+            continue;
+        }
+        $priTs = strtotime((string) ($c['primeira_compra'] ?? $c['ultima_compra'] ?? ''));
+        if ($priTs && $priTs >= $limiteSemanaTs) {
+            $clientesNovosSemana++;
+        }
+    }
 
     $produtosBaixaMargem = array_values(array_filter($dreMes['por_produto'], function ($p) use ($margemMin) {
         return !empty($p['tem_ficha']) && $p['faturamento'] > 0 && $p['margem_pct'] < $margemMin;
@@ -1961,6 +2017,15 @@ function pz_resumo_executivo_loja()
 
     // Alertas proativos gerados para a IA
     $alertas = [];
+    if (count($sumidos) > 0) {
+        $alertas[] = [
+            'nivel' => 'dica',
+            'modulo' => 'clientes',
+            'titulo' => count($sumidos) . ' cliente(s) que já compraram não pedem há 15+ dias',
+            'mensagem' => 'Chame no WhatsApp em 1 clique com oferta e recupere essas vendas hoje.',
+            'comando_ia' => 'Quais clientes estão sumidos?',
+        ];
+    }
     if (!$cx['atual'] || ($cx['atual']['status'] ?? '') !== 'aberto') {
         $alertas[] = [
             'nivel' => 'aviso',
@@ -2005,10 +2070,32 @@ function pz_resumo_executivo_loja()
         ];
     }
 
+    $resumoSemanalWpp = "*Resumo Semanal AcheIAki — {$nomeLojaRes}*\n"
+        . "• Pedidos na semana: " . (int) ($dreSemana['pedidos'] ?? 0) . " (R$ " . number_format((float) ($dreSemana['faturamento_bruto'] ?? 0), 2, ',', '.') . ")\n"
+        . "• Economia em comissões (~20% que não foi para outros apps): R$ " . number_format($econSemana, 2, ',', '.') . "\n"
+        . "• Novos clientes salvos na base própria: {$clientesNovosSemana} (Total: {$clientesWpp} com WhatsApp)\n"
+        . "• Clientes sumidos há 15+ dias prontos para chamar: " . count($sumidos);
+
     return [
         'hoje' => $dreHoje,
         'semana' => $dreSemana,
         'mes' => $dreMes,
+        'economia_taxas' => [
+            'hoje' => $econHoje,
+            'semana' => $econSemana,
+            'mes' => $econMes,
+            'taxa_ref_pct' => 20,
+        ],
+        'origem_pedidos' => $origemMes,
+        'base_clientes' => [
+            'total' => count($clientesTodos),
+            'com_whatsapp' => $clientesWpp,
+            'novos_semana' => $clientesNovosSemana,
+            'sumidos_15d' => count($sumidos),
+            'sumidos_preview' => array_slice($sumidos, 0, 5),
+            'cupom_sugerido' => $cupomAtivo,
+        ],
+        'resumo_semanal_wpp' => $resumoSemanalWpp,
         'caixa' => [
             'aberto' => !empty($cx['atual']) && ($cx['atual']['status'] ?? '') === 'aberto',
             'atual' => $cx['atual'],
@@ -2018,6 +2105,170 @@ function pz_resumo_executivo_loja()
         'estoque_baixo' => $estoqueBaixo,
         'produtos_baixa_margem' => $produtosBaixaMargem,
         'alertas_ia' => $alertas,
+    ];
+}
+
+function pz_clientes_sumidos(int $diasMin = 15, int $limite = 40, ?string $nomeLoja = null, ?string $slugLoja = null, ?string $cupom = null): array
+{
+    $clientes = pz_ler_clientes();
+    if (!$clientes) {
+        return [];
+    }
+    $slugAtual = $slugLoja ?: Database::getTenant();
+    $baseUrl = function_exists('pedidozap_base_url') ? rtrim(pedidozap_base_url(), '/') : '';
+    $linkLoja = $baseUrl !== ''
+        ? ($slugAtual !== 'default' ? ($baseUrl . '/loja/' . rawurlencode($slugAtual)) : ($baseUrl . '/index.html'))
+        : '';
+    $nomeExib = trim((string) ($nomeLoja ?: $slugAtual));
+    $agora = time();
+    $minSeg = max(1, $diasMin) * 86400;
+    $out = [];
+
+    foreach ($clientes as $c) {
+        if (!is_array($c)) {
+            continue;
+        }
+        $tel = preg_replace('/\D/', '', (string) ($c['telefone'] ?? ''));
+        if (strlen($tel) < 10) {
+            continue;
+        }
+        $ultStr = (string) ($c['ultima_compra'] ?? $c['primeira_compra'] ?? '');
+        $ultTs = $ultStr !== '' ? strtotime($ultStr) : false;
+        if (!$ultTs || ($agora - $ultTs) < $minSeg) {
+            continue;
+        }
+        $dias = (int) floor(($agora - $ultTs) / 86400);
+        $nomeCli = trim((string) ($c['nome'] ?? 'Cliente')) ?: 'Cliente';
+        $priNome = explode(' ', $nomeCli)[0];
+        $telWa = strlen($tel) <= 11 ? ('55' . $tel) : $tel;
+        $cupomTxt = $cupom ? (" Use o cupom *{$cupom}*") : ' Peça direto sem taxa de app';
+        $msg = "Oi {$priNome}! Bateu saudade do seu pedido na *{$nomeExib}*! Faz {$dias} dias desde a sua última compra.{$cupomTxt} com preço direto de balcão por aqui" . ($linkLoja ? (": {$linkLoja}") : '.');
+        $out[] = [
+            'id' => (string) ($c['id'] ?? $tel),
+            'nome' => $nomeCli,
+            'telefone' => $tel,
+            'telefone_mascarado' => strlen($tel) >= 8 ? (substr($tel, 0, 2) . ' *****-' . substr($tel, -4)) : '****',
+            'dias_sem_pedir' => $dias,
+            'total_pedidos' => (int) ($c['total_pedidos'] ?? 1),
+            'total_gasto' => round((float) ($c['total_gasto'] ?? 0), 2),
+            'ultima_compra' => $ultStr,
+            'whatsapp_url' => 'https://wa.me/' . $telWa . '?text=' . rawurlencode($msg),
+            'mensagem_sugerida' => $msg,
+        ];
+    }
+
+    usort($out, function ($a, $b) {
+        return ($b['total_gasto'] <=> $a['total_gasto']) ?: ($a['dias_sem_pedir'] <=> $b['dias_sem_pedir']);
+    });
+    return array_slice($out, 0, max(1, $limite));
+}
+
+function pz_otimizar_cardapio_sugestoes(string $slug, bool $aplicar = false): array
+{
+    $cardapio = Database::readStrict('cardapio.json');
+    if (!is_array($cardapio)) {
+        $cardapio = [];
+    }
+    $cfgLoja = pedidozap_normalizar_config(Database::readStrict('config.json'), $slug);
+    $nichoLoja = strtolower(trim((string) ($cfgLoja['NICHO'] ?? 'lanchonete')));
+    $nichosComida = ['lanchonete', 'pizzaria', 'marmitaria', 'pensao', 'acai', 'confeitaria'];
+    $ehComida = in_array($nichoLoja, $nichosComida, true);
+
+    $ter = function_exists('pz_territorio_analisar_loja') ? pz_territorio_analisar_loja($slug) : [];
+    $mediaRegiao = (float) ($ter['ranking']['media_preco_regiao'] ?? 0);
+
+    $melhorias = [];
+    $alertasPreco = [];
+    $alterados = 0;
+
+    foreach ($cardapio as $cat => $lista) {
+        if (!is_array($lista)) {
+            continue;
+        }
+        foreach ($lista as $i => $item) {
+            if (!is_array($item) || empty($item['nome'])) {
+                continue;
+            }
+            $nome = trim((string) $item['nome']);
+            $desc = trim((string) ($item['descricao'] ?? ''));
+            $preco = (float) ($item['preco'] ?? ($item['tamanhos'][0]['preco'] ?? 0));
+            $catNorm = mb_strtolower(trim((string) $cat), 'UTF-8');
+            $nomeNorm = mb_strtolower($nome, 'UTF-8');
+
+            if (strlen($desc) < 18) {
+                if (!$ehComida) {
+                    if ($nichoLoja === 'mercado' || strpos($catNorm, 'horti') !== false || strpos($catNorm, 'merc') !== false) {
+                        $novaDesc = "{$nome} selecionado com qualidade e preço direto do mercado, pronto para entrega rápida.";
+                    } elseif ($nichoLoja === 'farmacia' || strpos($catNorm, 'medic') !== false) {
+                        $novaDesc = "{$nome} original com procedência garantida e entrega rápida direto da farmácia perto de você.";
+                    } elseif ($nichoLoja === 'petshop' || strpos($catNorm, 'racao') !== false || strpos($catNorm, 'cae') !== false || strpos($catNorm, 'gato') !== false) {
+                        $novaDesc = "{$nome} original lacrado de fábrica para cuidar do seu pet com entrega rápida no bairro.";
+                    } elseif ($nichoLoja === 'moda' || strpos($catNorm, 'fem') !== false || strpos($catNorm, 'masc') !== false || strpos($catNorm, 'calc') !== false) {
+                        $novaDesc = "{$nome} com ótimo caimento e acabamento. Peça direto da loja com preço real e entrega rápida.";
+                    } elseif ($nichoLoja === 'eletronicos' || strpos($catNorm, 'celul') !== false || strpos($catNorm, 'audio') !== false) {
+                        $novaDesc = "{$nome} testado com garantia da loja local e entrega rápida sem sair de casa.";
+                    } elseif ($nichoLoja === 'bebidas') {
+                        $novaDesc = "{$nome} trincando de gelada, pronta para entrega rápida direta da distribuidora.";
+                    } else {
+                        $novaDesc = "{$nome} disponível à pronta entrega com preço direto da loja, sem taxa extra de aplicativo.";
+                    }
+                } else {
+                    if (strpos($nomeNorm, 'pizza') !== false || strpos($catNorm, 'pizza') !== false) {
+                        $novaDesc = "{$nome} assada na hora com massa leve, molho artesanal e queijo derretido no ponto certo.";
+                    } elseif (strpos($nomeNorm, 'burger') !== false || strpos($nomeNorm, 'x-') !== false || strpos($nomeNorm, 'lanche') !== false || strpos($catNorm, 'lanche') !== false || strpos($catNorm, 'hambur') !== false) {
+                        $novaDesc = "{$nome} preparado na chapa na hora com ingredientes frescos e pão macio selado.";
+                    } elseif (strpos($nomeNorm, 'batata') !== false || strpos($catNorm, 'porc') !== false) {
+                        $novaDesc = "{$nome} crocante por fora, macia por dentro e servida quentinha em porção caprichada.";
+                    } elseif (strpos($nomeNorm, 'acai') !== false || strpos($catNorm, 'acai') !== false) {
+                        $novaDesc = "{$nome} cremoso batido na hora, bem gelado e pronto para montar com seus acompanhamentos favoritos.";
+                    } elseif (strpos($catNorm, 'bebida') !== false || strpos($nomeNorm, 'coca') !== false || strpos($nomeNorm, 'refri') !== false || strpos($nomeNorm, 'suco') !== false) {
+                        $novaDesc = "{$nome} trincando de gelada para acompanhar o seu pedido.";
+                    } else {
+                        $novaDesc = "{$nome} feito na hora com capricho e preço direto da loja, sem taxa extra de aplicativo.";
+                    }
+                }
+                $melhorias[] = [
+                    'categoria' => $cat,
+                    'nome' => $nome,
+                    'antes' => $desc,
+                    'depois' => $novaDesc,
+                ];
+                if ($aplicar) {
+                    $cardapio[$cat][$i]['descricao'] = $novaDesc;
+                    $alterados++;
+                }
+            }
+
+            if ($mediaRegiao > 0 && $preco > ($mediaRegiao * 1.15) && strpos($catNorm, 'bebida') === false) {
+                $sugerido = round($mediaRegiao * 0.92, 2);
+                $alertasPreco[] = [
+                    'nome' => $nome,
+                    'preco_atual' => $preco,
+                    'media_regiao' => $mediaRegiao,
+                    'preco_sugerido' => $sugerido,
+                ];
+            }
+        }
+    }
+
+    if ($aplicar && $alterados > 0) {
+        Database::write('cardapio.json', $cardapio);
+        Database::mutate('config.json', function (&$c) {
+            if (!is_array($c)) {
+                $c = [];
+            }
+            $c['VERSION'] = time();
+            return true;
+        });
+    }
+
+    return [
+        'success' => true,
+        'aplicado' => $aplicar,
+        'alterados' => $alterados,
+        'sugestoes_descricao' => array_slice($melhorias, 0, 20),
+        'alertas_preco' => array_slice($alertasPreco, 0, 10),
+        'media_regiao' => $mediaRegiao,
     ];
 }
 

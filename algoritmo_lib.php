@@ -53,13 +53,32 @@ function pz_alg_afinidade_turno($nicho, $turno)
 {
     $n = pz_territorio_norm($nicho);
     $mapa = [
-        'cafe' => ['confeitaria' => 1.0, 'acai' => 0.4, 'lanchonete' => 0.5, 'pensao' => 0.3, 'marmitaria' => 0.3, 'pizzaria' => 0.1],
-        'almoco' => ['pensao' => 1.0, 'marmitaria' => 1.0, 'lanchonete' => 0.5, 'acai' => 0.4, 'confeitaria' => 0.3, 'pizzaria' => 0.3],
-        'tarde' => ['acai' => 1.0, 'confeitaria' => 1.0, 'lanchonete' => 0.7, 'marmitaria' => 0.3, 'pensao' => 0.3, 'pizzaria' => 0.4],
-        'jantar' => ['lanchonete' => 1.0, 'pizzaria' => 1.0, 'acai' => 0.6, 'marmitaria' => 0.5, 'pensao' => 0.4, 'confeitaria' => 0.4],
-        'madrugada' => ['lanchonete' => 1.0, 'pizzaria' => 0.95, 'acai' => 0.5, 'confeitaria' => 0.2, 'marmitaria' => 0.2, 'pensao' => 0.1],
+        'cafe' => [
+            'confeitaria' => 1.0, 'mercado' => 0.9, 'farmacia' => 0.85, 'petshop' => 0.8, 'papelaria' => 0.8, 'ferragens' => 0.85,
+            'lanchonete' => 0.5, 'acai' => 0.4, 'pensao' => 0.3, 'marmitaria' => 0.3, 'pizzaria' => 0.1,
+            'moda' => 0.75, 'eletronicos' => 0.75, 'beleza' => 0.75, 'bebidas' => 0.5, 'comercio' => 0.8,
+        ],
+        'almoco' => [
+            'pensao' => 1.0, 'marmitaria' => 1.0, 'mercado' => 0.85, 'farmacia' => 0.85, 'petshop' => 0.85, 'ferragens' => 0.85,
+            'moda' => 0.85, 'eletronicos' => 0.85, 'beleza' => 0.85, 'papelaria' => 0.85, 'comercio' => 0.85,
+            'lanchonete' => 0.55, 'bebidas' => 0.65, 'acai' => 0.45, 'confeitaria' => 0.4, 'pizzaria' => 0.3,
+        ],
+        'tarde' => [
+            'acai' => 1.0, 'confeitaria' => 1.0, 'moda' => 0.9, 'beleza' => 0.9, 'eletronicos' => 0.9, 'petshop' => 0.9,
+            'mercado' => 0.9, 'farmacia' => 0.85, 'papelaria' => 0.9, 'ferragens' => 0.85, 'comercio' => 0.9,
+            'lanchonete' => 0.75, 'bebidas' => 0.75, 'marmitaria' => 0.3, 'pensao' => 0.3, 'pizzaria' => 0.4,
+        ],
+        'jantar' => [
+            'lanchonete' => 1.0, 'pizzaria' => 1.0, 'bebidas' => 0.95, 'farmacia' => 0.85, 'mercado' => 0.75,
+            'acai' => 0.65, 'marmitaria' => 0.55, 'pensao' => 0.4, 'confeitaria' => 0.5,
+            'moda' => 0.55, 'eletronicos' => 0.55, 'petshop' => 0.55, 'beleza' => 0.55, 'papelaria' => 0.5, 'ferragens' => 0.45, 'comercio' => 0.6,
+        ],
+        'madrugada' => [
+            'lanchonete' => 1.0, 'pizzaria' => 0.95, 'bebidas' => 0.95, 'farmacia' => 0.9, 'acai' => 0.5,
+            'confeitaria' => 0.25, 'marmitaria' => 0.2, 'pensao' => 0.1, 'mercado' => 0.35, 'comercio' => 0.3,
+        ],
     ];
-    return $mapa[$turno][$n] ?? 0.5;
+    return $mapa[$turno][$n] ?? 0.65;
 }
 
 function pz_alg_extrair_tags($texto)
@@ -89,14 +108,24 @@ function pz_alg_expandir_intencao($texto)
     $rapidez = false;
 
     $sinonimos = [
-        'economia' => ['barato', 'barata', 'economico', 'economica', 'oferta', 'promocao', 'desconto', 'cupom', 'gratis', 'menor preco', 'em conta', 'combo'],
-        'rapidez' => ['rapido', 'rapida', 'pressa', 'agora', 'fome', 'imediato', 'urgente', 'chega logo'],
-        'lanchonete' => ['lanche', 'burger', 'hamburguer', 'xbacon', 'xsalada', 'xtudo', 'xegg', 'podrao', 'artesanal', 'batata', 'fritas', 'hotdog', 'cachorro', 'pastel'],
-        'marmitaria' => ['marmita', 'marmitex', 'quentinha', 'executivo', 'fitness', 'fit', 'salada', 'grelhado', 'frango'],
-        'pensao' => ['almoco', 'comida', 'caseira', 'feijoada', 'bife', 'arroz', 'feijao', 'parmegiana', 'caldo', 'sopa', 'prato'],
-        'pizzaria' => ['pizza', 'calabresa', 'mussarela', 'portuguesa', 'catupiry', 'borda', 'broto', 'esfiha', 'forno'],
-        'acai' => ['acai', 'tigela', 'barca', 'sorvete', 'gelado', 'calor', 'nutella', 'ninho', 'creme'],
+        'economia' => ['barato', 'barata', 'economico', 'economica', 'oferta', 'promocao', 'desconto', 'cupom', 'gratis', 'menor preco', 'em conta', 'combo', 'balcao', 'sem taxa'],
+        'rapidez' => ['rapido', 'rapida', 'pressa', 'agora', 'fome', 'imediato', 'urgente', 'chega logo', 'voando'],
+        'lanchonete' => ['lanche', 'burger', 'hamburguer', 'xbacon', 'xsalada', 'xtudo', 'xegg', 'xis', 'podrao', 'artesanal', 'batata', 'fritas', 'hotdog', 'cachorro', 'pastel', 'coxinha', 'salgado', 'smash'],
+        'marmitaria' => ['marmita', 'marmitex', 'quentinha', 'executivo', 'fitness', 'fit', 'salada', 'grelhado', 'frango', 'churrasco', 'espetinho'],
+        'pensao' => ['almoco', 'comida', 'caseira', 'feijoada', 'bife', 'arroz', 'feijao', 'parmegiana', 'caldo', 'sopa', 'prato', 'sushi', 'temaki', 'japonesa'],
+        'pizzaria' => ['pizza', 'calabresa', 'mussarela', 'portuguesa', 'catupiry', 'borda', 'broto', 'esfiha', 'forno', 'familia'],
+        'acai' => ['acai', 'tigela', 'barca', 'sorvete', 'gelado', 'calor', 'nutella', 'ninho', 'creme', 'milkshake'],
         'confeitaria' => ['doce', 'sobremesa', 'bolo', 'torta', 'chocolate', 'brigadeiro', 'pudim', 'cafe', 'cappuccino', 'brownie'],
+        'bebidas' => ['cerveja', 'chopp', 'vinho', 'whisky', 'vodka', 'gelo', 'carvao', 'agua', 'adega', 'fardo', 'guarana', 'refri', 'suco', 'energetico'],
+        'mercado' => ['mercado', 'mercearia', 'hortifruti', 'arroz', 'feijao', 'leite', 'pao', 'carne', 'fruta', 'verdura', 'legume', 'detergente', 'limpeza'],
+        'farmacia' => ['farmacia', 'remedio', 'medicamento', 'dor', 'dipirona', 'fralda', 'vitamina', 'curativo', 'pomada', 'protetor', 'alcool'],
+        'petshop' => ['pet', 'racao', 'cachorro', 'gato', 'areia', 'coleira', 'petisco', 'antipulgas', 'shampoo', 'animal'],
+        'moda' => ['roupa', 'camisa', 'camiseta', 'calca', 'vestido', 'blusa', 'tenis', 'sapato', 'sandalia', 'chinelo', 'bolsa', 'bone', 'moda'],
+        'eletronicos' => ['celular', 'capinha', 'pelicula', 'carregador', 'cabo', 'fone', 'bluetooth', 'caixa de som', 'mouse', 'teclado', 'relogio', 'smartwatch'],
+        'beleza' => ['maquiagem', 'batom', 'base', 'skincare', 'creme', 'perfume', 'cabelo', 'hidratante', 'esmalte', 'cosmetico'],
+        'papelaria' => ['presente', 'cesta', 'flor', 'buque', 'caderno', 'caneta', 'mochila', 'brinquedo', 'papelaria', 'livro'],
+        'ferragens' => ['ferramenta', 'martelo', 'furadeira', 'parafuso', 'lampada', 'tomada', 'fio', 'tinta', 'torneira', 'cano', 'construcao'],
+        'comercio' => ['loja', 'produto', 'kit', 'presente', 'novidade', 'acessorio', 'utilidade'],
     ];
 
     foreach ($sinonimos as $grupo => $termos) {
@@ -555,10 +584,18 @@ function pz_alg_recomendar(array $ctx)
         $multEco = $prefEconomia > 2.0 ? 1.45 : 1.0;
         $scorePreco = max(0.0, min(12.0, (4.5 + ($economiaPct * 0.25) + ($melhorPrecoSeg ? 2.5 : 0.0)) * $multEco));
 
-        // 3. Score Qualidade & Conversão Real (0 a 15 pts)
+        // 3. Score Qualidade, Preço Competitivo e Impulso de Loja Nova ("Cold-Start Fairness") (0 a 20 pts)
         $st = is_array($statsLojas[$slug] ?? null) ? $statsLojas[$slug] : [];
-        $taxaConv = (($st['impressoes'] ?? 0) >= 5) ? min(1.0, ((($st['add_carrinho'] ?? 0) + ($st['pedidos'] ?? 0) * 2) / $st['impressoes']) * 2.0) : 0.4;
+        $impressoesLoja = (int) ($st['impressoes'] ?? 0);
+        $pedidosLoja = (int) ($st['pedidos'] ?? 0);
+        $taxaConv = ($impressoesLoja >= 5) ? min(1.0, ((($st['add_carrinho'] ?? 0) + $pedidosLoja * 2) / $impressoesLoja) * 2.0) : 0.48;
         $scoreQual = (($loja['score_territorio'] / 100.0) * 10.0) + ($taxaConv * 5.0);
+        // Lojas novas/fundadoras com cardápio ativo ganham impulso justo para conquistar os primeiros pedidos
+        $ehLojaNovaAtiva = ($pedidosLoja < 5 || $impressoesLoja < 15) && !empty($loja['itens']);
+        $scoreNovidade = $ehLojaNovaAtiva ? 5.5 : 0.0;
+        if ($economiaPct >= 10) {
+            $scorePreco = min(14.5, $scorePreco + 2.5);
+        }
 
         // 4. Score Horário + Hábito Pessoal no Turno (0 a 12 pts)
         $nichoNorm = pz_territorio_norm($loja['nicho']);
@@ -604,7 +641,7 @@ function pz_alg_recomendar(array $ctx)
         $seed = abs(crc32(($vid ?: 'anon') . date('Y-m-d') . $slug)) % 100;
         $scoreExpl = empty($perfil['lojas'][$slug]) && $qtdComprasLoja === 0 ? (2.0 + ($seed / 100.0) * 3.0) : 1.0;
 
-        $matchLoja = (int) round(min(99, max(15, $scoreProx + $scorePreco + $scoreQual + $scoreTurno + $scoreHabitoCompra + $scoreAfLoja + $scoreExpl)));
+        $matchLoja = (int) round(min(99, max(15, $scoreProx + $scorePreco + $scoreQual + $scoreNovidade + $scoreTurno + $scoreHabitoCompra + $scoreAfLoja + $scoreExpl)));
         if (!$loja['aberto']) {
             $matchLoja = max(10, $matchLoja - 28);
         }
@@ -624,9 +661,12 @@ function pz_alg_recomendar(array $ctx)
             $motivosLoja[] = 'Combina com sua busca "' . $termoBateuLoja . '"';
         }
         if ($melhorPrecoSeg) {
-            $motivosLoja[] = 'Melhor preço em ' . $loja['nicho'];
+            $motivosLoja[] = 'Preço de balcão · mais barato em ' . $loja['nicho'];
         } elseif ($economiaPct >= 8) {
-            $motivosLoja[] = $economiaPct . '% mais barato que a média em ' . $loja['nicho'];
+            $motivosLoja[] = 'Preço direto · ' . $economiaPct . '% menor na região';
+        }
+        if ($ehLojaNovaAtiva && count($motivosLoja) < 2) {
+            $motivosLoja[] = 'Novidade perto · Taxa Zero';
         }
         if ($entregaEstendida) {
             $motivosLoja[] = 'Entrega até ' . $raioLoja . ' km (você está a ' . $dist . ' km)';

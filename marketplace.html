@@ -36,7 +36,7 @@
     }
     </script>
     <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
-    <link rel="stylesheet" href="css/marketplace.css?v=3">
+    <link rel="stylesheet" href="css/marketplace.css?v=4">
     <link rel="stylesheet" href="css/localizacao-gate.css?v=2">
     <link rel="stylesheet" href="css/lgpd-consent.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -96,15 +96,15 @@
             <section class="mkt-hero">
                 <div class="mkt-hero-left">
                     <div class="mkt-hero-copy">
-                        <span class="mkt-hero-chip"><i class="fa-solid fa-burger"></i> Lanches, Pizzas &amp; Comida Boa · Sem taxa extra</span>
-                        <h1>O que você quer comer hoje?</h1>
-                        <p>Escolha uma lanchonete ou restaurante perto de você, veja o preço real e peça direto para a cozinha.</p>
+                        <span class="mkt-hero-chip"><i class="fa-solid fa-burger"></i> Lanches, Restaurantes &amp; Lojas do Bairro · Sem taxa extra</span>
+                        <h1>Peça comida ou compre em lojas perto de você</h1>
+                        <p>Lanchonetes, pizzarias, mercados, farmácias, pet shops e comércio local com preço direto da loja, sem comissão.</p>
                     </div>
                     <div class="mkt-search-wrap">
                         <div class="mkt-search">
                             <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="search" id="mkt-busca" placeholder="Digite o que quer comer (ex.: X-bacon, pizza, batata) ou nome da loja...">
-                            <button type="button" id="mkt-btn-gps-topo" class="mkt-btn-gps" title="Achar lanches perto de mim agora">
+                            <input type="search" id="mkt-busca" placeholder="Buscar lanche, pizza, mercado, remédio, ração, roupa ou nome da loja...">
+                            <button type="button" id="mkt-btn-gps-topo" class="mkt-btn-gps" title="Achar lojas perto de mim agora">
                                 <i class="fa-solid fa-location-crosshairs"></i> <span class="aki-hide-xs">Achar </span>Perto
                             </button>
                         </div>
@@ -143,6 +143,16 @@
                         <strong>🍕 Quero pizza</strong>
                         <small>Pizzas, esfihas e massas</small>
                     </button>
+                    <button type="button" class="aki-quick-btn" data-atalho-nicho="mercado">
+                        <span class="aki-qb-ico aki-ico-green"><i class="fa-solid fa-cart-shopping"></i></span>
+                        <strong>🛒 Mercado e Bebidas</strong>
+                        <small>Compras, açougue e geladas</small>
+                    </button>
+                    <button type="button" class="aki-quick-btn" data-atalho-nicho="comercio">
+                        <span class="aki-qb-ico aki-ico-warm"><i class="fa-solid fa-bag-shopping"></i></span>
+                        <strong>🛍️ Lojas do Bairro</strong>
+                        <small>Farmácia, pet, roupas e presentes</small>
+                    </button>
                     <button type="button" class="aki-quick-btn" id="mkt-atalho-baratos">
                         <span class="aki-qb-ico aki-ico-green"><i class="fa-solid fa-tag"></i></span>
                         <strong>💰 Mais baratos</strong>
@@ -156,15 +166,25 @@
                 </div>
             </section>
 
-            <!-- Segmentos -->
-            <div class="mkt-segmentos" id="mkt-segmentos" role="tablist" aria-label="Tipos de comida">
-                <button type="button" class="mkt-seg ativo" data-nicho=""><span class="mkt-seg-ico"><i class="fa-solid fa-utensils"></i></span><strong>Tudo</strong></button>
+            <!-- Segmentos (Alimentação + Lojas & Comércio em Geral) -->
+            <div class="mkt-segmentos" id="mkt-segmentos" role="tablist" aria-label="Tipos de loja e comida">
+                <button type="button" class="mkt-seg ativo" data-nicho=""><span class="mkt-seg-ico"><i class="fa-solid fa-store"></i></span><strong>Tudo</strong></button>
                 <button type="button" class="mkt-seg" data-nicho="lanchonete"><span class="mkt-seg-ico"><i class="fa-solid fa-burger"></i></span><strong>Lanches</strong></button>
                 <button type="button" class="mkt-seg" data-nicho="pizzaria"><span class="mkt-seg-ico"><i class="fa-solid fa-pizza-slice"></i></span><strong>Pizzas</strong></button>
                 <button type="button" class="mkt-seg" data-nicho="marmitaria"><span class="mkt-seg-ico"><i class="fa-solid fa-bowl-food"></i></span><strong>Marmitas</strong></button>
-                <button type="button" class="mkt-seg" data-nicho="pensao"><span class="mkt-seg-ico"><i class="fa-solid fa-kitchen-set"></i></span><strong>Comida caseira</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="pensao"><span class="mkt-seg-ico"><i class="fa-solid fa-kitchen-set"></i></span><strong>Caseira</strong></button>
                 <button type="button" class="mkt-seg" data-nicho="acai"><span class="mkt-seg-ico"><i class="fa-solid fa-ice-cream"></i></span><strong>Açaí</strong></button>
                 <button type="button" class="mkt-seg" data-nicho="confeitaria"><span class="mkt-seg-ico"><i class="fa-solid fa-cake-candles"></i></span><strong>Doces</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="bebidas"><span class="mkt-seg-ico"><i class="fa-solid fa-wine-bottle"></i></span><strong>Bebidas</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="mercado"><span class="mkt-seg-ico"><i class="fa-solid fa-cart-shopping"></i></span><strong>Mercado</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="farmacia"><span class="mkt-seg-ico"><i class="fa-solid fa-pills"></i></span><strong>Farmácia</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="petshop"><span class="mkt-seg-ico"><i class="fa-solid fa-paw"></i></span><strong>Pet Shop</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="moda"><span class="mkt-seg-ico"><i class="fa-solid fa-shirt"></i></span><strong>Roupas</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="eletronicos"><span class="mkt-seg-ico"><i class="fa-solid fa-mobile-screen"></i></span><strong>Celulares</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="beleza"><span class="mkt-seg-ico"><i class="fa-solid fa-wand-magic-sparkles"></i></span><strong>Beleza</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="papelaria"><span class="mkt-seg-ico"><i class="fa-solid fa-gift"></i></span><strong>Presentes</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="ferragens"><span class="mkt-seg-ico"><i class="fa-solid fa-screwdriver-wrench"></i></span><strong>Ferragens</strong></button>
+                <button type="button" class="mkt-seg" data-nicho="comercio"><span class="mkt-seg-ico"><i class="fa-solid fa-bag-shopping"></i></span><strong>Outras Lojas</strong></button>
             </div>
 
             <!-- Filtros -->
@@ -215,6 +235,30 @@
                     <span class="mkt-sec-sub" id="mkt-lojas-resumo">Carregando lojas verificadas...</span>
                 </div>
                 <section id="mkt-grid-lojas" class="mkt-grid"></section>
+            </section>
+
+            <!-- Farm de lojas pelo público: Indique sua loja ou lanchonete favorita -->
+            <section class="mkt-secao" style="background:#fff7ed;border:1px solid #fdba74;border-radius:18px;padding:18px;">
+                <div class="mkt-sec-head" style="margin-bottom:10px;">
+                    <h2 style="color:#9a3412;"><i class="fa-solid fa-bullhorn" style="color:#ea580c;"></i> Sua loja ou lanchonete favorita ainda não está aqui?</h2>
+                    <span class="mkt-sec-sub">Indique abaixo para nossa equipe chamar ela e liberar pedidos com preço direto de balcão (sem taxa)!</span>
+                </div>
+                <form id="mkt-form-indicar-loja" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;align-items:end;">
+                    <div>
+                        <label for="ind-nome-loja" style="display:block;font-size:0.82rem;font-weight:700;color:#231915;margin-bottom:4px;">Nome da loja / lanchonete *</label>
+                        <input type="text" id="ind-nome-loja" required placeholder="Ex.: Burger do Zé ou Pet Amigo" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid #fed7aa;font-family:inherit;">
+                    </div>
+                    <div>
+                        <label for="ind-bairro-loja" style="display:block;font-size:0.82rem;font-weight:700;color:#231915;margin-bottom:4px;">Bairro / Região</label>
+                        <input type="text" id="ind-bairro-loja" placeholder="Ex.: Campo Grande" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid #fed7aa;font-family:inherit;">
+                    </div>
+                    <div>
+                        <label for="ind-contato-loja" style="display:block;font-size:0.82rem;font-weight:700;color:#231915;margin-bottom:4px;">WhatsApp ou @Instagram dela</label>
+                        <input type="text" id="ind-contato-loja" placeholder="(21) 99999-9999 ou @loja" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid #fed7aa;font-family:inherit;">
+                    </div>
+                    <button type="submit" class="mkt-btn-prim" style="background:#ea580c;min-height:42px;"><i class="fa-solid fa-paper-plane"></i> Indicar loja</button>
+                </form>
+                <p id="ind-loja-msg" class="mkt-msg" style="margin-top:8px;"></p>
             </section>
         </section>
 
@@ -342,7 +386,7 @@
     </main>
 
     <footer class="aki-footer-legal">
-        <span><strong>Ache<span style="color:#ea580c;">IA</span>ki</strong> — Comida perto de você · Direto da loja, sem taxa extra.</span>
+        <span><strong>Ache<span style="color:#ea580c;">IA</span>ki</strong> — Lanches, Restaurantes &amp; Lojas perto de você · Direto da loja, sem taxa extra.</span>
         <span style="display:flex;gap:14px;flex-wrap:wrap;">
             <a href="termos.html">Termos de Uso</a>
             <a href="privacidade.html">Política de Privacidade (LGPD)</a>
@@ -358,12 +402,12 @@
             <div class="aki-portal-visual-banner">
                 <img src="assets/images/acheiaki-logo.jpg?v=2" alt="AcheIAki — Lanches, Pizzarias e Comida perto de você">
                 <div class="aki-portal-food-strip" aria-hidden="true">
-                    <span>🍔 Hambúrgueres</span>
+                    <span>🍔 Lanches</span>
                     <span>🍕 Pizzas</span>
-                    <span>🍟 Porções</span>
-                    <span>🌭 Hot Dog</span>
-                    <span>🍱 Marmitas</span>
-                    <span>🥤 Bebidas</span>
+                    <span>🛒 Mercado</span>
+                    <span>💊 Farmácia</span>
+                    <span>🐾 Pet Shop</span>
+                    <span>🛍️ Lojas</span>
                 </div>
             </div>
 
