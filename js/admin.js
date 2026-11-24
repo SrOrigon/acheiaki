@@ -833,7 +833,7 @@ async function iniciarAdmin() {
         } else {
             // Descrição simples para itens comuns
             extraFieldsHtml = `
-                <input type="text" value="${safeVal(item.descricao)}" placeholder="Descrição (ingredientes)" style="width: 100%; margin-bottom: 5px; border:1px solid #eee; padding:5px; color:#666; font-size:0.9em;" onchange="window.atualizarItem('${category}', ${index}, 'descricao', this.value)">
+                <input type="text" value="${safeVal(item.descricao)}" placeholder="Descrição do item (detalhes, cor, marca ou ingredientes)" style="width: 100%; margin-bottom: 5px; border:1px solid #eee; padding:5px; color:#666; font-size:0.9em;" onchange="window.atualizarItem('${category}', ${index}, 'descricao', this.value)">
             `;
         }
 
@@ -841,11 +841,17 @@ async function iniciarAdmin() {
             ? item.grupos.map((g) => '# ' + (g.nome || 'Complementos') + '|' + (g.min || 0) + '|' + (g.max || 1) + '\n' + (g.itens || []).map((op) => op.nome + '|' + (op.preco || 0)).join('\n')).join('\n')
             : (item.opcionais || []).map((op) => op.nome + '|' + (op.preco || 0)).join('\n');
         const tamanhosTexto = (item.tamanhos || []).map((t) => t.nome + '|' + (t.preco || 0)).join('\n');
+        const temAvancado = Boolean(gruposTexto || tamanhosTexto || Number(item.peso || 0) > 0);
         extraFieldsHtml += `
-            <textarea placeholder="# Carne|1|1&#10;Bife|0&#10;# Guarnição|2|2&#10;Arroz|0" style="width:100%; margin-top:6px; font-size:0.8em; height:70px;" onchange="window.atualizarGrupos('${category}', ${index}, this.value)">${gruposTexto}</textarea>
-            <textarea placeholder="Tamanhos: P|18&#10;M|22" style="width:100%; margin-top:6px; font-size:0.8em; height:50px;" onchange="window.atualizarTamanhos('${category}', ${index}, this.value)">${tamanhosTexto}</textarea>
+            <details ${temAvancado ? 'open' : ''} style="margin-top:6px; border:1px dashed #cbd5e1; border-radius:8px; padding:6px 10px; background:#f8fafc;">
+                <summary style="cursor:pointer; font-size:0.84em; font-weight:700; color:#475569;">⚙️ Variações, tamanhos, cores ou opcionais</summary>
+                <div style="margin-top:6px;">
+                    <textarea placeholder="Ex.: # Cor ou Sabor|1|1&#10;Preto|0&#10;# Adicionais|0|2&#10;Garantia Estendida|15" style="width:100%; font-size:0.8em; height:68px;" onchange="window.atualizarGrupos('${category}', ${index}, this.value)">${gruposTexto}</textarea>
+                    <textarea placeholder="Tamanhos / variações de preço (ex.: P|69.90&#10;M|69.90)" style="width:100%; margin-top:6px; font-size:0.8em; height:48px;" onchange="window.atualizarTamanhos('${category}', ${index}, this.value)">${tamanhosTexto}</textarea>
+                    <label style="display:inline-block; margin-top:6px; font-size:0.8em;">Peso para frete (g) <input type="number" value="${item.peso || 0}" style="width:80px;" onchange="window.atualizarItem('${category}', ${index}, 'peso', this.value)"></label>
+                </div>
+            </details>
             <div style="display:flex; gap:12px; align-items:center; margin-top:6px; flex-wrap:wrap;">
-                <label style="font-size:0.8em;">Peso (g) <input type="number" value="${item.peso || 0}" style="width:80px;" onchange="window.atualizarItem('${category}', ${index}, 'peso', this.value)"></label>
                 <label style="font-size:0.8em;"><input type="checkbox" ${item.destaque ? 'checked' : ''} onchange="window.atualizarItem('${category}', ${index}, 'destaque', this.checked)"> Destaque</label>
                 <label style="font-size:0.8em;"><input type="checkbox" ${item.ativo !== false ? 'checked' : ''} onchange="window.atualizarItem('${category}', ${index}, 'ativo', this.checked)"> Ativo</label>
                 <label style="font-size:0.82em;background:${item.esgotado ? '#fee2e2' : '#f1f5f9'};color:${item.esgotado ? '#991b1b' : '#334155'};padding:4px 9px;border-radius:999px;font-weight:700;cursor:pointer;"><input type="checkbox" ${item.esgotado ? 'checked' : ''} onchange="window.atualizarItem('${category}', ${index}, 'esgotado', this.checked); window.__pzToggleEsgotadoServidor && window.__pzToggleEsgotadoServidor('${String(item.id || '')}', this.checked);"> ${item.esgotado ? 'ESGOTADO HOJE' : 'Marcar Esgotado'}</label>
@@ -856,7 +862,7 @@ async function iniciarAdmin() {
 
         row.innerHTML = `
             <div class="produto-foto-col" style="width:140px;">
-                <img src="${previewSrc.replace(/"/g, '&quot;')}" class="item-img" alt="Foto do prato" onerror="this.onerror=null;this.src='assets/images/placeholder-logo.svg'">
+                <img src="${previewSrc.replace(/"/g, '&quot;')}" class="item-img" alt="Foto do produto" onerror="this.onerror=null;this.src='assets/images/placeholder-logo.svg'">
                 ${imageControlHtml}
             </div>
             <div class="item-details" style="margin-left: 15px;">

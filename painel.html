@@ -228,8 +228,8 @@
                 <div class="ferramenta-explica"><strong id="ajuda-titulo-atendimento">Pedido no balcão</strong><span id="ajuda-texto-atendimento"></span></div>
             </div>
             <div class="ferramenta-linha">
-                <button type="button" class="btn-ferramenta" onclick="copiarLinkCozinha(false)" style="background:#b45309;"><i class="fa-solid fa-fire-burner"></i> Link da cozinha</button>
-                <div class="ferramenta-explica"><strong id="ajuda-titulo-cozinha">Link da cozinha</strong><span id="ajuda-texto-cozinha"></span></div>
+                <button type="button" class="btn-ferramenta" onclick="copiarLinkCozinha(false)" style="background:#b45309;"><i class="fa-solid fa-boxes-packing"></i> Link de preparo</button>
+                <div class="ferramenta-explica"><strong id="ajuda-titulo-cozinha">Link de preparo / expedição</strong><span id="ajuda-texto-cozinha"></span></div>
             </div>
             <div class="ferramenta-linha">
                 <button type="button" id="btn-imprimir-cozinha" class="btn-ferramenta" onclick="alternarImpressaoCozinha()" style="background:#ea580c;color:#fff;"><i class="fa-solid fa-print"></i> Impressão da comanda</button>
@@ -265,7 +265,7 @@
 
     <div class="aki-kanban-tabs" id="aki-kanban-mobile-tabs" role="tablist" aria-label="Etapas dos pedidos">
         <button type="button" class="ativo" data-col-alvo="col-novo">1. Chegaram <span class="aki-kt-count">0</span></button>
-        <button type="button" data-col-alvo="col-preparo">2. Cozinha <span class="aki-kt-count">0</span></button>
+        <button type="button" data-col-alvo="col-preparo">2. Preparo <span class="aki-kt-count">0</span></button>
         <button type="button" data-col-alvo="col-em-rota">3. Na rua <span class="aki-kt-count">0</span></button>
         <button type="button" data-col-alvo="col-concluido">4. Entregues <span class="aki-kt-count">0</span></button>
         <button type="button" data-col-alvo="col-arquivado">Guardados <span class="aki-kt-count">0</span></button>
@@ -278,7 +278,7 @@
             <div class="column-content" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
         </div>
         <div class="column" id="col-preparo" data-status="preparo">
-            <div class="column-header">🍳 2. Fazendo na cozinha <span class="count">0</span></div>
+            <div class="column-header">📦 2. Em preparo / separação <span class="count">0</span></div>
             <p class="coluna-dica" id="dica-col-preparo"></p>
             <div class="column-content" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
         </div>

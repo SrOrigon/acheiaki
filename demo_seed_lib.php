@@ -13,7 +13,7 @@ require_once __DIR__ . '/saas_lib.php';
 function pedidozap_garantir_loja_demo($forcar = false)
 {
     $slug = 'loja-demonstracao-acheiaki';
-    $versaoAlvo = 4;
+    $versaoAlvo = 5;
     $anterior = Database::getTenant();
 
     try {
@@ -134,6 +134,19 @@ function pedidozap_garantir_loja_demo($forcar = false)
             ['nome' => 'Ricardo Mendes (Comércio)', 'estrelas' => 5, 'comentario' => 'Meus clientes clicam no link do WhatsApp, já veem tudo com preço real e o pedido cai pronto no painel.'],
             ['nome' => 'Juliana Costa (Cliente)', 'estrelas' => 5, 'comentario' => 'Muito fácil de escolher, não precisa baixar nada e ainda acompanhei a entrega ao vivo!'],
         ];
+        $config['BANNER_WPP'] = [
+            'ativo' => true,
+            'titulo' => 'Atendimento e ofertas direto no WhatsApp',
+            'mensagem' => 'Olá! Vi o catálogo na Loja Demo AcheIAki e quero saber das promoções de hoje.',
+            'botao' => 'Chamar no Zap',
+        ];
+        $config['UPSELL'] = [
+            'ativo' => true,
+            'produto_id' => 'promo-fone-tws',
+            'imagem' => 'assets/images/demo-fone.jpg',
+            'titulo' => 'Leve também o Fone TWS em oferta!',
+            'subtitulo' => 'Adicione com desconto direto no carrinho — Taxa Zero.',
+        ];
 
         $catsDemo = [
             'promocoes' => ['nome' => 'Promoções', 'subtitulo' => 'Ofertas com cupom DIRETO10', 'emoji' => '🏷️', 'icone' => 'fa-tags', 'cor' => '#dc2626', 'ativo' => true],
@@ -162,7 +175,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'Fone Bluetooth TWS + Case Carregadora',
                     'descricao' => 'Som estéreo nítido, microfone integrado e até 18h de bateria com estojo portátil.',
                     'preco' => 79.90,
-                    'preco_original' => 119.90,
+                    'precoOriginal' => 119.90,
                     'imagem' => 'assets/images/demo-fone.jpg',
                     'promocao' => true,
                     'destaque' => true,
@@ -173,7 +186,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'Combo X-Bacon Artesanal + Batata',
                     'descricao' => 'Blend 160g, cheddar cremoso, bacon crocante + porção média de batata frita.',
                     'preco' => 34.90,
-                    'preco_original' => 42.00,
+                    'precoOriginal' => 42.00,
                     'imagem' => $img('demo3', 'assets/images/xbacon.png'),
                     'promocao' => true,
                     'destaque' => true,
