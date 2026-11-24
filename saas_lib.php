@@ -79,9 +79,12 @@ function pedidozap_nicho_presets()
 function pedidozap_saas_config()
 {
     $anterior = Database::getTenant();
-    Database::setTenant('default');
-    $data = Database::readStrict('saas_config.json');
-    Database::setTenant($anterior);
+    try {
+        Database::setTenant('default');
+        $data = Database::readStrict('saas_config.json');
+    } finally {
+        Database::setTenant($anterior);
+    }
 
     if (!is_array($data) || empty($data)) {
         $path = __DIR__ . '/data/saas_config.json';
@@ -98,7 +101,7 @@ function pedidozap_saas_config()
 
     $cfg = array_merge([
         'nome_plataforma' => 'AcheIAki',
-        'slogan_plataforma' => 'O Marketplace Inteligente da sua Região',
+        'slogan_plataforma' => 'Lanches, Pizzarias e Comida perto de você',
         'suporte_whatsapp' => '',
         'dpo_email' => 'privacidade@acheiaki.com.br',
         'cnpj_plataforma' => '',
@@ -150,9 +153,18 @@ function pedidozap_salvar_saas_config(array $config)
 {
     $atual = pedidozap_saas_config();
     $atual['nome_plataforma'] = trim((string) ($config['nome_plataforma'] ?? $atual['nome_plataforma']));
+    if (array_key_exists('slogan_plataforma', $config)) {
+        $slogan = trim((string) $config['slogan_plataforma']);
+        if ($slogan !== '') {
+            $atual['slogan_plataforma'] = $slogan;
+        }
+    }
     $atual['suporte_whatsapp'] = preg_replace('/\D/', '', (string) ($config['suporte_whatsapp'] ?? $atual['suporte_whatsapp'] ?? ''));
     if (array_key_exists('dpo_email', $config)) {
-        $atual['dpo_email'] = trim((string) $config['dpo_email']);
+        $dpo = trim((string) $config['dpo_email']);
+        if ($dpo === '' || filter_var($dpo, FILTER_VALIDATE_EMAIL)) {
+            $atual['dpo_email'] = $dpo;
+        }
     }
     if (array_key_exists('cnpj_plataforma', $config)) {
         $atual['cnpj_plataforma'] = trim((string) $config['cnpj_plataforma']);
@@ -206,9 +218,12 @@ function pedidozap_salvar_saas_config(array $config)
         $atual['mp_access_token'] = '';
     }
     $anterior = Database::getTenant();
-    Database::setTenant('default');
-    $ok = Database::write('saas_config.json', $atual);
-    Database::setTenant($anterior);
+    try {
+        Database::setTenant('default');
+        $ok = Database::write('saas_config.json', $atual);
+    } finally {
+        Database::setTenant($anterior);
+    }
     if (function_exists('pz_cache_del')) {
         pz_cache_del('mkt_lojas_all');
     }
@@ -218,9 +233,12 @@ function pedidozap_salvar_saas_config(array $config)
 function pedidozap_ler_registro()
 {
     $anterior = Database::getTenant();
-    Database::setTenant('default');
-    $registro = Database::read('tenants_registry.json');
-    Database::setTenant($anterior);
+    try {
+        Database::setTenant('default');
+        $registro = Database::read('tenants_registry.json');
+    } finally {
+        Database::setTenant($anterior);
+    }
     return is_array($registro) ? $registro : [];
 }
 
@@ -232,22 +250,25 @@ function pedidozap_salvar_registro_loja($slug, array $meta)
     }
 
     $anterior = Database::getTenant();
-    Database::setTenant('default');
-    $ok = Database::mutate('tenants_registry.json', function (&$registro) use ($slug, $meta) {
-        if (!is_array($registro)) {
-            $registro = [];
-        }
-        $atual = is_array($registro[$slug] ?? null) ? $registro[$slug] : [];
-        $registro[$slug] = array_merge($atual, $meta, [
-            'slug' => $slug,
-            'updated_at' => date('Y-m-d H:i:s'),
-        ]);
-        if (empty($registro[$slug]['criado_em'])) {
-            $registro[$slug]['criado_em'] = date('Y-m-d H:i:s');
-        }
-        return true;
-    });
-    Database::setTenant($anterior);
+    try {
+        Database::setTenant('default');
+        $ok = Database::mutate('tenants_registry.json', function (&$registro) use ($slug, $meta) {
+            if (!is_array($registro)) {
+                $registro = [];
+            }
+            $atual = is_array($registro[$slug] ?? null) ? $registro[$slug] : [];
+            $registro[$slug] = array_merge($atual, $meta, [
+                'slug' => $slug,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+            if (empty($registro[$slug]['criado_em'])) {
+                $registro[$slug]['criado_em'] = date('Y-m-d H:i:s');
+            }
+            return true;
+        });
+    } finally {
+        Database::setTenant($anterior);
+    }
     if ($ok && function_exists('pz_cache_del')) {
         pz_cache_del('pub_store_json_' . $slug);
         pz_cache_del('mkt_lojas_all');
@@ -279,6 +300,34 @@ function pedidozap_registrar_aviso_lista(array $atuais, $chave, $nivel, $titulo,
     return array_slice($lista, 0, 20);
 }
 
+function pedidozap_parse_data_iso(string $data): ?int
+{
+    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $data, $m)) {
+        return null;
+    }
+    if (!checkdate((int) $m[2], (int) $m[3], (int) $m[1])) {
+        return null;
+    }
+    $ts = strtotime($data . ' 00:00:00');
+    return $ts !== false ? $ts : null;
+}
+
+function pedidozap_somar_ciclo(int $baseTs, string $ciclo = 'mensal'): int
+{
+    $meses = strtolower(trim($ciclo)) === 'anual' ? 12 : 1;
+    try {
+        $dt = (new DateTimeImmutable('@' . $baseTs))->setTimezone(new DateTimeZone(date_default_timezone_get() ?: 'UTC'));
+        $diaOrig = (int) $dt->format('j');
+        $primeiroAlvo = $dt->modify('first day of +' . $meses . ' months');
+        $ultimoDia = (int) $primeiroAlvo->format('t');
+        $diaFinal = min($diaOrig, $ultimoDia);
+        $alvo = $primeiroAlvo->setDate((int) $primeiroAlvo->format('Y'), (int) $primeiroAlvo->format('n'), $diaFinal);
+        return $alvo->getTimestamp();
+    } catch (\Throwable $e) {
+        return (int) strtotime('+' . $meses . ' months', $baseTs);
+    }
+}
+
 function pedidozap_status_efetivo(array $loja, ?array $saas = null)
 {
     if ($saas === null) {
@@ -293,7 +342,8 @@ function pedidozap_status_efetivo(array $loja, ?array $saas = null)
         return ['status' => 'bloqueado', 'motivo' => $m !== '' ? $m : 'manual'];
     }
     $vencimento = trim((string) ($loja['vencimento'] ?? ''));
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $vencimento)) {
+    $vencDiaTs = pedidozap_parse_data_iso($vencimento);
+    if ($vencDiaTs === null) {
         return ['status' => $status, 'motivo' => ''];
     }
 
@@ -304,7 +354,7 @@ function pedidozap_status_efetivo(array $loja, ?array $saas = null)
     }
 
     // Período de teste gratuito sem pagamento prévio expira exatamente no fim dos 7 dias.
-    $ehTestePuro = !empty($loja['em_teste']) && empty($loja['ultimo_pagamento']);
+    $ehTestePuro = (!empty($loja['em_teste']) || $status === 'teste') && empty($loja['ultimo_pagamento']);
     if ($ehTestePuro) {
         return ['status' => 'bloqueado', 'motivo' => 'teste_encerrado'];
     }
@@ -339,25 +389,29 @@ function pedidozap_cobranca_detalhes(array $loja, ?array $saas = null, ?string $
     $toleranciaMax = max(0, min(2, (int) ($saas['tolerancia_atraso_dias'] ?? 2)));
 
     $vencimento = trim((string) ($loja['vencimento'] ?? ''));
+    $vencDiaTs = pedidozap_parse_data_iso($vencimento);
     $hoje = date('Y-m-d');
     $diasRestantes = null;
     $diasAtraso = 0;
     $dataBloqueioPrevista = '';
-    $vencBr = preg_match('/^\d{4}-\d{2}-\d{2}$/', $vencimento) ? date('d/m/Y', strtotime($vencimento)) : '';
+    $vencBr = $vencDiaTs !== null ? date('d/m/Y', $vencDiaTs) : '';
     $bloqueioBr = '';
 
-    $ehTestePuro = !empty($loja['em_teste']) && empty($loja['ultimo_pagamento']);
-    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $vencimento)) {
-        $diffDias = (int) floor((strtotime($vencimento) - strtotime($hoje)) / 86400);
+    $ehTestePuro = (!empty($loja['em_teste']) || (($loja['status'] ?? '') === 'teste')) && empty($loja['ultimo_pagamento']);
+    if ($vencDiaTs !== null) {
+        $diffDias = (int) floor(($vencDiaTs - strtotime($hoje . ' 00:00:00')) / 86400);
         if ($diffDias >= 0) {
             $diasRestantes = $diffDias;
         } else {
             $diasAtraso = abs($diffDias);
         }
-        $dataBloqueioPrevista = $ehTestePuro
-            ? $vencimento
-            : date('Y-m-d', strtotime($vencimento . ' +' . $toleranciaMax . ' days'));
-        $bloqueioBr = date('d/m/Y', strtotime($dataBloqueioPrevista));
+        $dataBloqueioTs = $ehTestePuro
+            ? $vencDiaTs
+            : strtotime($vencimento . ' +' . $toleranciaMax . ' days');
+        if ($dataBloqueioTs !== false) {
+            $dataBloqueioPrevista = date('Y-m-d', $dataBloqueioTs);
+            $bloqueioBr = date('d/m/Y', $dataBloqueioTs);
+        }
     }
 
     // Encargo contratual de 10% incide após ultrapassar os 2 dias de tolerância em assinatura/plano regularizado (ou pendência marcada).
@@ -408,11 +462,12 @@ function pedidozap_cobranca_detalhes(array $loja, ?array $saas = null, ?string $
             ];
         }
     } elseif ($status === 'atrasado') {
+        $multaFmt = rtrim(rtrim((string) $multaPctConfig, '0'), '.');
         $aviso = [
             'nivel' => 'urgente',
             'chave' => 'atraso_' . min($toleranciaMax, max(1, $diasAtraso)) . 'd_' . $vencimento,
             'titulo' => 'PAGAMENTO EM ATRASO — Dia ' . $diasAtraso . ' de ' . $toleranciaMax . ' de tolerância máxima',
-            'mensagem' => 'Seu plano venceu em ' . $vencBr . '. Você tem no máximo até ' . $bloqueioBr . ' às 23:59 para pagar o valor normal (' . pedidozap_fmt_brl($valorNormal) . '). Após esses 2 dias, sua página entra em shadowban (desaparece para compradores sem apagar seus dados) e será cobrado +10% (' . pedidozap_fmt_brl($valorNormal * (1 + ($multaPctConfig / 100))) . ') para voltar.',
+            'mensagem' => 'Seu plano venceu em ' . $vencBr . '. Você tem no máximo até ' . $bloqueioBr . ' às 23:59 para pagar o valor normal (' . pedidozap_fmt_brl($valorNormal) . '). Após esses ' . $toleranciaMax . ' dias, sua página entra em shadowban (desaparece para compradores sem apagar seus dados) e será cobrado +' . $multaFmt . '% (' . pedidozap_fmt_brl($valorNormal * (1 + ($multaPctConfig / 100))) . ') para voltar.',
             'cta_texto' => 'Regularizar agora sem multa (' . pedidozap_fmt_brl($valorNormal) . ')',
         ];
     } elseif ($status === 'teste' || !empty($loja['em_teste'])) {
@@ -466,10 +521,14 @@ function pedidozap_cobranca_detalhes(array $loja, ?array $saas = null, ?string $
 
 function pedidozap_assinatura_publica($slug)
 {
+    $slug = strtolower(trim((string) $slug));
+    if ($slug === '') {
+        $slug = 'default';
+    }
     $registro = pedidozap_ler_registro();
     $loja = is_array($registro[$slug] ?? null) ? $registro[$slug] : [];
     $saas = pedidozap_saas_config();
-    $planoInfo = pz_plano_da_loja($slug);
+    $planoInfo = pz_plano_da_loja($slug, $loja, $saas);
     $catalogo = pz_planos_catalogo($saas);
     $det = pedidozap_cobranca_detalhes($loja, $saas, $planoInfo['slug'], $planoInfo['ciclo']);
     $precoAtual = (float) ($planoInfo['preco_mensal'] ?? 79.90);
@@ -527,9 +586,16 @@ function pedidozap_base_url()
         || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
         || (($_SERVER['SERVER_PORT'] ?? '') === '443');
     $saas = pedidozap_saas_config();
-    $host = !empty($saas['dominio_base']) ? $saas['dominio_base'] : ($_SERVER['HTTP_HOST'] ?? 'localhost');
-    $dir = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/');
-    if (!empty($saas['dominio_base'])) {
+    $envHost = function_exists('pz_db_env_val') ? pz_db_env_val('RAILWAY_PUBLIC_DOMAIN') : '';
+    $host = !empty($saas['dominio_base'])
+        ? $saas['dominio_base']
+        : ($_SERVER['HTTP_HOST'] ?? ($envHost !== '' ? $envHost : 'localhost'));
+    $script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $dir = ($script === '' || strpos($script, '/') === false) ? '' : rtrim(dirname($script), '/.');
+    if ($dir === '/' || $dir === '.') {
+        $dir = '';
+    }
+    if (!empty($saas['dominio_base']) || $envHost !== '') {
         $https = true;
     }
     return ($https ? 'https' : 'http') . '://' . $host . $dir;
@@ -554,11 +620,13 @@ function pedidozap_mp_request($metodo, $caminho, $corpo = null)
         'Content-Type: application/json',
     ];
     if ($metodo === 'POST') {
-        $headers[] = 'X-Idempotency-Key: ' . bin2hex(random_bytes(16));
+        $idem = function_exists('random_bytes') ? bin2hex(random_bytes(16)) : sha1(uniqid('mp', true));
+        $headers[] = 'X-Idempotency-Key: ' . $idem;
     }
     curl_setopt_array($ch, [
         CURLOPT_CUSTOMREQUEST => $metodo,
         CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 8,
         CURLOPT_TIMEOUT => 20,
         CURLOPT_HTTPHEADER => $headers,
     ]);
@@ -566,14 +634,19 @@ function pedidozap_mp_request($metodo, $caminho, $corpo = null)
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($corpo, JSON_UNESCAPED_UNICODE));
     }
     $resposta = curl_exec($ch);
+    $curlErr = curl_error($ch);
     $codigo = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+    if ($resposta === false) {
+        return [$codigo, ['message' => 'Falha de comunicação com Mercado Pago' . ($curlErr !== '' ? ': ' . $curlErr : '.')]];
+    }
     $dados = json_decode((string) $resposta, true);
     return [$codigo, is_array($dados) ? $dados : []];
 }
 
 function pedidozap_mp_criar_cobranca($slug, $email, $planoSlug = null, $ciclo = 'mensal', $modo = 'recorrente')
 {
+    $slug = strtolower(trim((string) $slug));
     $saas = pedidozap_saas_config();
     $registro = pedidozap_ler_registro();
     $loja = is_array($registro[$slug] ?? null) ? $registro[$slug] : [];
@@ -594,8 +667,16 @@ function pedidozap_mp_criar_cobranca($slug, $email, $planoSlug = null, $ciclo = 
 
 function pedidozap_mp_criar_pagamento_avulso($slug, $email, $planoSlug = null, $ciclo = 'mensal', $forcarReativacao = null)
 {
+    $slug = strtolower(trim((string) $slug));
+    $email = trim((string) $email);
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return ['success' => false, 'message' => 'Informe um e-mail válido do responsável para gerar a cobrança.'];
+    }
     $saas = pedidozap_saas_config();
     $registro = pedidozap_ler_registro();
+    if ($slug === '' || (!isset($registro[$slug]) && !Database::tenantDataExists($slug))) {
+        return ['success' => false, 'message' => 'Loja não encontrada para gerar a cobrança.'];
+    }
     $loja = is_array($registro[$slug] ?? null) ? $registro[$slug] : [];
     $planoFinal = pz_plano_normalizar($planoSlug ?: ($loja['plano_escolhido'] ?? $loja['plano'] ?? 'pro'));
     $cicloFinal = strtolower(trim((string) $ciclo)) === 'anual' ? 'anual' : 'mensal';
@@ -699,8 +780,16 @@ function pedidozap_mp_criar_pagamento_avulso($slug, $email, $planoSlug = null, $
 
 function pedidozap_mp_criar_assinatura($slug, $email, $planoSlug = null, $ciclo = 'mensal')
 {
+    $slug = strtolower(trim((string) $slug));
+    $email = trim((string) $email);
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return ['success' => false, 'message' => 'Informe um e-mail válido do responsável para ativar a renovação automática.'];
+    }
     $saas = pedidozap_saas_config();
     $registro = pedidozap_ler_registro();
+    if ($slug === '' || (!isset($registro[$slug]) && !Database::tenantDataExists($slug))) {
+        return ['success' => false, 'message' => 'Loja não encontrada para ativar a assinatura.'];
+    }
     $loja = is_array($registro[$slug] ?? null) ? $registro[$slug] : [];
     $planoFinal = pz_plano_normalizar($planoSlug ?: ($loja['plano_escolhido'] ?? $loja['plano'] ?? 'pro'));
     $cicloFinal = strtolower(trim((string) $ciclo)) === 'anual' ? 'anual' : 'mensal';
@@ -717,9 +806,10 @@ function pedidozap_mp_criar_assinatura($slug, $email, $planoSlug = null, $ciclo 
     $nome = $loja['nome_empresa'] ?? $slug;
 
     $retorno = pedidozap_base_url() . '/admin.html?assinatura=retorno' . ($slug !== 'default' ? '&tenant=' . rawurlencode($slug) : '');
+    $extSubRef = 'sub|' . $slug . '|' . $planoFinal . '|' . $cicloFinal;
     [$codigo, $dados] = pedidozap_mp_request('POST', '/preapproval', [
         'reason' => ($saas['nome_plataforma'] ?: 'AcheIAki') . ' - Plano ' . $planoDef['nome'] . ' (' . ($cicloFinal === 'anual' ? 'Anual' : 'Mensal') . ') - ' . $nome,
-        'external_reference' => $slug,
+        'external_reference' => $extSubRef,
         'payer_email' => $email,
         'back_url' => $retorno,
         'auto_recurring' => [
@@ -748,6 +838,10 @@ function pedidozap_mp_criar_assinatura($slug, $email, $planoSlug = null, $ciclo 
 
 function pedidozap_mp_cancelar_assinatura($slug)
 {
+    $slug = strtolower(trim((string) $slug));
+    if ($slug === '') {
+        return ['success' => false, 'message' => 'Loja não informada.'];
+    }
     $registro = pedidozap_ler_registro();
     $loja = is_array($registro[$slug] ?? null) ? $registro[$slug] : [];
     $preId = preg_replace('/[^A-Za-z0-9_-]/', '', (string) ($loja['assinatura_id'] ?? ''));
@@ -850,43 +944,80 @@ function pedidozap_mp_sincronizar_pagamento($paymentId, $slugEsperado = null)
         return ['success' => false, 'message' => 'Valor pago (' . pedidozap_fmt_brl($valorPago) . ') inferior ao devido (' . pedidozap_fmt_brl($valorEsperado) . ').'];
     }
 
-    $atualTs = strtotime((string) ($loja['vencimento'] ?? ''));
-    $hojeTs = strtotime(date('Y-m-d'));
-    $baseRenov = ($atualTs && $atualTs > $hojeTs) ? $atualTs : $pagoTs;
-    $novoVenc = date('Y-m-d', strtotime($cicloFinal === 'anual' ? '+12 months' : '+1 month', $baseRenov));
+    $jaProcessado = false;
+    $anterior = Database::getTenant();
+    try {
+        Database::setTenant('default');
+        Database::mutate('tenants_registry.json', function (&$reg) use (
+            $slug,
+            $paymentId,
+            $planoFinal,
+            $cicloFinal,
+            $pagoTs,
+            $valorPago,
+            $det,
+            &$jaProcessado
+        ) {
+            if (!is_array($reg)) {
+                $reg = [];
+            }
+            $cur = is_array($reg[$slug] ?? null) ? $reg[$slug] : [];
+            $procAtual = is_array($cur['mp_pagamentos_processados'] ?? null) ? $cur['mp_pagamentos_processados'] : [];
+            if (in_array((string) $paymentId, $procAtual, true)) {
+                $jaProcessado = true;
+                return false;
+            }
+            $atualTs = pedidozap_parse_data_iso(trim((string) ($cur['vencimento'] ?? '')));
+            $hojeTs = strtotime(date('Y-m-d') . ' 00:00:00');
+            $baseRenov = ($atualTs !== null && $atualTs > $hojeTs) ? $atualTs : $pagoTs;
+            $novoVenc = date('Y-m-d', pedidozap_somar_ciclo($baseRenov, $cicloFinal));
 
-    $processados[] = (string) $paymentId;
-    $processados = array_slice($processados, -20);
-    $notifs = pedidozap_registrar_aviso_lista(
-        $loja['cobranca_notificacoes'] ?? [],
-        'pag_ok_' . $paymentId,
-        'ok',
-        !empty($det['encargo_reativacao_ativo']) ? 'Loja reativada e liberada do shadowban!' : 'Pagamento confirmado!',
-        'Pagamento #' . $paymentId . ' aprovado (' . pedidozap_fmt_brl($valorPago) . '). Novo vencimento: ' . date('d/m/Y', strtotime($novoVenc)) . '.'
-    );
-
-    pedidozap_salvar_registro_loja($slug, [
-        'status' => 'ativo',
-        'bloqueio_motivo' => '',
-        'em_teste' => false,
-        'shadowban_ativo' => false,
-        'taxa_reativacao_pendente' => false,
-        'plano' => $planoFinal,
-        'plano_escolhido' => $planoFinal,
-        'ciclo_cobranca' => $cicloFinal,
-        'vencimento' => $novoVenc,
-        'ultimo_pagamento' => date('Y-m-d', $pagoTs),
-        'ultimo_mp_payment_id' => (string) $paymentId,
-        'ultimo_mp_payment_status' => 'approved',
-        'mp_pagamentos_processados' => $processados,
-        'cobranca_notificacoes' => $notifs,
-    ]);
+            $procAtual[] = (string) $paymentId;
+            $procAtual = array_slice($procAtual, -20);
+            $notifs = pedidozap_registrar_aviso_lista(
+                is_array($cur['cobranca_notificacoes'] ?? null) ? $cur['cobranca_notificacoes'] : [],
+                'pag_ok_' . $paymentId,
+                'ok',
+                !empty($det['encargo_reativacao_ativo']) ? 'Loja reativada e liberada do shadowban!' : 'Pagamento confirmado!',
+                'Pagamento #' . $paymentId . ' aprovado (' . pedidozap_fmt_brl($valorPago) . '). Novo vencimento: ' . date('d/m/Y', strtotime($novoVenc)) . '.'
+            );
+            $reg[$slug] = array_merge($cur, [
+                'slug' => $slug,
+                'status' => 'ativo',
+                'bloqueio_motivo' => '',
+                'em_teste' => false,
+                'shadowban_ativo' => false,
+                'taxa_reativacao_pendente' => false,
+                'plano' => $planoFinal,
+                'plano_escolhido' => $planoFinal,
+                'ciclo_cobranca' => $cicloFinal,
+                'vencimento' => $novoVenc,
+                'ultimo_pagamento' => date('Y-m-d', $pagoTs),
+                'ultimo_mp_payment_id' => (string) $paymentId,
+                'ultimo_mp_payment_status' => 'approved',
+                'mp_pagamentos_processados' => $procAtual,
+                'cobranca_notificacoes' => $notifs,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+            return true;
+        });
+    } finally {
+        Database::setTenant($anterior);
+    }
+    if ($jaProcessado) {
+        return ['success' => true, 'slug' => $slug, 'status' => 'approved', 'pago' => true, 'ja_processado' => true];
+    }
+    if (function_exists('pz_cache_del')) {
+        pz_cache_del('pub_store_json_' . $slug);
+        pz_cache_del('mkt_lojas_all');
+    }
 
     return ['success' => true, 'slug' => $slug, 'status' => 'approved', 'pago' => true];
 }
 
 function pedidozap_mp_buscar_ultimo_pagamento($slug)
 {
+    $slug = strtolower(trim((string) $slug));
     $registro = pedidozap_ler_registro();
     $loja = is_array($registro[$slug] ?? null) ? $registro[$slug] : [];
     $extRef = trim((string) ($loja['mp_ext_ref_pendente'] ?? ''));
@@ -923,8 +1054,17 @@ function pedidozap_mp_sincronizar_assinatura($preapprovalId, $slugEsperado = nul
     if ($codigo !== 200 || empty($pre['id'])) {
         return ['success' => false, 'message' => 'Não foi possível consultar a assinatura no Mercado Pago.'];
     }
-    $slug = strtolower((string) ($pre['external_reference'] ?? ''));
-    if ($slug === '' || ($slugEsperado !== null && $slug !== $slugEsperado)) {
+    $extPre = strtolower(trim((string) ($pre['external_reference'] ?? '')));
+    $slug = $extPre;
+    $planoPre = '';
+    $cicloPre = '';
+    if (strpos($extPre, 'sub|') === 0) {
+        $partesSub = explode('|', $extPre);
+        $slug = strtolower(trim((string) ($partesSub[1] ?? '')));
+        $planoPre = (string) ($partesSub[2] ?? '');
+        $cicloPre = (string) ($partesSub[3] ?? '');
+    }
+    if ($slug === '' || ($slugEsperado !== null && $slug !== strtolower(trim((string) $slugEsperado)))) {
         return ['success' => false, 'message' => 'Assinatura de outra loja.'];
     }
     $registro = pedidozap_ler_registro();
@@ -944,9 +1084,9 @@ function pedidozap_mp_sincronizar_assinatura($preapprovalId, $slugEsperado = nul
     if ($status === 'authorized' && $cobrancas > 0 && $ultimaCobranca !== '') {
         $pago = strtotime($ultimaCobranca);
         $candidatos = [];
-        $cicloPago = (string) ($loja['ciclo_pendente'] ?? $loja['ciclo_cobranca'] ?? 'mensal');
+        $cicloPago = $cicloPre !== '' ? $cicloPre : (string) ($loja['ciclo_pendente'] ?? $loja['ciclo_cobranca'] ?? 'mensal');
         if ($pago) {
-            $candidatos[] = strtotime($cicloPago === 'anual' ? '+12 months' : '+1 month', $pago);
+            $candidatos[] = pedidozap_somar_ciclo($pago, $cicloPago);
             $meta['ultimo_pagamento'] = date('Y-m-d', $pago);
         }
         $proxima = strtotime((string) ($pre['next_payment_date'] ?? ''));
@@ -955,8 +1095,8 @@ function pedidozap_mp_sincronizar_assinatura($preapprovalId, $slugEsperado = nul
         }
         if ($candidatos) {
             $novo = max($candidatos);
-            $atual = strtotime((string) ($loja['vencimento'] ?? ''));
-            $meta['vencimento'] = date('Y-m-d', ($atual && $atual > $novo) ? $atual : $novo);
+            $atual = pedidozap_parse_data_iso(trim((string) ($loja['vencimento'] ?? '')));
+            $meta['vencimento'] = date('Y-m-d', ($atual !== null && $atual > $novo) ? $atual : $novo);
         }
         $meta['status'] = 'ativo';
         $meta['bloqueio_motivo'] = '';
@@ -964,16 +1104,24 @@ function pedidozap_mp_sincronizar_assinatura($preapprovalId, $slugEsperado = nul
         $meta['shadowban_ativo'] = false;
         $meta['taxa_reativacao_pendente'] = false;
         $meta['modo_cobranca_preferido'] = 'recorrente';
-        $planoAtivo = pz_plano_normalizar((string) ($loja['plano_pendente'] ?? $loja['plano_escolhido'] ?? $loja['plano'] ?? 'pro'));
+        $planoAtivo = pz_plano_normalizar($planoPre !== '' ? $planoPre : (string) ($loja['plano_pendente'] ?? $loja['plano_escolhido'] ?? $loja['plano'] ?? 'pro'));
         $meta['plano'] = $planoAtivo;
         $meta['plano_escolhido'] = $planoAtivo;
-        $meta['ciclo_cobranca'] = $cicloPago === 'anual' ? 'anual' : 'mensal';
+        $meta['ciclo_cobranca'] = strtolower(trim($cicloPago)) === 'anual' ? 'anual' : 'mensal';
         $meta['cobranca_notificacoes'] = pedidozap_registrar_aviso_lista(
             $loja['cobranca_notificacoes'] ?? [],
             'rec_ok_' . ($meta['ultimo_pagamento'] ?? date('Y-m-d')),
             'ok',
             'Cobrança automática confirmada',
             'Assinatura recorrente renovada. Próximo vencimento em ' . (!empty($meta['vencimento']) ? date('d/m/Y', strtotime($meta['vencimento'])) : '') . '.'
+        );
+    } elseif (in_array($status, ['cancelled', 'paused'], true) && (($loja['assinatura_status'] ?? '') === 'authorized')) {
+        $meta['cobranca_notificacoes'] = pedidozap_registrar_aviso_lista(
+            $loja['cobranca_notificacoes'] ?? [],
+            'rec_off_' . $status . '_' . date('Y-m-d'),
+            'aviso',
+            'Cobrança automática ' . ($status === 'paused' ? 'pausada' : 'cancelada'),
+            'Sua assinatura automática mudou de status no Mercado Pago. Confira na aba Meu Plano para não ficar em atraso.'
         );
     }
 
@@ -1008,7 +1156,7 @@ function pedidozap_varrer_vencimentos_e_avisos()
         }
         if (!empty($det['encargo_reativacao_ativo']) && empty($loja['taxa_reativacao_pendente'])) {
             $patch['taxa_reativacao_pendente'] = true;
-        } elseif (empty($det['encargo_reativacao_ativo']) && !empty($loja['taxa_reativacao_pendente']) && $det['status'] === 'ativo') {
+        } elseif (empty($det['encargo_reativacao_ativo']) && !empty($loja['taxa_reativacao_pendente']) && $det['status'] !== 'bloqueado') {
             $patch['taxa_reativacao_pendente'] = false;
         }
         if (!empty($det['aviso']['chave'])) {
@@ -1044,7 +1192,7 @@ function pedidozap_recusar_loja_bloqueada($user, $pass)
     echo json_encode([
         'success' => false,
         'shadowban' => true,
-        'message' => 'A mensalidade desta loja ultrapassou o prazo e a loja está em shadowban/bloqueio (todos os seus dados permanecem salvos). Regularize na aba Mensalidade para voltar ao ar.',
+        'message' => 'A mensalidade desta loja ultrapassou o prazo e a loja está em shadowban/bloqueio (todos os seus dados permanecem salvos). Regularize na aba Meu Plano para voltar ao ar.',
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -1120,9 +1268,12 @@ function pedidozap_criar_loja(array $dados)
     $tempoMin = isset($dados['tempo_medio_min']) && is_numeric($dados['tempo_medio_min']) ? (int) $dados['tempo_medio_min'] : 35;
     $taxaBase = isset($dados['taxa_entrega_base']) && is_numeric($dados['taxa_entrega_base']) ? max(0.0, (float) $dados['taxa_entrega_base']) : 0.0;
 
+    $lenStr = static function ($txt) {
+        return function_exists('mb_strlen') ? mb_strlen((string) $txt, 'UTF-8') : strlen((string) $txt);
+    };
     $exigirCompleto = !empty($dados['exigir_cadastro_completo']);
     if ($exigirCompleto) {
-        if (mb_strlen($nome, 'UTF-8') < 3) {
+        if ($lenStr($nome) < 3) {
             return ['success' => false, 'message' => 'Informe o nome completo do estabelecimento (mínimo 3 caracteres).'];
         }
         if (!pedidozap_validar_cnpj($cnpj)) {
@@ -1131,7 +1282,7 @@ function pedidozap_criar_loja(array $dados)
         if (strlen($whatsapp) < 10) {
             return ['success' => false, 'message' => 'WhatsApp da loja obrigatório com DDD (mínimo 10 dígitos).'];
         }
-        if (strlen($cep) !== 8 || mb_strlen($rua, 'UTF-8') < 3 || $numero === '' || mb_strlen($bairro, 'UTF-8') < 2 || mb_strlen($cidade, 'UTF-8') < 2 || strlen($estado) !== 2) {
+        if (strlen($cep) !== 8 || $lenStr($rua) < 3 || $numero === '' || $lenStr($bairro) < 2 || $lenStr($cidade) < 2 || strlen($estado) !== 2) {
             return ['success' => false, 'message' => 'Preencha o endereço completo obrigatório da empresa (CEP com 8 dígitos, Rua, Número, Bairro, Cidade e UF).'];
         }
         if ($raioKm < 1 || $raioKm > 300) {
@@ -1149,21 +1300,21 @@ function pedidozap_criar_loja(array $dados)
     if (!preg_match('/^[a-z0-9][a-z0-9_-]{0,63}$/', $slug) || $slug === 'default') {
         return ['success' => false, 'message' => 'O endereço da loja precisa ter só letras minúsculas, números e hífen.'];
     }
-    $tamanhoNome = function_exists('mb_strlen') ? mb_strlen($nome) : strlen($nome);
-    $tamanhoSenha = function_exists('mb_strlen') ? mb_strlen($senha) : strlen($senha);
+    $tamanhoNome = $lenStr($nome);
+    $tamanhoSenha = $lenStr($senha);
     if ($tamanhoNome < 3 || $senha === '' || $tamanhoSenha < 6) {
         return ['success' => false, 'message' => 'Informe o nome da loja e uma senha com pelo menos 6 caracteres.'];
     }
     if ($login === '') {
         $login = 'admin';
     }
-    if (Database::tenantDataExists($slug)) {
+    $regExist = pedidozap_ler_registro();
+    if (Database::tenantDataExists($slug) || isset($regExist[$slug])) {
         return ['success' => false, 'message' => 'Já existe uma loja com esse endereço.'];
     }
 
     // Evita duplicidade de CNPJ em lojas ativas
     if ($cnpj !== '') {
-        $regExist = pedidozap_ler_registro();
         foreach ($regExist as $mExist) {
             if (is_array($mExist) && preg_replace('/\D/', '', (string) ($mExist['cnpj'] ?? '')) === $cnpj) {
                 return ['success' => false, 'message' => 'Este CNPJ já está cadastrado no sistema. Entre no painel da sua loja ou fale com o suporte.'];
@@ -1258,15 +1409,21 @@ function pedidozap_criar_loja(array $dados)
     if ($cep !== '') {
         $config['ENDERECO']['cep'] = $cep;
     }
-    if (!empty($dados['lat']) && !empty($dados['lng']) && is_numeric($dados['lat']) && is_numeric($dados['lng'])) {
+    if (pedidozap_coords_validas($dados['lat'] ?? null, $dados['lng'] ?? null)) {
         $config['ENDERECO']['lat'] = round((float) $dados['lat'], 7);
         $config['ENDERECO']['lng'] = round((float) $dados['lng'], 7);
-    } elseif (empty($config['ENDERECO']['lat']) && ($config['ENDERECO']['cidade'] !== '' || $config['ENDERECO']['cep'] !== '')) {
-        pedidozap_tentar_geocode_loja($config);
+    } else {
+        if (!pedidozap_coords_validas($config['ENDERECO']['lat'] ?? null, $config['ENDERECO']['lng'] ?? null)) {
+            $config['ENDERECO']['lat'] = null;
+            $config['ENDERECO']['lng'] = null;
+            if ($config['ENDERECO']['cidade'] !== '' || $config['ENDERECO']['cep'] !== '') {
+                pedidozap_tentar_geocode_loja($config);
+            }
+        }
     }
 
-    if ($exigirCompleto && (empty($config['ENDERECO']['lat']) || empty($config['ENDERECO']['lng']))) {
-        return ['success' => false, 'message' => 'Não foi possível localizar as coordenadas GPS do endereço. Clique em "Capturar GPS da loja" ou confira o CEP e a cidade antes de concluir.'];
+    if ($exigirCompleto && !pedidozap_coords_validas($config['ENDERECO']['lat'] ?? null, $config['ENDERECO']['lng'] ?? null)) {
+        return ['success' => false, 'message' => 'Não foi possível localizar as coordenadas GPS do endereço. Toque em "Usar minha localização (GPS)" ou confira o CEP e a cidade antes de concluir.'];
     }
 
     if (!empty($dados['consentimento_lgpd']) && is_array($dados['consentimento_lgpd'])) {
@@ -1274,20 +1431,28 @@ function pedidozap_criar_loja(array $dados)
     }
 
     $anterior = Database::getTenant();
-    Database::setTenant($slug);
-    $okConfig = Database::write('config.json', $config);
-    $okMenu = Database::write('cardapio.json', $cardapio);
-    $okAuth = pedidozap_salvar_credenciais($login, $senha);
-    Database::write('pedidos.json', []);
-    Database::setTenant($anterior);
+    try {
+        Database::setTenant($slug);
+        $okConfig = Database::write('config.json', $config);
+        $okMenu = Database::write('cardapio.json', $cardapio);
+        $okAuth = pedidozap_salvar_credenciais($login, $senha);
+        Database::write('pedidos.json', []);
+    } finally {
+        Database::setTenant($anterior);
+    }
+
+    if (!$okConfig || !$okMenu || !$okAuth) {
+        return ['success' => false, 'message' => 'Não foi possível gravar os dados iniciais da loja. Tente novamente.'];
+    }
 
     $vencimento = trim((string) ($dados['vencimento'] ?? ''));
-    $emTeste = !empty($dados['em_teste']);
+    $statusInicial = (string) ($dados['status'] ?? (!empty($dados['em_teste']) ? 'teste' : 'ativo'));
+    $emTeste = !empty($dados['em_teste']) || $statusInicial === 'teste';
     $diasTrial = max(1, min(7, (int) (pedidozap_saas_config()['dias_teste_gratis'] ?? 7)));
     if ($emTeste) {
         $limiteTrialTs = strtotime('+' . $diasTrial . ' days');
-        $vencInformadoTs = $vencimento !== '' ? strtotime($vencimento) : false;
-        if (!$vencInformadoTs || $vencInformadoTs > $limiteTrialTs) {
+        $vencInformadoTs = pedidozap_parse_data_iso($vencimento);
+        if ($vencInformadoTs === null || $vencInformadoTs > $limiteTrialTs) {
             $vencimento = date('Y-m-d', $limiteTrialTs);
         }
     }
@@ -1299,7 +1464,7 @@ function pedidozap_criar_loja(array $dados)
         'google_place_id' => $perfil ? (string) ($perfil['google_place_id'] ?? '') : '',
         'nicho' => $nicho,
         'login' => $login,
-        'status' => $dados['status'] ?? ($emTeste ? 'teste' : 'ativo'),
+        'status' => $statusInicial,
         'plano' => $emTeste ? 'teste' : $planoEscolhido,
         'plano_escolhido' => $planoEscolhido,
         'ciclo_cobranca' => strtolower((string) ($dados['ciclo_cobranca'] ?? 'mensal')) === 'anual' ? 'anual' : 'mensal',
@@ -1317,8 +1482,8 @@ function pedidozap_criar_loja(array $dados)
     ]);
 
     return [
-        'success' => (bool) ($okConfig && $okMenu && $okAuth && $okRegistro),
-        'message' => ($okConfig && $okMenu && $okAuth && $okRegistro) ? '' : 'Não foi possível criar a loja.',
+        'success' => (bool) $okRegistro,
+        'message' => $okRegistro ? '' : 'Não foi possível finalizar o registro da loja.',
         'slug' => $slug,
         'vencimento' => $vencimento,
         'login' => $login,
@@ -1327,6 +1492,10 @@ function pedidozap_criar_loja(array $dados)
 
 function pedidozap_loja_bloqueada($slug)
 {
+    $slug = strtolower(trim((string) $slug));
+    if ($slug === '') {
+        $slug = 'default';
+    }
     return pedidozap_assinatura_publica($slug)['status'] === 'bloqueado';
 }
 
@@ -1348,9 +1517,12 @@ function pedidozap_ler_master()
     }
 
     $anterior = Database::getTenant();
-    Database::setTenant('default');
-    $data = Database::readStrict('master_auth.json');
-    Database::setTenant($anterior);
+    try {
+        Database::setTenant('default');
+        $data = Database::readStrict('master_auth.json');
+    } finally {
+        Database::setTenant($anterior);
+    }
     if (is_array($data) && !empty($data['user']) && !empty($data['pass_hash'])) {
         return $data;
     }
@@ -1396,9 +1568,12 @@ function pedidozap_salvar_master($user, $pass)
         'updated_at' => date('c'),
     ];
     $anterior = Database::getTenant();
-    Database::setTenant('default');
-    $ok = Database::write('master_auth.json', $payload);
-    Database::setTenant($anterior);
+    try {
+        Database::setTenant('default');
+        $ok = Database::write('master_auth.json', $payload);
+    } finally {
+        Database::setTenant($anterior);
+    }
     return $ok;
 }
 
@@ -1587,25 +1762,26 @@ function pedidozap_app_secret()
         return $envSecret;
     }
     $anterior = Database::getTenant();
-    Database::setTenant('default');
-    $data = Database::readStrict('app_secret.json');
-    if (is_array($data) && !empty($data['secret']) && strlen($data['secret']) >= 32) {
-        Database::setTenant($anterior);
-        return $data['secret'];
-    }
-    $path = __DIR__ . '/data/app_secret.json';
-    if (is_file($path)) {
-        $fileData = json_decode(@file_get_contents($path) ?: '', true);
-        if (is_array($fileData) && !empty($fileData['secret']) && strlen($fileData['secret']) >= 32) {
-            Database::write('app_secret.json', $fileData);
-            Database::setTenant($anterior);
-            return $fileData['secret'];
+    try {
+        Database::setTenant('default');
+        $data = Database::readStrict('app_secret.json');
+        if (is_array($data) && !empty($data['secret']) && strlen($data['secret']) >= 32) {
+            return $data['secret'];
         }
+        $path = __DIR__ . '/data/app_secret.json';
+        if (is_file($path)) {
+            $fileData = json_decode(@file_get_contents($path) ?: '', true);
+            if (is_array($fileData) && !empty($fileData['secret']) && strlen($fileData['secret']) >= 32) {
+                Database::write('app_secret.json', $fileData);
+                return $fileData['secret'];
+            }
+        }
+        $secret = bin2hex(random_bytes(32));
+        Database::write('app_secret.json', ['secret' => $secret, 'criado_em' => date('c')]);
+        return $secret;
+    } finally {
+        Database::setTenant($anterior);
     }
-    $secret = bin2hex(random_bytes(32));
-    Database::write('app_secret.json', ['secret' => $secret, 'criado_em' => date('c')]);
-    Database::setTenant($anterior);
-    return $secret;
 }
 
 function pedidozap_b64url($bin)
@@ -1667,26 +1843,30 @@ function pedidozap_validar_token($user, $token)
         return false;
     }
     $payload = json_decode(pedidozap_b64url_decode($partes[1]) ?: '', true);
-    if (!is_array($payload) || (int) ($payload['e'] ?? 0) < time()) {
+    if (!is_array($payload) || (int) ($payload['e'] ?? 0) < time() || empty($payload['u']) || !is_string($payload['u'])) {
         return false;
     }
     if ((string) $user !== '' && strcasecmp((string) $payload['u'], (string) $user) !== 0) {
         return false;
     }
     $role = $payload['r'] ?? '';
+    $sigCred = isset($payload['d']) && is_string($payload['d']) ? $payload['d'] : '';
+    if ($sigCred === '') {
+        return false;
+    }
     if ($role === 'master') {
-        return hash_equals(pedidozap_digital_credencial('master'), (string) ($payload['d'] ?? '')) ? 'master' : false;
+        return hash_equals(pedidozap_digital_credencial('master'), $sigCred) ? 'master' : false;
     }
     if ($role === 'funcionario') {
         if (($payload['t'] ?? '') !== Database::getTenant()) {
             return false;
         }
-        return hash_equals(pedidozap_digital_credencial('funcionario', (string) ($payload['u'] ?? '')), (string) ($payload['d'] ?? '')) ? 'funcionario' : false;
+        return hash_equals(pedidozap_digital_credencial('funcionario', $payload['u']), $sigCred) ? 'funcionario' : false;
     }
     if ($role !== 'lojista' || ($payload['t'] ?? '') !== Database::getTenant()) {
         return false;
     }
-    return hash_equals(pedidozap_digital_credencial('lojista'), (string) ($payload['d'] ?? '')) ? 'lojista' : false;
+    return hash_equals(pedidozap_digital_credencial('lojista'), $sigCred) ? 'lojista' : false;
 }
 
 /**
@@ -1701,31 +1881,33 @@ function pedidozap_limite_requisicao($escopo, $maximo = 80, $janela = 60, $regis
     }
     $dir = __DIR__ . '/data/ratelimit';
     if (!is_dir($dir)) {
-        mkdir($dir, 0755, true);
+        @mkdir($dir, 0755, true);
     }
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'desconhecido';
+    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'desconhecido');
     $tenant = class_exists('Database') ? Database::getTenant() : 'default';
     $path = $dir . '/' . sha1($ip . '|' . $escopo . '|' . $tenant) . '.json';
     $agora = time();
 
-    $data = is_file($path) ? json_decode(file_get_contents($path) ?: '', true) : null;
-    if (!is_array($data) || ($data['inicio'] ?? 0) < $agora - $janela) {
+    $raw = is_file($path) ? (@file_get_contents($path) ?: '') : '';
+    $data = $raw !== '' ? json_decode($raw, true) : null;
+    if (!is_array($data) || (int) ($data['inicio'] ?? 0) < $agora - $janela) {
         $data = ['inicio' => $agora, 'hits' => 0];
     }
+    $data['hits'] = (int) ($data['hits'] ?? 0);
     if ($registrar) {
         $data['hits']++;
-        file_put_contents($path, json_encode($data), LOCK_EX);
+        @file_put_contents($path, json_encode($data), LOCK_EX);
     }
-    return (int) ($data['hits'] ?? 0) <= (int) $maximo;
+    return $data['hits'] <= (int) $maximo;
 }
 
 function pedidozap_limite_login($registrarFalha = false, $limpar = false)
 {
     $dir = __DIR__ . '/data/ratelimit';
     if (!is_dir($dir)) {
-        mkdir($dir, 0755, true);
+        @mkdir($dir, 0755, true);
     }
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'desconhecido';
+    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'desconhecido');
     $path = $dir . '/' . sha1($ip . '|' . Database::getTenant()) . '.json';
     $janela = 900;
     $maximo = 8;
@@ -1735,13 +1917,15 @@ function pedidozap_limite_login($registrarFalha = false, $limpar = false)
         return true;
     }
 
-    $data = is_file($path) ? json_decode(file_get_contents($path) ?: '', true) : null;
-    if (!is_array($data) || ($data['inicio'] ?? 0) < time() - $janela) {
+    $raw = is_file($path) ? (@file_get_contents($path) ?: '') : '';
+    $data = $raw !== '' ? json_decode($raw, true) : null;
+    if (!is_array($data) || (int) ($data['inicio'] ?? 0) < time() - $janela) {
         $data = ['inicio' => time(), 'falhas' => 0];
     }
+    $data['falhas'] = (int) ($data['falhas'] ?? 0);
     if ($registrarFalha) {
         $data['falhas']++;
-        file_put_contents($path, json_encode($data), LOCK_EX);
+        @file_put_contents($path, json_encode($data), LOCK_EX);
     }
     return $data['falhas'] < $maximo;
 }
@@ -1760,7 +1944,7 @@ function pedidozap_resumo_lojas()
         if (!is_array($meta)) {
             continue;
         }
-        $planoLojaResumo = pz_plano_da_loja($slug);
+        $planoLojaResumo = pz_plano_da_loja((string) $slug, $meta, $saas);
         $det = pedidozap_cobranca_detalhes($meta, $saas, $planoLojaResumo['slug'], $planoLojaResumo['ciclo']);
         $lista[] = [
             'slug' => $slug,
@@ -1797,7 +1981,7 @@ function pedidozap_resumo_lojas()
         ];
     }
     usort($lista, function ($a, $b) {
-        return strcmp($b['criado_em'], $a['criado_em']);
+        return strcmp((string) ($b['criado_em'] ?? ''), (string) ($a['criado_em'] ?? ''));
     });
     return $lista;
 }

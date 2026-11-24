@@ -147,17 +147,17 @@ function pedidozap_default_ajuda()
     return [
         'admin' => [
             'tutorial' => 'Personalize o passo a passo e os textos de ajuda. Tudo que o lojista lê pode ser mudado aqui.',
-            'identidade' => 'Coloque como o cliente vê sua loja: nome, logo, cores e fotos. Depois toque em Salvar no topo.',
-            'contato' => 'Número do WhatsApp, horários e endereço. O cliente usa isso para falar com você e saber se está aberto.',
-            'cardapio' => 'Role até a caixa laranja “Pratos e preços”. Em cada item use o botão azul Enviar foto, depois defina o preço.',
+            'identidade' => 'Na aba Nome e Foto, coloque o nome da loja, envie a logo e escolha as cores. Depois toque em Salvar.',
+            'contato' => 'Na aba WhatsApp e Horário, coloque seu número com DDD, horários e endereço da loja.',
+            'cardapio' => 'Na aba Meus Pratos, adicione seus lanches e bebidas. Em cada item use o botão laranja Enviar foto e defina o preço.',
             'frete' => 'Diga se entrega, se o cliente busca na loja e quanto cobrar de entrega.',
-            'pagamentos' => 'Marque as formas de pagamento que você aceita (PIX, dinheiro, cartão).',
+            'pagamentos' => 'Na aba Como Receber, marque as formas de pagamento que você aceita (PIX, dinheiro, cartão).',
             'relatorios' => 'Escolha o mês e veja quais itens venderam mais ou menos — ajuda a planejar compras.',
             'comandas' => 'Textos da impressora da cozinha e botões da tela da cozinha.',
             'atendimento' => 'Tela para balconista registrar pedido com nome e telefone do cliente.',
             'textos' => 'Frases que aparecem no site do cardápio (banner, títulos das seções).',
             'segmento' => 'Tipo de comida e categorias que aparecem no site.',
-            'conta' => 'Situação da mensalidade e pagamento do sistema.',
+            'conta' => 'Na aba Meu Plano, acompanhe seu plano, teste grátis e formas de pagamento.',
             'seguranca' => 'Troque usuário e senha de entrada. Não apague nada aqui sem ter certeza.',
         ],
         'painel' => [
@@ -597,11 +597,13 @@ function pedidozap_limpar_cardapio_para_salvar(array $cardapio, array $config)
             if (!is_array($item)) {
                 continue;
             }
-            $img = trim((string) ($item['imagem'] ?? ''));
+            $img = preg_replace('/[\x00-\x1F\x7F]/', '', trim((string) ($item['imagem'] ?? '')));
             if ($img === '' || stripos($img, 'data:image') === 0) {
                 $item['imagem'] = 'assets/images/placeholder-logo.svg';
             } elseif (strlen($img) > 500) {
-                $item['imagem'] = mb_substr($img, 0, 500);
+                $item['imagem'] = function_exists('mb_substr') ? mb_substr($img, 0, 500, 'UTF-8') : substr($img, 0, 500);
+            } else {
+                $item['imagem'] = $img;
             }
             unset($item['imagens'], $item['galeria'], $item['fotos']);
         }
@@ -665,18 +667,40 @@ function pedidozap_sincronizar_midias_cardapio($tenant, array $cardapioAntigo, a
 
 function pedidozap_nullable_float($value)
 {
-    if ($value === null || $value === '') {
+    if ($value === null || $value === '' || is_array($value) || is_object($value)) {
         return null;
+    }
+    if (is_string($value)) {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
     }
     if (!is_numeric($value)) {
         return null;
     }
-    return (float) $value;
+    $num = (float) $value;
+    return is_finite($num) ? $num : null;
+}
+
+function pedidozap_coords_validas($lat, $lng): bool
+{
+    $latF = pedidozap_nullable_float($lat);
+    $lngF = pedidozap_nullable_float($lng);
+    if ($latF === null || $lngF === null) {
+        return false;
+    }
+    if (abs($latF) < 0.0001 && abs($lngF) < 0.0001) {
+        return false;
+    }
+    return abs($latF) <= 90.0 && abs($lngF) <= 180.0;
 }
 
 function pedidozap_endereco_loja_texto(array $endereco)
 {
-    $linha1 = trim(($endereco['rua'] ?? '') . ' ' . ($endereco['numero'] ?? ''));
+    $rua = trim((string) ($endereco['rua'] ?? ''));
+    $numero = trim((string) ($endereco['numero'] ?? ''));
+    $linha1 = ($rua !== '' && $numero !== '') ? ($rua . ', ' . $numero) : trim($rua . ' ' . $numero);
     $linha2Partes = array_filter([
         $endereco['bairro'] ?? '',
         $endereco['cidade'] ?? '',
@@ -699,26 +723,51 @@ function pedidozap_geocode_query($query)
     }
 
     $url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=' . rawurlencode($query);
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'GET',
-            'timeout' => 8,
-            'header' => "User-Agent: AcheIAkiPlatform/1.0 (cardapio digital)\r\nAccept: application/json\r\n",
-        ],
-    ]);
-
-    $raw = @file_get_contents($url, false, $context);
-    if ($raw === false) {
+    $raw = false;
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 4,
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_HTTPHEADER => [
+                'User-Agent: AcheIAkiPlatform/1.0 (cardapio digital)',
+                'Accept: application/json',
+            ],
+        ]);
+        $resp = curl_exec($ch);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($resp !== false && $httpCode >= 200 && $httpCode < 300) {
+            $raw = $resp;
+        }
+    }
+    if ($raw === false && filter_var(ini_get('allow_url_fopen'), FILTER_VALIDATE_BOOLEAN)) {
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'timeout' => 8,
+                'header' => "User-Agent: AcheIAkiPlatform/1.0 (cardapio digital)\r\nAccept: application/json\r\n",
+            ],
+        ]);
+        $raw = @file_get_contents($url, false, $context);
+    }
+    if ($raw === false || $raw === '') {
         return null;
     }
     $json = json_decode($raw, true);
-    if (!is_array($json) || empty($json[0]['lat']) || empty($json[0]['lon'])) {
+    if (!is_array($json) || !isset($json[0]['lat'], $json[0]['lon']) || !is_numeric($json[0]['lat']) || !is_numeric($json[0]['lon'])) {
+        return null;
+    }
+    $lat = (float) $json[0]['lat'];
+    $lng = (float) $json[0]['lon'];
+    if (!pedidozap_coords_validas($lat, $lng)) {
         return null;
     }
 
     return [
-        'lat' => (float) $json[0]['lat'],
-        'lng' => (float) $json[0]['lon'],
+        'lat' => $lat,
+        'lng' => $lng,
         'label' => $json[0]['display_name'] ?? '',
     ];
 }
@@ -726,7 +775,7 @@ function pedidozap_geocode_query($query)
 function pedidozap_tentar_geocode_loja(array &$config)
 {
     $end = $config['ENDERECO'] ?? [];
-    if (pedidozap_nullable_float($end['lat'] ?? null) !== null && pedidozap_nullable_float($end['lng'] ?? null) !== null) {
+    if (pedidozap_coords_validas($end['lat'] ?? null, $end['lng'] ?? null)) {
         return;
     }
 

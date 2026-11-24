@@ -242,16 +242,20 @@ function pz_plano_preco_ciclo(string $planoSlug, string $ciclo = 'mensal', ?arra
     return strtolower(trim($ciclo)) === 'anual' ? (float) $def['preco_anual'] : (float) $def['preco_mensal'];
 }
 
-function pz_plano_da_loja(?string $slugTenant = null): array
+function pz_plano_da_loja(?string $slugTenant = null, ?array $lojaMeta = null, ?array $saasCfg = null): array
 {
     $tenant = $slugTenant !== null && $slugTenant !== ''
         ? $slugTenant
         : (class_exists('Database') ? Database::getTenant() : 'default');
 
-    $registro = function_exists('pedidozap_ler_registro') ? pedidozap_ler_registro() : [];
-    $loja = is_array($registro[$tenant] ?? null) ? $registro[$tenant] : [];
+    if ($lojaMeta !== null) {
+        $loja = $lojaMeta;
+    } else {
+        $registro = function_exists('pedidozap_ler_registro') ? pedidozap_ler_registro() : [];
+        $loja = is_array($registro[$tenant] ?? null) ? $registro[$tenant] : [];
+    }
     $planoBruto = (string) ($loja['plano'] ?? '');
-    $emTeste = !empty($loja['em_teste']) || $planoBruto === 'teste';
+    $emTeste = !empty($loja['em_teste']) || $planoBruto === 'teste' || (($loja['status'] ?? '') === 'teste');
 
     if ($tenant === 'default' && $planoBruto === '') {
         $slugEfetivo = 'enterprise';
@@ -263,7 +267,7 @@ function pz_plano_da_loja(?string $slugTenant = null): array
         $slugEfetivo = pz_plano_normalizar($planoBruto !== '' ? $planoBruto : 'essencial');
     }
 
-    $catalogo = pz_planos_catalogo();
+    $catalogo = pz_planos_catalogo($saasCfg);
     $def = $catalogo[$slugEfetivo] ?? $catalogo['essencial'];
     $def['em_teste'] = $emTeste;
     $def['plano_bruto'] = $planoBruto;
@@ -300,7 +304,7 @@ function pz_plano_exigir(string $recurso, string $rotuloRecurso, string $planoMi
         'plano_necessario_nome' => $minDef['nome'],
         'preco_necessario' => $minDef['preco_mensal'],
         'message' => $rotuloRecurso . ' está disponível a partir do plano ' . $minDef['nome']
-            . ' (R$ ' . number_format((float) $minDef['preco_mensal'], 2, ',', '.') . '/mês). Faça upgrade na aba Sua Conta.',
+            . ' (R$ ' . number_format((float) $minDef['preco_mensal'], 2, ',', '.') . '/mês). Faça upgrade na aba Meu Plano.',
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
