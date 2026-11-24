@@ -49,7 +49,12 @@ body.mkt-body { margin: 0; background: var(--aki-canvas, var(--mkt-bg)); font-fa
 .mkt-main { max-width: 1240px; margin: 0 auto; padding: 22px 20px 64px; }
 
 /* HERO APETITOSO DE COMIDA E DELIVERY */
-.mkt-hero { background: linear-gradient(135deg, #2b1810 0%, #7c2d12 58%, #c2410c 100%); color: #fff; border-radius: 20px; padding: 26px 24px; margin-bottom: 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 12px 28px -10px rgba(124, 45, 18, 0.35); overflow: hidden; max-width: 100%; }
+.mkt-hero { background: linear-gradient(135deg, #231915 0%, #6b240c 58%, #b9380c 100%); color: #fff; border-radius: 20px; padding: 22px 24px; margin-bottom: 18px; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr); align-items: center; gap: 22px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 12px 28px -10px rgba(124, 45, 18, 0.35); overflow: hidden; max-width: 100%; }
+.mkt-hero-left { display: grid; gap: 14px; min-width: 0; }
+.mkt-hero-visual { border-radius: 16px; overflow: hidden; border: 2px solid rgba(253, 186, 116, 0.35); background: #231915; box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3); }
+.mkt-hero-visual img { width: 100%; height: 215px; object-fit: cover; object-position: 72% center; display: block; }
+.mkt-hero-visual-emojis { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 10px; background: rgba(35, 25, 21, 0.94); justify-content: center; border-top: 1px solid rgba(253, 186, 116, 0.22); }
+.mkt-hero-visual-emojis span { font-size: 0.78rem; font-weight: 700; color: #ffedd5; background: rgba(234, 88, 12, 0.25); border: 1px solid rgba(251, 146, 60, 0.35); padding: 3px 9px; border-radius: 999px; }
 .mkt-hero-copy, .mkt-search-wrap { min-width: 0; width: 100%; }
 .mkt-hero-chip { display: inline-flex; align-items: center; gap: 7px; background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.22); padding: 5px 12px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; color: #ffedd5; letter-spacing: 0.01em; max-width: 100%; }
 .mkt-hero h1 { margin: 10px 0 6px; font-size: clamp(1.32rem, 2.6vw, 2rem); line-height: 1.18; color: #fff; font-weight: 800; }
@@ -710,7 +715,9 @@ body.mkt-body { margin: 0; background: var(--aki-canvas, var(--mkt-bg)); font-fa
     .aki-quick-btn small { font-size: 0.76rem; }
 
     /* Hero e busca sem overflow */
-    .mkt-hero { padding: 18px 14px; border-radius: 16px; gap: 12px; margin-bottom: 14px; }
+    .mkt-hero { grid-template-columns: 1fr; padding: 16px 14px; border-radius: 16px; gap: 12px; margin-bottom: 14px; }
+    .mkt-hero-visual { order: -1; }
+    .mkt-hero-visual img { height: 152px; }
     .mkt-hero h1 { font-size: 1.28rem; }
     .mkt-hero p { font-size: 0.86rem; }
     .mkt-search { padding: 5px 5px 5px 11px; gap: 6px; border-radius: 12px; }
@@ -875,6 +882,39 @@ body.mkt-body { margin: 0; background: var(--aki-canvas, var(--mkt-bg)); font-fa
     border: 1px solid rgba(35, 25, 21, 0.08);
     border-radius: 22px;
     box-shadow: 0 28px 64px -16px rgba(35, 25, 21, 0.38);
+}
+.aki-portal-visual-banner {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(234, 88, 12, 0.28);
+    background: #231915;
+    margin-bottom: 16px;
+    box-shadow: 0 10px 24px -10px rgba(35, 25, 21, 0.35);
+}
+.aki-portal-visual-banner img {
+    width: 100%;
+    max-height: 185px;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+.aki-portal-food-strip {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 8px 10px;
+    background: #2d1b13;
+    border-top: 1px solid rgba(251, 146, 60, 0.2);
+}
+.aki-portal-food-strip span {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #ffedd5;
+    background: rgba(234, 88, 12, 0.25);
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(251, 146, 60, 0.35);
 }
 .aki-portal-brand {
     display: flex;

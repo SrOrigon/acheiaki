@@ -36,7 +36,7 @@
     }
     </script>
     <link rel="stylesheet" href="css/acheiaki-design.css?v=1">
-    <link rel="stylesheet" href="css/marketplace.css?v=2">
+    <link rel="stylesheet" href="css/marketplace.css?v=3">
     <link rel="stylesheet" href="css/localizacao-gate.css?v=2">
     <link rel="stylesheet" href="css/lgpd-consent.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -45,7 +45,7 @@
     <header class="mkt-header">
         <div class="mkt-header-inner">
             <a href="marketplace.html" class="mkt-brand" title="AcheIAki — Peça comida direto da loja perto de você">
-                <img src="assets/images/acheiaki-icon.jpg" alt="AcheIAki" class="mkt-brand-img">
+                <img src="assets/images/acheiaki-icon.jpg?v=2" alt="AcheIAki" class="mkt-brand-img">
                 <span class="mkt-brand-word">Ache<span class="aki-ia">IA</span>ki <small>Comida &amp; Delivery</small></span>
             </a>
 
@@ -94,18 +94,29 @@
         <!-- ABA 1: PEDIR COMIDA -->
         <section id="mkt-pane-descobrir" class="mkt-pane">
             <section class="mkt-hero">
-                <div class="mkt-hero-copy">
-                    <span class="mkt-hero-chip"><i class="fa-solid fa-fire-flame-curved"></i> Comida boa · Preço direto da loja · Sem taxa extra</span>
-                    <h1>O que você quer comer hoje?</h1>
-                    <p>Escolha um restaurante perto de você, veja o preço real sem taxa escondida e peça direto para a cozinha.</p>
+                <div class="mkt-hero-left">
+                    <div class="mkt-hero-copy">
+                        <span class="mkt-hero-chip"><i class="fa-solid fa-burger"></i> Lanches, Pizzas &amp; Comida Boa · Sem taxa extra</span>
+                        <h1>O que você quer comer hoje?</h1>
+                        <p>Escolha uma lanchonete ou restaurante perto de você, veja o preço real e peça direto para a cozinha.</p>
+                    </div>
+                    <div class="mkt-search-wrap">
+                        <div class="mkt-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="search" id="mkt-busca" placeholder="Digite o que quer comer (ex.: X-bacon, pizza, batata) ou nome da loja...">
+                            <button type="button" id="mkt-btn-gps-topo" class="mkt-btn-gps" title="Achar lanches perto de mim agora">
+                                <i class="fa-solid fa-location-crosshairs"></i> <span class="aki-hide-xs">Achar </span>Perto
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="mkt-search-wrap">
-                    <div class="mkt-search">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="search" id="mkt-busca" placeholder="Digite o que quer comer (ex.: pizza, X-bacon, marmita) ou nome da loja...">
-                        <button type="button" id="mkt-btn-gps-topo" class="mkt-btn-gps" title="Achar lojas perto de mim agora">
-                            <i class="fa-solid fa-location-crosshairs"></i> <span class="aki-hide-xs">Achar </span>Perto
-                        </button>
+                <div class="mkt-hero-visual">
+                    <img src="assets/images/hero-lanches.jpg?v=2" alt="Hambúrguer com bacon e cheddar, pizza quentinha, batata frita, coxinha, pastel e refrigerante gelado no AcheIAki">
+                    <div class="mkt-hero-visual-emojis" aria-hidden="true">
+                        <span>🍔 Lanches</span>
+                        <span>🍕 Pizzas</span>
+                        <span>🍟 Porções</span>
+                        <span>🥤 Bebidas</span>
                     </div>
                 </div>
             </section>
@@ -344,11 +355,15 @@
         <div class="mkt-modal-card mkt-modal-gate aki-portal-card">
             <button type="button" class="mkt-modal-x" id="mkt-fechar-conta" aria-label="Fechar" hidden>&times;</button>
 
-            <div class="aki-portal-brand">
-                <img src="assets/images/acheiaki-icon.jpg" alt="AcheIAki">
-                <div>
-                    <div class="aki-portal-logo-txt">Ache<span>IA</span>ki</div>
-                    <small>Peça comida ou venda sem pagar comissão</small>
+            <div class="aki-portal-visual-banner">
+                <img src="assets/images/acheiaki-logo.jpg?v=2" alt="AcheIAki — Lanches, Pizzarias e Comida perto de você">
+                <div class="aki-portal-food-strip" aria-hidden="true">
+                    <span>🍔 Hambúrgueres</span>
+                    <span>🍕 Pizzas</span>
+                    <span>🍟 Porções</span>
+                    <span>🌭 Hot Dog</span>
+                    <span>🍱 Marmitas</span>
+                    <span>🥤 Bebidas</span>
                 </div>
             </div>
 
