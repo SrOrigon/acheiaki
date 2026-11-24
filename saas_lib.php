@@ -9,13 +9,14 @@ require_once __DIR__ . '/planos_lib.php';
 
 function pedidozap_nicho_presets()
 {
+    require_once __DIR__ . '/store_schema.php';
     $cat = function ($slug, $nome, $emoji, $cor, $sub) {
         return [
             'slug' => $slug,
             'nome' => $nome,
             'subtitulo' => $sub,
             'emoji' => $emoji,
-            'icone' => 'fa-utensils',
+            'icone' => pedidozap_icone_categoria($slug),
             'cor' => $cor,
             'ativo' => true,
         ];

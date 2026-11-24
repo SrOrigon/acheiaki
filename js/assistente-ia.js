@@ -474,12 +474,12 @@
         inicializarUi(opcoes) {
             if (opcoes.abrirAoIniciar) this.abrirPainel();
             if (this.ctx === 'cadastro') {
-                this.renderAtalhos(['Quero uma lanchonete', 'Só marmita', 'Pizzaria', 'Como funciona?']);
+                this.renderAtalhos(['Lanchonete', 'Farmácia', 'Pet Shop', 'Moda', 'Mercado', 'Como funciona?']);
                 this.falar(
                     opcoes.mensagemInicial ||
-                    'Oi! Sou a assistente inteligente do AcheIAki (O Marketplace Inteligente da sua Região).\n' +
-                    'Posso criar sua loja conversando — você pode me falar tudo de uma vez (ex.: "Minha loja chama Sabor da Vila, vendo marmita e zap 11999887766") ou ir passo a passo.\n\n' +
-                    'Qual o nome do seu estabelecimento (ou que tipo de comida você vende)?'
+                    'Oi! Sou a assistente inteligente do AcheIAki (Marketplace Multissetor).\n' +
+                    'Posso criar sua loja conversando — você pode falar tudo de uma vez (ex.: "Minha loja chama Casa das Rações, pet shop e zap 21999887766") ou ir passo a passo.\n\n' +
+                    'Qual o nome do seu estabelecimento (ou qual o ramo da empresa)?'
                 );
             } else if (this.ctx === 'painel') {
                 this.renderAtalhos([
@@ -498,16 +498,16 @@
                     'O que preciso comprar de estoque?',
                     'Qual meu produto mais lucrativo?',
                     'Quais pedidos estão em aberto agora?',
-                    'Montar cardápio inicial'
+                    'Montar catálogo inicial'
                 ]);
                 if (!opcoes.silencioso) {
                     this.falar(
                         opcoes.mensagemInicial ||
-                        'Sou o Agente IA Integrado do Food Gestão! Consulto vendas reais, DRE, estoque/CMV, caixa e opero o sistema com você:\n' +
+                        'Sou o Copiloto AcheIAki IA! Consulto vendas reais, DRE, estoque/CMV, caixa e configuro sua loja com você:\n' +
                         '• "Quanto vendi hoje?" ou "Qual meu produto mais lucrativo?"\n' +
-                        '• "Abrir caixa com 100 reais" ou "Lançar despesa Gás 110 reais"\n' +
+                        '• "Abrir caixa com 100 reais" ou "Lançar despesa Embalagem 110 reais"\n' +
                         '• "O que preciso comprar de estoque?" ou "Criar cupom VOLTA10 10%"\n' +
-                        '• "Cadastra X-Bacon por 28" ou "Taxa fixa 5 reais"'
+                        '• "Cadastra Cabo USB-C 29,90" ou "Taxa fixa 5 reais"'
                     );
                 }
             }
@@ -1296,16 +1296,16 @@
             });
 
             if (totalItens === 0) {
-                pendencias.push('Seu cardápio está vazio! Diga "montar cardápio inicial" que eu crio os pratos base para o seu tipo de comida.');
+                pendencias.push('Seu catálogo ainda está vazio! Diga "montar catálogo inicial" que eu crio itens base para o seu ramo.');
                 pontos -= 25;
             } else {
-                pontosPositivos.push(totalItens + ' prato(s) no cardápio');
+                pontosPositivos.push(totalItens + ' produto(s) no catálogo');
                 if (itensSemPreco > 0) {
                     pendencias.push(itensSemPreco + ' item(ns) estão com preço R$ 0,00.');
                     pontos -= 10;
                 }
                 if (itensSemFoto > 0) {
-                    pendencias.push(itensSemFoto + ' item(ns) ainda estão sem foto própria (você pode enviar na aba "Pratos e preços").');
+                    pendencias.push(itensSemFoto + ' item(ns) ainda estão sem foto própria (envie na aba "Meus Produtos").');
                     pontos -= 5;
                 }
             }
@@ -1331,7 +1331,7 @@
 
             pontos = Math.max(10, Math.min(100, pontos));
             const atalhos = [];
-            if (totalItens === 0) atalhos.push('Montar cardápio inicial');
+            if (totalItens === 0) atalhos.push('Montar catálogo inicial');
             if (zap.length < 10) atalhos.push('Mudar WhatsApp');
             atalhos.push('Configurar entrega', 'Salvar tudo');
             this.renderAtalhos(atalhos);
@@ -1503,10 +1503,10 @@
                     linhas.push('• ' + cat.toUpperCase() + ' (' + arr.length + '): ' + resumoItens + (arr.length > 4 ? '...' : ''));
                 });
                 if (!total) {
-                    this.renderAtalhos(['Montar cardápio inicial', 'Cadastrar prato']);
-                    this.falar('Seu cardápio ainda está vazio. Quer que eu monte um cardápio inicial ou prefere me ditar os pratos?');
+                    this.renderAtalhos(['Montar catálogo inicial', 'Cadastra Produto 29,90']);
+                    this.falar('Seu catálogo ainda está vazio. Quer que eu monte itens iniciais para o seu ramo ou prefere me ditar os produtos?');
                 } else {
-                    this.falar('Você tem ' + total + ' item(ns) no cardápio:\n' + linhas.join('\n'));
+                    this.falar('Você tem ' + total + ' item(ns) no catálogo:\n' + linhas.join('\n'));
                 }
                 return;
             }

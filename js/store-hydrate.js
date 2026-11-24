@@ -126,16 +126,13 @@
             sameAs.push('https://wa.me/' + String(config.WHATSAPP_NUMBER).replace(/\D/g, ''));
         }
 
-        const menu = { '@type': 'Menu', name: 'Cardápio', hasMenuSection: [] };
+        const menu = { '@type': 'ItemList', name: 'Catálogo', itemListElement: [] };
         Object.keys(cardapio || {}).forEach((chave) => {
             const itens = cardapio[chave];
             if (!Array.isArray(itens) || !itens.length) return;
-            const meta = (config.CATEGORIAS || {})[chave] || {};
-            menu.hasMenuSection.push({
-                '@type': 'MenuSection',
-                name: meta.nome || chave,
-                hasMenuItem: itens.filter((item) => item && item.ativo !== false).slice(0, 30).map((item) => ({
-                    '@type': 'MenuItem',
+            itens.filter((item) => item && item.ativo !== false).slice(0, 30).forEach((item) => {
+                menu.itemListElement.push({
+                    '@type': 'Product',
                     name: item.nome,
                     description: item.descricao || '',
                     offers: {
@@ -143,20 +140,21 @@
                         price: Number(item.preco || 0).toFixed(2),
                         priceCurrency: 'BRL'
                     }
-                }))
+                });
             });
         });
 
+        const nichoLd = String(config.NICHO || '').toLowerCase();
+        const ehFoodLd = ['lanchonete', 'pizzaria', 'marmitaria', 'pensao', 'acai', 'confeitaria'].indexOf(nichoLd) !== -1;
         const ld = {
             '@context': 'https://schema.org',
-            '@type': 'Restaurant',
+            '@type': ehFoodLd ? 'Restaurant' : 'LocalBusiness',
             name: nome,
             description: descricao,
             url: location.origin + location.pathname,
             telephone: config.WHATSAPP_NUMBER ? '+' + String(config.WHATSAPP_NUMBER).replace(/\D/g, '') : undefined,
             image: (config.IDENTIDADE && config.IDENTIDADE.HERO) || undefined,
             logo: (config.IDENTIDADE && config.IDENTIDADE.LOGO) || undefined,
-            servesCuisine: ['Lanchonete'],
             address: {
                 '@type': 'PostalAddress',
                 streetAddress: [end.rua, end.numero].filter(Boolean).join(', '),
@@ -166,7 +164,7 @@
                 addressCountry: 'BR'
             },
             sameAs: sameAs,
-            hasMenu: menu
+            mainEntity: menu
         };
 
         let node = document.getElementById('seo-jsonld');
@@ -198,7 +196,11 @@
         setText('[data-bind="hero-subtitulo"]', heroSub);
         setText('[data-bind="secao-ofertas"]', textos.SECAO_OFERTAS || 'Ofertas do Dia');
         setText('[data-bind="secao-destaques"]', textos.SECAO_DESTAQUES || 'Destaques');
-        setText('[data-bind="secao-cardapio"]', textos.SECAO_CARDAPIO || 'Cardápio');
+        const secCardBruto = String(textos.SECAO_CARDAPIO || '').trim();
+        const secCardFinal = (!secCardBruto || /^explore nosso card[aá]pio$/i.test(secCardBruto) || /^card[aá]pio$/i.test(secCardBruto))
+            ? 'Explore nosso Catálogo'
+            : secCardBruto;
+        setText('[data-bind="secao-cardapio"]', secCardFinal);
         setText('[data-bind="secao-avaliacoes"]', textos.SECAO_AVALIACOES || 'Avaliações');
 
         const banner = config.BANNER_WPP || {};
@@ -737,10 +739,38 @@
         document.querySelectorAll('nav.nav-desktop a[href="#promocoes"], nav.nav-desktop a[href*="promocoes"]').forEach((a) => {
             a.style.display = mostrarPromo ? '' : 'none';
         });
+        const mapaIconesCat = {
+            promocoes: 'fa-tags', destaques: 'fa-tags', ofertas: 'fa-tags',
+            combos: 'fa-box-open', kits: 'fa-box-open', novidades: 'fa-star',
+            catalogo: 'fa-bag-shopping', acessorios: 'fa-bag-shopping', servicos: 'fa-briefcase',
+            lanches: 'fa-burger', hamburgueres: 'fa-burger',
+            porcoes: 'fa-bowl-food', guarnicoes: 'fa-bowl-food',
+            bebidas: 'fa-martini-glass-citrus', refrigerantes: 'fa-martini-glass-citrus',
+            cervejas: 'fa-beer-mug-empty', destilados: 'fa-wine-glass', conveniencia: 'fa-snowflake',
+            sobremesas: 'fa-cake-candles', bolos: 'fa-cake-candles', doces: 'fa-candy-cane',
+            pizzas: 'fa-pizza-slice', bordas: 'fa-pizza-slice',
+            acai: 'fa-ice-cream', complementos: 'fa-ice-cream',
+            pratos: 'fa-utensils', marmitas: 'fa-utensils', executivos: 'fa-utensils', sopas: 'fa-mug-hot',
+            hortifruti: 'fa-carrot', mercearia: 'fa-basket-shopping', mercado: 'fa-basket-shopping',
+            acougue: 'fa-drumstick-bite', limpeza: 'fa-pump-soap', higiene: 'fa-pump-soap',
+            medicamentos: 'fa-pills', bebe: 'fa-baby', suplementos: 'fa-heart-pulse',
+            caes: 'fa-paw', gatos: 'fa-paw', petiscos: 'fa-paw', higiene_pet: 'fa-paw',
+            feminino: 'fa-shirt', masculino: 'fa-shirt', calcados: 'fa-shoe-prints',
+            celulares: 'fa-mobile-screen-button', audio: 'fa-headphones',
+            informatica: 'fa-laptop', energia: 'fa-bolt',
+            maquiagem: 'fa-wand-magic-sparkles', skincare: 'fa-wand-magic-sparkles', cabelos: 'fa-wand-magic-sparkles',
+            perfumes: 'fa-gift', presentes: 'fa-gift', flores: 'fa-seedling',
+            escolar: 'fa-pen-ruler', brinquedos: 'fa-puzzle-piece',
+            ferramentas: 'fa-screwdriver-wrench', eletrica: 'fa-lightbulb',
+            hidraulica: 'fa-faucet', utilidades: 'fa-house'
+        };
         document.querySelectorAll('.menu-grid').forEach((grade) => {
             grade.innerHTML = cats.map((cat) => {
+                const ic = (!cat.icone || cat.icone === 'fa-utensils')
+                    ? (mapaIconesCat[String(cat.slug || '').toLowerCase()] || 'fa-store')
+                    : cat.icone;
                 return '<a class="card-categoria" href="' + escapeAttr(urlLoja('categoria.html?cat=' + encodeURIComponent(cat.slug))) + '">'
-                    + '<div class="card-cat-img" style="background:' + escapeAttr(cat.cor || '#f97136') + '"><i class="fa-solid ' + escapeAttr(cat.icone || 'fa-utensils') + '"></i></div>'
+                    + '<div class="card-cat-img" style="background:' + escapeAttr(cat.cor || '#f97136') + '"><i class="fa-solid ' + escapeAttr(ic) + '"></i></div>'
                     + '<h3>' + escapeHtml((cat.emoji ? cat.emoji + ' ' : '') + (cat.nome || cat.slug)) + '</h3><p>' + escapeHtml(cat.subtitulo || '') + '</p></a>';
             }).join('');
         });
@@ -753,7 +783,7 @@
                     aviso = document.createElement('p');
                     aviso.id = 'cardapio-vazio';
                     aviso.className = 'cardapio-vazio';
-                    aviso.textContent = 'Os pratos aparecem aqui depois que você colocar o nome, o preço e a foto no painel.';
+                    aviso.textContent = 'Os produtos aparecem aqui depois que você colocar o nome, o preço e a foto no painel.';
                     secao.appendChild(aviso);
                 }
             } else if (aviso) {

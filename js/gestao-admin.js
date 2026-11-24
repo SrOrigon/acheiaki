@@ -439,17 +439,17 @@
                 const qtdPrc = (prev && prev.alertas_preco) ? prev.alertas_preco.length : 0;
                 box.hidden = false;
                 if (!qtdDesc && !qtdPrc) {
-                    box.innerHTML = '<strong style="color:#15803d;">✅ Cardápio aprovado pela IA!</strong> Todos os itens já têm descrição vendedora e preços competitivos.';
+                    box.innerHTML = '<strong style="color:#15803d;">✅ Catálogo aprovado pela IA!</strong> Todos os itens já têm descrição vendedora e preços competitivos.';
                     return;
                 }
-                box.innerHTML = '<div><strong>✨ Diagnóstico da IA no Cardápio:</strong> ' + qtdDesc + ' item(ns) sem descrição apetitosa e ' + qtdPrc + ' preço(s) acima da média regional.</div>'
+                box.innerHTML = '<div><strong>✨ Diagnóstico da IA no Catálogo:</strong> ' + qtdDesc + ' item(ns) sem descrição vendedora e ' + qtdPrc + ' preço(s) acima da média regional.</div>'
                     + (qtdDesc ? '<div style="margin-top:8px;"><button type="button" id="fg-btn-aplicar-otim" class="fg-btn fg-btn-prim" style="font-size:0.8rem;padding:6px 12px;">Aplicar ' + qtdDesc + ' descrição(ões) vendedora(s) agora</button></div>' : '')
                     + (qtdPrc ? '<ul style="margin:6px 0 0;padding-left:18px;color:#9a3412;">' + prev.alertas_preco.slice(0, 4).map((p) => '<li><strong>' + esc(p.nome) + '</strong>: está ' + brl(p.preco_atual) + ' (sugestão ~' + brl(p.preco_sugerido) + ' p/ vender mais)</li>').join('') + '</ul>' : '');
                 const bAp = document.getElementById('fg-btn-aplicar-otim');
                 if (bAp) {
                     bAp.addEventListener('click', async () => {
                         const ap = await apiGestao('otimizar_cardapio_ia', { aplicar: true });
-                        box.innerHTML = '<strong style="color:#15803d;">✅ ' + (ap.alterados || 0) + ' descrição(ões) atualizada(s) no seu cardápio!</strong>';
+                        box.innerHTML = '<strong style="color:#15803d;">✅ ' + (ap.alterados || 0) + ' descrição(ões) atualizada(s) no seu catálogo!</strong>';
                     });
                 }
             });
@@ -1624,7 +1624,7 @@
                     <h4 style="margin:0 0 8px;color:#312e81;"><i class="fa-solid fa-fire"></i> Entrega pelo Algoritmo de Recomendações (Estilo TikTok)</h4>
                     <div class="fg-grid-kpis">
                         <div class="fg-kpi"><div class="fg-kpi-label">Impressões na Região</div><div class="fg-kpi-valor">${esc(res.algoritmo_metricas.impressoes || 0)}</div></div>
-                        <div class="fg-kpi"><div class="fg-kpi-label">Cliques nos Pratos</div><div class="fg-kpi-valor">${esc(res.algoritmo_metricas.cliques || 0)}</div><div class="fg-kpi-sub">CTR: ${esc(res.algoritmo_metricas.ctr_pct || 0)}%</div></div>
+                        <div class="fg-kpi"><div class="fg-kpi-label">Cliques nos Produtos</div><div class="fg-kpi-valor">${esc(res.algoritmo_metricas.cliques || 0)}</div><div class="fg-kpi-sub">CTR: ${esc(res.algoritmo_metricas.ctr_pct || 0)}%</div></div>
                         <div class="fg-kpi"><div class="fg-kpi-label">Adições ao Carrinho</div><div class="fg-kpi-valor">${esc(res.algoritmo_metricas.add_carrinho || 0)}</div><div class="fg-kpi-sub">Conversão: ${esc(res.algoritmo_metricas.conversao_pct || 0)}%</div></div>
                         <div class="fg-kpi"><div class="fg-kpi-label">Tempo de Atenção</div><div class="fg-kpi-valor">${esc(res.algoritmo_metricas.atencao_media_seg || 0)}s</div><div class="fg-kpi-sub">Média dos visitantes</div></div>
                     </div>
@@ -1654,7 +1654,7 @@
             </div>
 
             ${produtos.length ? `
-                <h4 style="margin:0 0 8px;"><i class="fa-solid fa-utensils"></i> Produtos que merecem melhoria prioritária</h4>
+                <h4 style="margin:0 0 8px;"><i class="fa-solid fa-tags"></i> Produtos que merecem melhoria prioritária</h4>
                 <div class="fg-tabela-wrap">
                     <table class="fg-tabela">
                         <thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Oportunidade</th></tr></thead>

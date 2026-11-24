@@ -204,6 +204,45 @@ function pedidozap_default_ajuda()
     ];
 }
 
+function pedidozap_icone_categoria($slug, $iconeAtual = '')
+{
+    $s = strtolower(trim((string) $slug));
+    $cur = trim((string) $iconeAtual);
+    $mapa = [
+        'promocoes' => 'fa-tags', 'destaques' => 'fa-tags', 'ofertas' => 'fa-tags',
+        'combos' => 'fa-box-open', 'kits' => 'fa-box-open', 'novidades' => 'fa-star',
+        'catalogo' => 'fa-bag-shopping', 'acessorios' => 'fa-bag-shopping',
+        'servicos' => 'fa-briefcase',
+        'lanches' => 'fa-burger', 'hamburgueres' => 'fa-burger',
+        'porcoes' => 'fa-bowl-food', 'guarnicoes' => 'fa-bowl-food',
+        'bebidas' => 'fa-martini-glass-citrus', 'refrigerantes' => 'fa-martini-glass-citrus',
+        'cervejas' => 'fa-beer-mug-empty', 'destilados' => 'fa-wine-glass', 'conveniencia' => 'fa-snowflake',
+        'sobremesas' => 'fa-cake-candles', 'bolos' => 'fa-cake-candles', 'doces' => 'fa-candy-cane',
+        'pizzas' => 'fa-pizza-slice', 'bordas' => 'fa-pizza-slice',
+        'acai' => 'fa-ice-cream', 'complementos' => 'fa-ice-cream',
+        'pratos' => 'fa-utensils', 'marmitas' => 'fa-utensils', 'executivos' => 'fa-utensils', 'sopas' => 'fa-mug-hot',
+        'hortifruti' => 'fa-carrot', 'mercearia' => 'fa-basket-shopping', 'mercado' => 'fa-basket-shopping',
+        'acougue' => 'fa-drumstick-bite', 'limpeza' => 'fa-pump-soap', 'higiene' => 'fa-pump-soap',
+        'medicamentos' => 'fa-pills', 'bebe' => 'fa-baby', 'suplementos' => 'fa-heart-pulse',
+        'caes' => 'fa-paw', 'gatos' => 'fa-paw', 'petiscos' => 'fa-paw', 'higiene_pet' => 'fa-paw',
+        'feminino' => 'fa-shirt', 'masculino' => 'fa-shirt', 'calcados' => 'fa-shoe-prints',
+        'celulares' => 'fa-mobile-screen-button', 'audio' => 'fa-headphones',
+        'informatica' => 'fa-laptop', 'energia' => 'fa-bolt',
+        'maquiagem' => 'fa-wand-magic-sparkles', 'skincare' => 'fa-wand-magic-sparkles', 'cabelos' => 'fa-wand-magic-sparkles',
+        'perfumes' => 'fa-gift', 'presentes' => 'fa-gift', 'flores' => 'fa-seedling',
+        'escolar' => 'fa-pen-ruler', 'brinquedos' => 'fa-puzzle-piece',
+        'ferramentas' => 'fa-screwdriver-wrench', 'eletrica' => 'fa-lightbulb',
+        'hidraulica' => 'fa-faucet', 'utilidades' => 'fa-house',
+    ];
+    if (isset($mapa[$s]) && ($cur === '' || $cur === 'fa-utensils')) {
+        return $mapa[$s];
+    }
+    if ($cur !== '' && $cur !== 'fa-utensils') {
+        return $cur;
+    }
+    return $mapa[$s] ?? 'fa-store';
+}
+
 function pedidozap_default_categorias()
 {
     return [
@@ -270,7 +309,7 @@ function pedidozap_default_config()
         'TENANT_SLUG' => 'default',
         'NOME_LOJA' => 'Nome da Sua Loja',
         'SLOGAN' => 'Peça online e receba no conforto da sua casa.',
-        'DESCRICAO_SEO' => 'Cardápio digital para pedidos pelo WhatsApp.',
+        'DESCRICAO_SEO' => 'Catálogo online para pedidos diretos pelo WhatsApp.',
         'PALAVRAS_CHAVE' => '',
         'WHATSAPP_NUMBER' => '',
         'IDENTIDADE' => [
@@ -288,7 +327,7 @@ function pedidozap_default_config()
             'HERO_SUBTITULO' => 'Escolha seus favoritos e peça agora.',
             'SECAO_OFERTAS' => 'Ofertas do Dia',
             'SECAO_DESTAQUES' => 'Destaques',
-            'SECAO_CARDAPIO' => 'Explore nosso Cardápio',
+            'SECAO_CARDAPIO' => 'Explore nosso Catálogo',
             'SECAO_AVALIACOES' => 'O que nossos clientes dizem',
             'PAGINAS' => [
                 'hamburgueres' => $pagina,
@@ -382,10 +421,10 @@ function pedidozap_default_config()
         'ATENDIMENTO' => [
             'ativo' => true,
             'titulo_pagina' => 'Pedido manual',
-            'instrucao' => 'Informe o cliente e abra o cardápio para montar o pedido.',
+            'instrucao' => 'Informe o cliente e abra o catálogo para montar o pedido.',
             'label_nome' => 'Nome do cliente',
             'label_telefone' => 'Telefone (com DDD)',
-            'btn_abrir_cardapio' => 'Abrir cardápio',
+            'btn_abrir_cardapio' => 'Abrir catálogo',
             'banner_cardapio' => 'Modo atendente — pedido manual',
             'texto_sucesso' => 'Pedido registrado. Confira no painel de pedidos.',
             'abrir_whatsapp' => false,
@@ -399,7 +438,7 @@ function pedidozap_default_config()
             'texto_loja_fechada' => 'Loja fechada — agende o pedido',
         ],
         'COMANDA' => [
-            'titulo_via_cozinha' => 'COZINHA',
+            'titulo_via_cozinha' => 'PREPARO / EXPEDIÇÃO',
             'titulo_via_baladao' => 'BALCÃO',
             'rotulo_pedido' => 'Pedido',
             'rotulo_itens' => 'ITENS',
@@ -415,11 +454,11 @@ function pedidozap_default_config()
             'mostrar_pagamento_cozinha' => false,
             'mostrar_telefone_cozinha' => true,
             'largura_mm' => 80,
-            'painel_imprimir_ligado' => 'Imprimir ao mandar pra cozinha',
-            'painel_imprimir_desligado' => 'Só imprime na tela da cozinha',
+            'painel_imprimir_ligado' => 'Imprimir ao mandar para preparo',
+            'painel_imprimir_desligado' => 'Só imprime na tela de preparo',
             'cozinha_btn_imprimir' => 'Reimprimir comanda',
             'cozinha_btn_pronto' => 'Pronto — sai para entrega',
-            'cozinha_vazio' => 'Nenhum pedido na cozinha no momento.',
+            'cozinha_vazio' => 'Nenhum pedido em preparo ou separação no momento.',
             'cozinha_instrucao' => 'Deixe esta página aberta na impressora térmica 80 mm.',
             'erro_popup' => 'Libere pop-ups neste site para imprimir a comanda.',
             'texto_canal_balcao' => 'Balcão',
@@ -504,6 +543,38 @@ function pedidozap_normalizar_config($saved, $tenant = 'default')
     $config['NIVEL_EXPERIENCIA_CONFIRMADO'] = !empty($config['NIVEL_EXPERIENCIA_CONFIRMADO']);
     if (!isset($config['NOME_LOJA']) || trim((string) $config['NOME_LOJA']) === '') {
         $config['NOME_LOJA'] = 'Nome da Sua Loja';
+    }
+
+    // Atualiza textos e ícones legados de versões antigas que ainda apontavam só para comida/cardápio
+    $secCard = trim((string) ($config['TEXTOS']['SECAO_CARDAPIO'] ?? ''));
+    if ($secCard === '' || strcasecmp($secCard, 'Explore nosso Cardápio') === 0 || strcasecmp($secCard, 'Cardápio') === 0) {
+        $config['TEXTOS']['SECAO_CARDAPIO'] = 'Explore nosso Catálogo';
+    }
+    if (($config['DESCRICAO_SEO'] ?? '') === 'Cardápio digital para pedidos pelo WhatsApp.') {
+        $config['DESCRICAO_SEO'] = 'Catálogo online para pedidos diretos pelo WhatsApp.';
+    }
+    if (($config['ATENDIMENTO']['btn_abrir_cardapio'] ?? '') === 'Abrir cardápio') {
+        $config['ATENDIMENTO']['btn_abrir_cardapio'] = 'Abrir catálogo';
+    }
+    if (($config['ATENDIMENTO']['instrucao'] ?? '') === 'Informe o cliente e abra o cardápio para montar o pedido.') {
+        $config['ATENDIMENTO']['instrucao'] = 'Informe o cliente e abra o catálogo para montar o pedido.';
+    }
+    if (($config['COMANDA']['cozinha_vazio'] ?? '') === 'Nenhum pedido na cozinha no momento.') {
+        $config['COMANDA']['cozinha_vazio'] = 'Nenhum pedido em preparo ou separação no momento.';
+    }
+    if (($config['COMANDA']['painel_imprimir_ligado'] ?? '') === 'Imprimir ao mandar pra cozinha') {
+        $config['COMANDA']['painel_imprimir_ligado'] = 'Imprimir ao mandar para preparo';
+    }
+    if (($config['COMANDA']['painel_imprimir_desligado'] ?? '') === 'Só imprime na tela da cozinha') {
+        $config['COMANDA']['painel_imprimir_desligado'] = 'Só imprime na tela de preparo';
+    }
+    if (is_array($config['CATEGORIAS'] ?? null)) {
+        foreach ($config['CATEGORIAS'] as $catSlug => &$catInfo) {
+            if (is_array($catInfo)) {
+                $catInfo['icone'] = pedidozap_icone_categoria((string) $catSlug, (string) ($catInfo['icone'] ?? ''));
+            }
+        }
+        unset($catInfo);
     }
 
     $config['ENDERECO']['lat'] = pedidozap_nullable_float($config['ENDERECO']['lat'] ?? null);

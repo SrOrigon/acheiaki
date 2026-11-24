@@ -538,7 +538,7 @@ function iniciarVitrine() {
                 <div class="carrinho-vazio">
                     <i class="fa-solid fa-basket-shopping"></i>
                     <p>Seu carrinho está vazio.</p>
-                    <p style="font-size:1em">Toque em Pedir no prato que você quer.</p>
+                    <p style="font-size:1em">Toque em Pedir no item que você quer.</p>
                 </div>`;
         }
 

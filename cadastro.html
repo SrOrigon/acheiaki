@@ -164,8 +164,8 @@
                 <h2>Por que a loja fica com mais margem que em app de marketplace</h2>
                 <ul style="margin:10px 0 0;padding-left:1.15rem;color:#374151;font-size:0.92rem;">
                     <li><strong>0% de comissão por pedido</strong> — o cliente pede no seu link; o dinheiro não passa por taxa de marketplace.</li>
-                    <li><strong>Cardápio + cozinha + motoboy + caixa</strong> no mesmo painel, sem outro sistema.</li>
-                    <li><strong>Uma foto por prato</strong>, painel em português simples e tutorial no primeiro acesso.</li>
+                    <li><strong>Catálogo + preparo/expedição + entregador + caixa</strong> no mesmo painel, para qualquer tipo de negócio.</li>
+                    <li><strong>Uma foto por produto</strong>, painel em português simples e tutorial no primeiro acesso.</li>
                     <li>Aparece no marketplace da região para quem busca perto — sem leilão de anúncio.</li>
                 </ul>
                 <p style="margin:10px 0 0;font-size:0.84rem;color:#6b7280;">O AcheIAki não substitui a frota de um app nacional. Ele é melhor onde o dono quer <strong>ficar com a margem</strong> e atender com a própria equipe.</p>
@@ -174,7 +174,7 @@
             <div class="aki-garantia-box">
                 <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
                 <div>
-                    <strong>Condição Loja Fundadora — Risco Zero:</strong> comece com teste grátis completo, cadastre seu cardápio com ajuda da nossa IA em minutos, <strong>sem fidelidade e sem multa de cancelamento</strong>.
+                    <strong>Condição Loja Fundadora — Risco Zero:</strong> comece com teste grátis completo, cadastre seus produtos e catálogo com ajuda da nossa IA em minutos, <strong>sem fidelidade e sem multa de cancelamento</strong>.
                 </div>
             </div>
         </section>
@@ -194,7 +194,7 @@
         </form>
 
         <section id="secao-assistente-cadastro" class="cadastro-assistente" hidden>
-            <p style="margin-top:0;">Conte o nome da loja, o tipo de comida e o WhatsApp — eu monto o resto.</p>
+            <p style="margin-top:0;">Conte o nome da loja, o ramo do negócio e o WhatsApp — eu monto o resto.</p>
             <div id="cadastro-assistente-embed">
                 <div class="pz-assist-mensagens"></div>
                 <div class="pz-assist-atalhos"></div>
@@ -218,7 +218,7 @@
             <div class="pz-nivel-cards" id="cad-nivel-cards">
                 <label class="pz-nivel-card ativo" data-nivel-card="basico">
                     <strong><span>🟢 Modo Fácil (Recomendado)</span> <input type="radio" name="nivel_experiencia" value="basico" checked required></strong>
-                    <small>Só o essencial na tela: pratos, preços, WhatsApp e pedidos sem complicação.</small>
+                    <small>Só o essencial na tela: produtos, preços, WhatsApp e pedidos sem complicação.</small>
                 </label>
                 <label class="pz-nivel-card" data-nivel-card="avancado">
                     <strong><span>🛠️ Mais Opções</span> <input type="radio" name="nivel_experiencia" value="avancado"></strong>
@@ -232,7 +232,7 @@
 
             <h2 style="margin-top:16px;font-size:1.25rem;color:#9a3412;">1. Dados da sua empresa</h2>
             <label for="nome">Nome do estabelecimento *</label>
-            <input id="nome" name="nome" required minlength="3" placeholder="Ex.: Restaurante Fogão a Lenha">
+            <input id="nome" name="nome" required minlength="3" placeholder="Ex.: Mercado Central, Moda Bella ou Lanchonete Bom Sabor">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div>
                     <label for="cad-cnpj">CNPJ da empresa *</label>
@@ -360,7 +360,7 @@
                 <label class="pz-nivel-card" data-plano-card="essencial">
                     <strong><span>Essencial</span> <input type="radio" name="plano_escolhido" value="essencial"></strong>
                     <div style="font-weight:800;color:#e85d04;font-size:1.05rem;">R$ 79,90/mês</div>
-                    <small>Cardápio próprio + marketplace, painel, cozinha, impressão de comandas e até 50 produtos (acesso do dono).</small>
+                    <small>Vitrine própria + marketplace, painel, preparo/expedição, impressão e até 50 produtos (acesso do dono).</small>
                 </label>
                 <label class="pz-nivel-card ativo" data-plano-card="pro">
                     <strong><span>⭐ Pro (Recomendado)</span> <input type="radio" name="plano_escolhido" value="pro" checked></strong>
@@ -790,9 +790,9 @@
             }
             btn.addEventListener('click', function () {
                 const suf = String(Math.floor(1000 + Math.random() * 9000));
-                document.getElementById('nome').value = 'Restaurante Modelo ' + suf;
+                document.getElementById('nome').value = 'Loja Modelo AcheIAki ' + suf;
                 document.getElementById('cad-cnpj').value = gerarCnpjValido();
-                document.getElementById('cad-razao').value = 'Restaurante Modelo ' + suf + ' LTDA';
+                document.getElementById('cad-razao').value = 'Loja Modelo AcheIAki ' + suf + ' LTDA';
                 document.getElementById('whatsapp').value = '6299999' + suf;
                 document.getElementById('cad-cep').value = '74215-030';
                 document.getElementById('cad-rua').value = 'Av. T-63';

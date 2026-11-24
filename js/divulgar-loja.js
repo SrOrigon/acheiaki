@@ -138,7 +138,7 @@
             btnZap.addEventListener('click', function () {
                 const nome = obterNomeLoja();
                 const u = obterUrlLoja();
-                const msg = 'Oi! Agora o cardápio da ' + nome + ' está no AcheIAki com preço direto e entrega rápida — sem taxa de app! Faça seu pedido por aqui: ' + u;
+                const msg = 'Oi! Agora a loja ' + nome + ' está no AcheIAki com preço direto e entrega rápida — sem taxa de app! Faça seu pedido por aqui: ' + u;
                 copiarTexto(msg, 'Texto pronto copiado e abrindo WhatsApp para enviar na sua lista/status.');
                 window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
             });
@@ -149,7 +149,7 @@
             btnBio.addEventListener('click', function () {
                 const u = obterUrlLoja();
                 const texto = 'Peça direto sem taxa de app:\n' + u;
-                copiarTexto(texto, 'Texto da Bio do Instagram / Link do Cardápio (Google Maps) copiado!');
+                copiarTexto(texto, 'Texto da Bio do Instagram / Link da Loja (Google Maps) copiado!');
             });
             if (btnBio.parentElement && !document.getElementById('aki-div-btn-autozap')) {
                 const btnAutoZap = document.createElement('button');
@@ -161,7 +161,7 @@
                 btnAutoZap.addEventListener('click', function () {
                     const nome = obterNomeLoja();
                     const u = obterUrlLoja();
-                    const autoMsg = 'Olá! Seja bem-vindo(a) à ' + nome + '.\nPara fazer seu pedido rapidinho (com preço direto da loja e entrega calculada na hora), toque no link do nosso cardápio digital:\n👉 ' + u;
+                    const autoMsg = 'Olá! Seja bem-vindo(a) à ' + nome + '.\nPara ver nosso catálogo e pedir rapidinho (com preço direto da loja e entrega calculada na hora), toque aqui:\n👉 ' + u;
                     copiarTexto(autoMsg, 'Mensagem automática para WhatsApp Business copiada! Cole em Configurações -> Saudação do WhatsApp.');
                 });
                 btnBio.parentElement.appendChild(btnAutoZap);

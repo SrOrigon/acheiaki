@@ -912,7 +912,7 @@ async function iniciarAdmin() {
                     salvarAlteracoesNoNavegador();
                     gravarEstadoAdminUi();
                     renderizarEditor();
-                    showToast('Foto do prato atualizada. Toque em Salvar para publicar no site.', 'success');
+                    showToast('Foto do item atualizada. Toque em Salvar para publicar na loja.', 'success');
                 } catch (err) {
                     showToast(err.message || 'Erro ao processar a foto.', 'error');
                 } finally {
@@ -1042,13 +1042,13 @@ async function iniciarAdmin() {
             }
             const payloadStr = JSON.stringify(dadosLocais);
             if (payloadStr.length > 4_500_000) {
-                showToast('O cardápio ficou muito pesado (fotos). Envie as fotos de novo pelo botão azul ou use links de imagem.', 'error');
+                showToast('O catálogo ficou muito pesado (fotos). Envie as fotos de novo pelo botão de foto ou use links de imagem.', 'error');
                 btnGerarArquivo.disabled = false;
                 btnGerarArquivo.innerHTML = '<i class="fa-solid fa-save"></i> Salvar';
                 return;
             }
             if (payloadStr.indexOf('data:image') !== -1) {
-                showToast('Há foto que não foi para o servidor. Use "Enviar foto" em cada prato antes de Salvar.', 'error');
+                showToast('Há foto que não foi para o servidor. Use "Enviar foto" em cada produto antes de Salvar.', 'error');
                 btnGerarArquivo.disabled = false;
                 btnGerarArquivo.innerHTML = '<i class="fa-solid fa-save"></i> Salvar';
                 return;
@@ -1140,9 +1140,26 @@ async function iniciarAdmin() {
             const promos = configLocais.CATEGORIAS.promocoes;
             configLocais.CATEGORIAS = promos ? { promocoes: promos } : {};
         }
+        const mapIconeAdmin = {
+            promocoes: 'fa-tags', destaques: 'fa-tags', ofertas: 'fa-tags', combos: 'fa-box-open', kits: 'fa-box-open',
+            novidades: 'fa-star', catalogo: 'fa-bag-shopping', acessorios: 'fa-bag-shopping', servicos: 'fa-briefcase',
+            lanches: 'fa-burger', hamburgueres: 'fa-burger', porcoes: 'fa-bowl-food', guarnicoes: 'fa-bowl-food',
+            bebidas: 'fa-martini-glass-citrus', refrigerantes: 'fa-martini-glass-citrus', cervejas: 'fa-beer-mug-empty',
+            destilados: 'fa-wine-glass', conveniencia: 'fa-snowflake', sobremesas: 'fa-cake-candles', bolos: 'fa-cake-candles',
+            doces: 'fa-candy-cane', pizzas: 'fa-pizza-slice', bordas: 'fa-pizza-slice', acai: 'fa-ice-cream',
+            complementos: 'fa-ice-cream', pratos: 'fa-utensils', marmitas: 'fa-utensils', executivos: 'fa-utensils',
+            sopas: 'fa-mug-hot', hortifruti: 'fa-carrot', mercearia: 'fa-basket-shopping', acougue: 'fa-drumstick-bite',
+            limpeza: 'fa-pump-soap', higiene: 'fa-pump-soap', medicamentos: 'fa-pills', bebe: 'fa-baby',
+            suplementos: 'fa-heart-pulse', caes: 'fa-paw', gatos: 'fa-paw', petiscos: 'fa-paw', higiene_pet: 'fa-paw',
+            feminino: 'fa-shirt', masculino: 'fa-shirt', calcados: 'fa-shoe-prints', celulares: 'fa-mobile-screen-button',
+            audio: 'fa-headphones', informatica: 'fa-laptop', energia: 'fa-bolt', maquiagem: 'fa-wand-magic-sparkles',
+            skincare: 'fa-wand-magic-sparkles', cabelos: 'fa-wand-magic-sparkles', perfumes: 'fa-gift', presentes: 'fa-gift',
+            flores: 'fa-seedling', escolar: 'fa-pen-ruler', brinquedos: 'fa-puzzle-piece', ferramentas: 'fa-screwdriver-wrench',
+            eletrica: 'fa-lightbulb', hidraulica: 'fa-faucet', utilidades: 'fa-house'
+        };
         preset.categorias.forEach((cat) => {
             configLocais.CATEGORIAS[cat.slug] = {
-                nome: cat.nome, subtitulo: cat.subtitulo, emoji: cat.emoji, icone: 'fa-utensils', cor: cat.cor, ativo: true
+                nome: cat.nome, subtitulo: cat.subtitulo, emoji: cat.emoji, icone: mapIconeAdmin[cat.slug] || 'fa-store', cor: cat.cor, ativo: true
             };
             if (!dadosLocais[cat.slug]) dadosLocais[cat.slug] = [];
             if (!configLocais.TEXTOS.PAGINAS) configLocais.TEXTOS.PAGINAS = {};
@@ -1186,7 +1203,7 @@ async function iniciarAdmin() {
             });
             const d = await r.json();
             if (d && d.success) {
-                showToast(esgotado ? 'Item marcado como ESGOTADO hoje no cardápio!' : 'Item reativado no cardápio!', 'success');
+                showToast(esgotado ? 'Item marcado como ESGOTADO hoje no catálogo!' : 'Item reativado no catálogo!', 'success');
                 renderizarEditor();
             }
         } catch (e) { /* usuário ainda pode salvar completo */ }
@@ -1201,7 +1218,7 @@ async function iniciarAdmin() {
             return;
         }
         if (!configLocais.CATEGORIAS) configLocais.CATEGORIAS = {};
-        configLocais.CATEGORIAS[slug] = configLocais.CATEGORIAS[slug] || { nome: nome, subtitulo: '', emoji: '', icone: 'fa-utensils', cor: '#f97136', ativo: true };
+        configLocais.CATEGORIAS[slug] = configLocais.CATEGORIAS[slug] || { nome: nome, subtitulo: '', emoji: '', icone: 'fa-store', cor: '#f97136', ativo: true };
         configLocais.CATEGORIAS[slug].nome = nome;
         if (!dadosLocais[slug]) dadosLocais[slug] = [];
         salvarAlteracoesNoNavegador();
@@ -1356,10 +1373,10 @@ function ligarWhiteLabel() {
         ATENDIMENTO: {
             ativo: true,
             titulo_pagina: 'Pedido manual',
-            instrucao: 'Informe o cliente e abra o cardápio para montar o pedido.',
+            instrucao: 'Informe o cliente e abra o catálogo para montar o pedido.',
             label_nome: 'Nome do cliente',
             label_telefone: 'Telefone (com DDD)',
-            btn_abrir_cardapio: 'Abrir cardápio',
+            btn_abrir_cardapio: 'Abrir catálogo',
             banner_cardapio: 'Modo atendente — pedido manual',
             texto_sucesso: 'Pedido registrado. Confira no painel de pedidos.',
             abrir_whatsapp: false,
@@ -1373,16 +1390,16 @@ function ligarWhiteLabel() {
             texto_loja_fechada: 'Loja fechada — agende o pedido'
         },
         COMANDA: {
-            titulo_via_cozinha: 'COZINHA',
+            titulo_via_cozinha: 'PREPARO / EXPEDIÇÃO',
             texto_canal_balcao: 'Balcão',
             rodape_cozinha: 'Confira os itens antes de enviar.',
             rodape_completa: 'Obrigado pela preferência!',
             cozinha_instrucao: 'Mantenha esta tela aberta na impressora 80 mm. Ao aceitar no painel, a comanda imprime aqui.',
             cozinha_btn_pronto: 'Pronto — sai para entrega',
             cozinha_btn_imprimir: 'Reimprimir comanda',
-            cozinha_vazio: 'Nenhum pedido na cozinha no momento.',
-            painel_imprimir_ligado: 'Imprimir ao mandar pra cozinha',
-            painel_imprimir_desligado: 'Só imprime na tela da cozinha',
+            cozinha_vazio: 'Nenhum pedido em preparo ou separação no momento.',
+            painel_imprimir_ligado: 'Imprimir ao mandar para preparo',
+            painel_imprimir_desligado: 'Só imprime na tela de preparo',
             mostrar_telefone_cozinha: true,
             mostrar_pagamento_cozinha: false,
             painel_imprimir_auto: true,
