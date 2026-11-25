@@ -11,7 +11,8 @@ $data = json_decode($input, true);
 
 pedidozap_bootstrap_tenant(is_array($data) ? $data : null);
 
-if (!$data) {
+if (!is_array($data)) {
+    http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Dados inválidos recebidos.']);
     exit;
 }

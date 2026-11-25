@@ -670,7 +670,7 @@ function pedidozap_assinatura_publica($slug)
         'recursos' => $planoInfo['recursos'],
         'planos_catalogo' => array_values($catalogo),
         'desconto_anual_pct' => (int) ($saas['desconto_anual_pct'] ?? 20),
-        'dias_teste_gratis' => (int) ($saas['dias_teste_gratis'] ?? 7),
+        'dias_teste_gratis' => max(1, min(30, (int) ($saas['dias_teste_gratis'] ?? 30))),
         'multa_reativacao_pct' => (float) ($saas['multa_reativacao_pct'] ?? 10),
         'vencimento' => $loja['vencimento'] ?? '',
         'nicho' => $loja['nicho'] ?? ($loja['NICHO'] ?? ''),
