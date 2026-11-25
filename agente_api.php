@@ -178,7 +178,7 @@ if ($action === 'vitrine_responder') {
         }
     }
     if ($horario === '') {
-        $horario = $empresa['horario_funcionamento'] ?? ($empresa['horario'] ?? 'Consulte no topo do cardápio');
+        $horario = $empresa['horario_funcionamento'] ?? ($empresa['horario'] ?? 'Consulte no topo da loja');
     }
 
     $logistica = $config['LOGISTICA'] ?? [];
@@ -393,16 +393,17 @@ if ($action === 'vitrine_responder') {
         }
     }
 
+    $termoVitrine = $ehAlimentacao ? 'cardápio' : 'catálogo';
     if ($encontrados) {
         $exibir = array_slice($ranquearProdutos($encontrados, $perfilTags, $querEconomia), 0, 5);
         $cabecalho = $querEconomia
             ? 'Separei estas opções com ótimo custo-benefício para você:'
-            : 'Encontrei estas opções no cardápio para você:';
+            : 'Encontrei estas opções no ' . $termoVitrine . ' para você:';
     } else {
         $exibir = array_slice($ranquearProdutos($todosProdutos, $perfilTags, $querEconomia), 0, 5);
         $cabecalho = ($querRecomendacao && $perfilTags)
             ? 'Com base no que você mais gosta, estas são as melhores pedidas aqui:'
-            : ($querEconomia ? 'Confira as opções mais em conta disponíveis agora:' : 'Aqui estão as melhores opções disponíveis agora no cardápio:');
+            : ($querEconomia ? 'Confira as opções mais em conta disponíveis agora:' : 'Aqui estão as melhores opções disponíveis agora no ' . $termoVitrine . ':');
     }
 
     if ($exibir) {
@@ -461,6 +462,10 @@ $permEst = pedidozap_tem_permissao($sessao, 'ia_estoque') || pedidozap_tem_permi
 $permOp = pedidozap_tem_permissao($sessao, 'ia_operacao') || pedidozap_tem_permissao($sessao, 'pedidos');
 $permCli = pedidozap_tem_permissao($sessao, 'clientes') || $permOp;
 
+$nichoPainel = strtolower(trim((string) ($config['NICHO'] ?? 'comercio')));
+$ehAlimentacaoPainel = in_array($nichoPainel, ['lanchonete', 'pizzaria', 'marmitaria', 'pensao', 'acai', 'confeitaria', 'bebidas'], true);
+$termoCatPainel = $ehAlimentacaoPainel ? 'cardápio' : 'catálogo';
+
 $resumo = pz_resumo_executivo_loja();
 $intCfg = pedidozap_integracoes_publicas();
 $iaPessoal = pz_ler_ia_pessoal();
@@ -510,10 +515,15 @@ if ($action === 'melhorar_descricao') {
             'pizzaria' => 'Massa leve assada na hora com recheio generoso e excelente custo-benefício direto com a loja.',
             'marmitaria' => 'Refeição fresca, bem servida e temperada na medida certa para matar a fome pagando preço justo.',
             'acai' => 'Cremoso, refrescante e montado com todo cuidado para chegar perfeito até você.',
+            'confeitaria' => 'Preparado artesanalmente com ingredientes selecionados e acabamento caprichado para adoçar o seu dia.',
+            'bebidas' => 'Gelada no ponto certo, original e pronta para entrega rápida direta da loja.',
             'petshop' => 'Selecionado para garantir saúde, bem-estar e economia direto na sua casa.',
             'moda' => 'Conforto, ótimo caimento e qualidade garantida com entrega rápida no bairro.',
             'eletronicos' => 'Alta durabilidade, pronto uso e garantia direta com atendimento rápido da nossa loja.',
             'beleza' => 'Cuidado diário com acabamento impecável e entrega rápida sem taxas extras.',
+            'farmacia' => 'Produto original com procedência garantida e envio ágil direto da farmácia do bairro.',
+            'mercado' => 'Selecionado com qualidade e preço justo de mercado para chegar rápido na sua casa.',
+            'servicos' => 'Atendimento especializado com agendamento prático, garantia e preço transparente direto com a equipe.',
         ];
         $fecho = $sufixos[$nichoLojaDesc] ?? 'Qualidade garantida, envio ágil no bairro e preço direto da loja sem taxa de aplicativo.';
         $sug = trim(($base !== '' ? $base . ' ' : "{$nomeItem}: ") . $fecho);
@@ -537,7 +547,7 @@ if ($action === 'diagnostico') {
         $sugestoes[] = 'O que preciso comprar de estoque?';
     }
     if ($permOp) {
-        $sugestoes[] = 'Otimizar descrições e preços do cardápio';
+        $sugestoes[] = 'Otimizar descrições e preços do ' . $termoCatPainel;
         $sugestoes[] = 'Quais pedidos estão em aberto agora?';
     }
     if ($permCli) {
@@ -672,7 +682,7 @@ if (!empty($iaPessoal['ativa']) && pz_plano_tem_recurso('ia_pessoal_externa', nu
         . "  5) {\"tipo\":\"movimentar_estoque\",\"item\":\"Nome do insumo\",\"mov\":\"entrada|perda\",\"quantidade\":10}\n"
         . "  6) {\"tipo\":\"mover_pedido\",\"pedido_id\":\"123\",\"status\":\"preparo|em-rota|concluido|cancelado\",\"entregador\":\"Nome opcional\"}\n"
         . "  7) {\"tipo\":\"criar_cupom\",\"codigo\":\"CUPOM10\",\"desconto_tipo\":\"percentual|valor|frete_gratis\",\"valor\":10}\n"
-        . "  8) {\"tipo\":\"acao_local\",\"comando\":\"Cadastra X-Bacon por 28\"}\n\n"
+        . "  8) {\"tipo\":\"acao_local\",\"comando\":\"Cadastra Produto Destaque por 39.90\"}\n\n"
         . "CONTEXTO REAL DA EMPRESA:\n" . json_encode($ctxCliente, JSON_UNESCAPED_UNICODE);
 
     $llmRes = pz_executar_ia_pessoal($iaPessoal, $sysCliente, $pergunta);
@@ -1126,7 +1136,7 @@ elseif (strpos($n, 'lucrativ') !== false || strpos($n, 'margem') !== false || st
         $nomes = implode(', ', array_map(function ($p) {
             return $p['nome'] . ' (' . $p['quantidade'] . 'x)';
         }, $top));
-        $resposta = "Você já tem vendas no mês ({$nomes}), mas **nenhuma ficha técnica** vinculada aos produtos vendidos. Cadastre a ficha técnica em **Estoque & CMV** para calcular CMV exato e lucro real por prato!";
+        $resposta = "Você já tem vendas no mês ({$nomes}), mas **nenhuma ficha técnica / composição de custo** vinculada aos itens vendidos. Cadastre em **Estoque & CMV** para calcular CMV exato e lucro real por item!";
     } else {
         $resposta = "Ainda não há vendas no mês para ranquear lucratividade. Você tem **" . count($fichas) . " ficha(s) técnica(s)** cadastrada(s).";
     }
@@ -1250,7 +1260,7 @@ elseif (strpos($n, 'entregador') !== false || strpos($n, 'motoboy') !== false ||
     $origem = ['pedidos.json'];
     $cards = [
         ['titulo' => 'Novos', 'valor' => $cont['novo']],
-        ['titulo' => 'Na Cozinha', 'valor' => $cont['preparo']],
+        ['titulo' => ($ehAlimentacaoPainel ? 'Em Preparo / Cozinha' : 'Em Preparo / Separação'), 'valor' => $cont['preparo']],
         ['titulo' => 'Em Rota', 'valor' => $cont['em-rota']],
     ];
     if (!$abertos) {
@@ -1268,7 +1278,7 @@ elseif (strpos($n, 'entregador') !== false || strpos($n, 'motoboy') !== false ||
 // ---------------------------------------------------------------------
 // 11. CONSULTA: ECONOMIA EM TAXAS, RESUMO SEMANAL E CLIENTES SUMIDOS
 // ---------------------------------------------------------------------
-if (strpos($n, 'econom') !== false || strpos($n, 'ifood') !== false || strpos($n, '99') !== false || strpos($n, 'semanal') !== false || strpos($n, 'sumid') !== false || strpos($n, 'inativo') !== false || strpos($n, 'reativ') !== false) {
+elseif (strpos($n, 'econom') !== false || strpos($n, 'ifood') !== false || strpos($n, '99') !== false || strpos($n, 'semanal') !== false || strpos($n, 'sumid') !== false || strpos($n, 'inativo') !== false || strpos($n, 'reativ') !== false) {
     $econMes = (float) ($resumo['economia_taxas']['mes'] ?? 0);
     $econSem = (float) ($resumo['economia_taxas']['semana'] ?? 0);
     $baseCli = $resumo['base_clientes'] ?? [];
@@ -1292,9 +1302,9 @@ if (strpos($n, 'econom') !== false || strpos($n, 'ifood') !== false || strpos($n
     $acoesUI[] = ['label' => 'Ver Clientes & Reativação', 'aba' => 'visao-geral'];
 }
 // ---------------------------------------------------------------------
-// 11A. CONSULTA: OTIMIZAR CARDÁPIO E PREÇOS COMPETITIVOS COM IA
+// 11A. CONSULTA: OTIMIZAR CATÁLOGO E PREÇOS COMPETITIVOS COM IA
 // ---------------------------------------------------------------------
-elseif (strpos($n, 'otimiz') !== false || strpos($n, 'descri') !== false || strpos($n, 'competitiv') !== false || strpos($n, 'melhorar cardapio') !== false) {
+elseif (strpos($n, 'otimiz') !== false || strpos($n, 'descri') !== false || strpos($n, 'competitiv') !== false || strpos($n, 'melhorar cardapio') !== false || strpos($n, 'melhorar catalogo') !== false || strpos($n, 'melhorar produtos') !== false) {
     $otim = pz_otimizar_cardapio_sugestoes(Database::getTenant(), false);
     $origem = ['cardapio.json', 'territorio_lib'];
     $qtdDesc = count($otim['sugestoes_descricao'] ?? []);
@@ -1305,9 +1315,9 @@ elseif (strpos($n, 'otimiz') !== false || strpos($n, 'descri') !== false || strp
     ];
     $partesResp = [];
     if ($qtdDesc > 0) {
-        $partesResp[] = "✍️ Encontrei **{$qtdDesc} item(ns)** sem descrição apetitosa (ex.: **" . ($otim['sugestoes_descricao'][0]['nome'] ?? '') . "**). Toque no botão **Otimizar Cardápio com IA** no painel Hoje para preencher automaticamente!";
+        $partesResp[] = "✍️ Encontrei **{$qtdDesc} item(ns)** sem descrição vendedora completa (ex.: **" . ($otim['sugestoes_descricao'][0]['nome'] ?? '') . "**). Toque no botão **✨ Melhorar descrição (IA)** ou em **Otimizar Catálogo com IA** na tela Hoje para preencher automaticamente!";
     } else {
-        $partesResp[] = "✅ Todas as descrições do seu cardápio estão bem preenchidas e vendedoras!";
+        $partesResp[] = "✅ Todas as descrições do seu {$termoCatPainel} estão bem preenchidas e vendedoras!";
     }
     if ($qtdPreco > 0) {
         $ap0 = $otim['alertas_preco'][0];
@@ -1398,7 +1408,7 @@ elseif (preg_match('/\b(o que e|como funciona|conceito|explica|significa|diferen
         $acoesUI[] = ['label' => 'Abrir Meus Produtos', 'aba' => 'cardapio'];
     } elseif (preg_match('/(shadowban|tolerancia|multa|10%|atraso)/', $n)) {
         $resposta = "🛡️ **Regra de Cobrança, Tolerância e Shadowban:**\n"
-            . "• Toda loja nova começa com **7 dias grátis** completos.\n"
+            . "• Toda loja nova começa com **30 dias grátis** completos no Plano **Scale IA**.\n"
             . "• Após o vencimento, existe **tolerância máxima de 2 dias** com avisos no painel antes de bloquear.\n"
             . "• Passando de 2 dias, entra o **Shadowban**: sua vitrine some temporariamente para compradores, mas **100% dos produtos, pedidos e clientes continuam salvos**.\n"
             . "• Para reativar após os 2 dias incide o encargo contratual de **+10%** sobre o plano, ou você pode deixar o **pagamento automático recorrente** ligado para nunca atrasar.";

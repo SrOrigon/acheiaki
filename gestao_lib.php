@@ -469,7 +469,7 @@ function pz_salvar_ficha_tecnica(array $input, $usuario = '')
     $rendimento = max(1, (float) ($input['rendimento'] ?? 1));
 
     if ($produtoId === '' || $produtoNome === '') {
-        return ['success' => false, 'message' => 'Selecione um produto do cardápio.'];
+        return ['success' => false, 'message' => 'Selecione um produto do catálogo.'];
     }
     if (!$ingredientes) {
         return ['success' => false, 'message' => 'Adicione pelo menos um ingrediente na ficha técnica.'];
@@ -2065,8 +2065,8 @@ function pz_resumo_executivo_loja()
             'nivel' => 'dica',
             'modulo' => 'ficha_tecnica',
             'titulo' => 'Margem baixa em ' . $p0['nome'] . ' (' . $p0['margem_pct'] . '%)',
-            'mensagem' => 'Abaixo da meta de ' . $margemMin . '%. Vale revisar preço ou custo dos ingredientes.',
-            'comando_ia' => 'Qual meu lanche mais lucrativo?',
+            'mensagem' => 'Abaixo da meta de ' . $margemMin . '%. Vale revisar o preço de venda ou o custo do produto.',
+            'comando_ia' => 'Qual meu produto mais lucrativo?',
         ];
     }
 
@@ -2227,7 +2227,7 @@ function pz_otimizar_cardapio_sugestoes(string $slug, bool $aplicar = false): ar
         $cardapio = [];
     }
     $cfgLoja = pedidozap_normalizar_config(Database::readStrict('config.json'), $slug);
-    $nichoLoja = strtolower(trim((string) ($cfgLoja['NICHO'] ?? 'lanchonete')));
+    $nichoLoja = strtolower(trim((string) ($cfgLoja['NICHO'] ?? 'comercio')));
     $nichosComida = ['lanchonete', 'pizzaria', 'marmitaria', 'pensao', 'acai', 'confeitaria'];
     $ehComida = in_array($nichoLoja, $nichosComida, true);
 
@@ -2252,7 +2252,7 @@ function pz_otimizar_cardapio_sugestoes(string $slug, bool $aplicar = false): ar
             $catNorm = mb_strtolower(trim((string) $cat), 'UTF-8');
             $nomeNorm = mb_strtolower($nome, 'UTF-8');
 
-            if (strlen($desc) < 18) {
+            if (mb_strlen($desc, 'UTF-8') < 18) {
                 if (!$ehComida) {
                     if ($nichoLoja === 'mercado' || strpos($catNorm, 'horti') !== false || strpos($catNorm, 'merc') !== false) {
                         $novaDesc = "{$nome} selecionado com qualidade e preço direto do mercado, pronto para entrega rápida.";
@@ -2264,8 +2264,14 @@ function pz_otimizar_cardapio_sugestoes(string $slug, bool $aplicar = false): ar
                         $novaDesc = "{$nome} com ótimo caimento e acabamento. Peça direto da loja com preço real e entrega rápida.";
                     } elseif ($nichoLoja === 'eletronicos' || strpos($catNorm, 'celul') !== false || strpos($catNorm, 'audio') !== false) {
                         $novaDesc = "{$nome} testado com garantia da loja local e entrega rápida sem sair de casa.";
+                    } elseif ($nichoLoja === 'beleza' || strpos($catNorm, 'cosmet') !== false || strpos($catNorm, 'perfum') !== false || strpos($catNorm, 'maqui') !== false) {
+                        $novaDesc = "{$nome} original para seu cuidado diário, com entrega discreta e rápida direto da loja.";
+                    } elseif ($nichoLoja === 'papelaria' || $nichoLoja === 'ferragem' || $nichoLoja === 'casa') {
+                        $novaDesc = "{$nome} resistente e pronto uso para o seu dia a dia, com entrega ágil no bairro.";
+                    } elseif ($nichoLoja === 'servicos' || strpos($catNorm, 'servic') !== false || strpos($catNorm, 'agenda') !== false) {
+                        $novaDesc = "{$nome} realizado por profissional qualificado com agendamento fácil e atendimento direto da equipe.";
                     } elseif ($nichoLoja === 'bebidas') {
-                        $novaDesc = "{$nome} trincando de gelada, pronta para entrega rápida direta da distribuidora.";
+                        $novaDesc = "{$nome} trincando de gelada, pronta para entrega rápida direta da loja.";
                     } else {
                         $novaDesc = "{$nome} disponível à pronta entrega com preço direto da loja, sem taxa extra de aplicativo.";
                     }
