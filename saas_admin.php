@@ -161,6 +161,164 @@ if ($acao === 'criar') {
     exit;
 }
 
+if ($acao === 'clonar_vitrine') {
+    $nomeEmp = trim((string) ($body['nome_empresa'] ?? ''));
+    $slugNovo = preg_replace('/[^a-z0-9_-]/i', '', strtolower(trim((string) ($body['slug'] ?? ''))));
+    if ($slugNovo === '' && $nomeEmp !== '') {
+        $slugNovo = pedidozap_slugify($nomeEmp);
+    }
+    $nichoAlvo = trim((string) ($body['nicho'] ?? 'lanchonete')) ?: 'lanchonete';
+    $loginNovo = trim((string) ($body['login'] ?? 'admin')) ?: 'admin';
+    $senhaUsada = (string) ($body['senha'] ?? '');
+    if (strlen($senhaUsada) < 6) {
+        $senhaUsada = 'Aki@' . substr(bin2hex(random_bytes(3)), 0, 6);
+    }
+    $diasCortesia = max(7, min(90, (int) ($body['dias_cortesia'] ?? 30)));
+    $vencPiloto = trim((string) ($body['vencimento'] ?? '')) ?: date('Y-m-d', strtotime('+' . $diasCortesia . ' days'));
+    $bairroPiloto = trim((string) ($body['bairro'] ?? 'Campo Grande')) ?: 'Campo Grande';
+    $cidadePiloto = trim((string) ($body['cidade'] ?? 'Rio de Janeiro')) ?: 'Rio de Janeiro';
+    $ufPiloto = strtoupper(substr(trim((string) ($body['estado'] ?? 'RJ')) ?: 'RJ', 0, 2));
+    $zapPiloto = preg_replace('/\D/', '', (string) ($body['whatsapp'] ?? ''));
+    $planoPiloto = pz_plano_normalizar((string) ($body['plano'] ?? 'pro'));
+
+    $criado = pedidozap_criar_loja([
+        'nome_empresa' => $nomeEmp,
+        'slug' => $slugNovo,
+        'nicho' => $nichoAlvo,
+        'login' => $loginNovo,
+        'senha' => $senhaUsada,
+        'plano' => $planoPiloto,
+        'plano_escolhido' => $planoPiloto,
+        'vencimento' => $vencPiloto,
+        'whatsapp' => $zapPiloto,
+        'bairro' => $bairroPiloto,
+        'cidade' => $cidadePiloto,
+        'estado' => $ufPiloto,
+        'taxa_entrega_base' => is_numeric($body['taxa_entrega'] ?? null) ? (float) $body['taxa_entrega'] : 5.0,
+        'tempo_medio_min' => 35,
+        'status' => 'ativo',
+    ]);
+    if (empty($criado['success'])) {
+        http_response_code(400);
+        echo json_encode($criado, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $slugFinal = (string) $criado['slug'];
+    $origemSlug = preg_replace('/[^a-z0-9_-]/i', '', strtolower(trim((string) ($body['origem_slug'] ?? ''))));
+    $itensTexto = trim((string) ($body['itens_rapidos'] ?? ''));
+
+    $antT = Database::getTenant();
+    $qtdItens = 0;
+    try {
+        Database::setTenant($slugFinal);
+        $cfgDest = pedidozap_normalizar_config(Database::readStrict('config.json'), $slugFinal);
+        $cardDest = Database::readStrict('cardapio.json');
+        if (!is_array($cardDest)) {
+            $cardDest = [];
+        }
+
+        if ($origemSlug !== '' && ($origemSlug === 'loja-demonstracao-acheiaki' || Database::tenantDataExists($origemSlug))) {
+            Database::setTenant($origemSlug);
+            $cfgOrig = pedidozap_normalizar_config(Database::readStrict('config.json'), $origemSlug);
+            $cardOrig = Database::readStrict('cardapio.json');
+            Database::setTenant($slugFinal);
+            if (is_array($cardOrig) && $cardOrig) {
+                $cardDest = $cardOrig;
+            }
+            if (!empty($cfgOrig['CATEGORIAS']) && is_array($cfgOrig['CATEGORIAS'])) {
+                $cfgDest['CATEGORIAS'] = $cfgOrig['CATEGORIAS'];
+            }
+            if (!empty($cfgOrig['TEXTOS']['PAGINAS']) && is_array($cfgOrig['TEXTOS']['PAGINAS'])) {
+                $cfgDest['TEXTOS']['PAGINAS'] = $cfgOrig['TEXTOS']['PAGINAS'];
+            }
+            if (!empty($cfgOrig['IDENTIDADE']['CORES'])) {
+                $cfgDest['IDENTIDADE']['CORES'] = $cfgOrig['IDENTIDADE']['CORES'];
+            }
+        }
+
+        if ($itensTexto !== '') {
+            $catsKeys = array_keys($cfgDest['CATEGORIAS'] ?? []);
+            $catAlvo = 'destaques';
+            foreach ($catsKeys as $ck) {
+                if ($ck !== 'promocoes') {
+                    $catAlvo = $ck;
+                    break;
+                }
+            }
+            if (!isset($cfgDest['CATEGORIAS'][$catAlvo])) {
+                $cfgDest['CATEGORIAS'][$catAlvo] = ['nome' => 'Mais Pedidos', 'subtitulo' => 'Seleção da loja', 'emoji' => '⭐', 'icone' => 'fa-star', 'cor' => '#ea580c', 'ativo' => true];
+            }
+            if (!isset($cardDest[$catAlvo]) || !is_array($cardDest[$catAlvo])) {
+                $cardDest[$catAlvo] = [];
+            }
+            $linhas = preg_split('/\r\n|\r|\n/', $itensTexto) ?: [];
+            $idxItem = 1;
+            foreach (array_slice($linhas, 0, 30) as $linha) {
+                $linha = trim($linha);
+                if ($linha === '') {
+                    continue;
+                }
+                $partes = array_map('trim', explode('|', $linha));
+                $nomeItem = $partes[0] ?? '';
+                if ($nomeItem === '') {
+                    continue;
+                }
+                $precoNum = isset($partes[1]) ? (float) str_replace(['R$', ' ', ','], ['', '', '.'], $partes[1]) : 0.0;
+                $descItem = $partes[2] ?? 'Produto direto da loja sem taxa de aplicativo.';
+                $cardDest[$catAlvo][] = [
+                    'id' => 'piloto_' . $idxItem . '_' . substr(bin2hex(random_bytes(2)), 0, 4),
+                    'nome' => $nomeItem,
+                    'descricao' => $descItem,
+                    'preco' => max(0.0, round($precoNum, 2)),
+                    'imagem' => 'assets/images/placeholder-logo.svg',
+                    'destaque' => $idxItem <= 4,
+                    'maisPedido' => $idxItem <= 2,
+                    'ativo' => true,
+                ];
+                $idxItem++;
+            }
+        }
+
+        foreach ($cardDest as $arrCat) {
+            if (is_array($arrCat)) {
+                $qtdItens += count($arrCat);
+            }
+        }
+        $cfgDest['NOME_LOJA'] = $nomeEmp;
+        $cfgDest['TEXTOS']['HERO_TITULO'] = $nomeEmp;
+        $cfgDest['TEXTOS']['HERO_SUBTITULO'] = 'Peça direto sem taxa de aplicativo — ' . $bairroPiloto . ', ' . $cidadePiloto . '.';
+        $cfgDest['TEXTOS']['SECAO_CARDAPIO'] = 'Explore nosso Catálogo';
+        $cfgDest['ENDERECO']['bairro'] = $bairroPiloto;
+        $cfgDest['ENDERECO']['cidade'] = $cidadePiloto;
+        $cfgDest['ENDERECO']['estado'] = $ufPiloto;
+        if ($zapPiloto !== '') {
+            $cfgDest['WHATSAPP_NUMBER'] = $zapPiloto;
+            $cfgDest['REDES']['whatsapp'] = $zapPiloto;
+        }
+        Database::write('config.json', $cfgDest);
+        Database::write('cardapio.json', $cardDest);
+    } finally {
+        Database::setTenant($antT);
+    }
+
+    echo json_encode([
+        'success' => true,
+        'slug' => $slugFinal,
+        'nome_empresa' => $nomeEmp,
+        'whatsapp' => $zapPiloto,
+        'login' => $loginNovo,
+        'senha_usada' => $senhaUsada,
+        'vencimento' => $vencPiloto,
+        'qtd_itens' => $qtdItens,
+        'url_curta' => '/' . $slugFinal,
+        'url_loja' => 'loja/' . rawurlencode($slugFinal) . '/',
+        'url_admin' => 'admin.html?tenant=' . rawurlencode($slugFinal),
+        'lojas' => pedidozap_resumo_lojas(),
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if ($acao === 'integracoes') {
     echo json_encode([
         'success' => true,

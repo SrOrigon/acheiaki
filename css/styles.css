@@ -1673,9 +1673,17 @@ img, video, svg {
     .cabecalho {
         padding: 10px 0;
     }
+    .cabecalho .container-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .logo-container {
+        min-width: 0;
+        flex: 1 1 180px;
+    }
     .cabecalho h1 {
         white-space: normal;
-        font-size: 1rem;
+        font-size: 0.96rem;
         line-height: 1.15;
     }
 
@@ -1683,12 +1691,24 @@ img, video, svg {
         display: flex;
         gap: 6px;
         align-items: center;
+        flex-wrap: wrap;
     }
     .header-acoes .btn-pedir-agora {
-        padding: 8px 12px;
-        font-size: 0.84rem;
+        padding: 8px 11px;
+        font-size: 0.82rem;
         white-space: nowrap;
         margin-right: 0 !important;
+    }
+    .banner-wpp-ofertas {
+        padding: 18px 16px;
+        gap: 14px;
+    }
+    .banner-wpp-ofertas a {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        display: inline-flex;
+        align-items: center;
     }
 
     .hero {

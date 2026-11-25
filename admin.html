@@ -230,6 +230,12 @@
             white-space: normal;
         }
 
+        .aki-wpp-chat-grid {
+            display: grid;
+            grid-template-columns: minmax(160px, 0.9fr) minmax(220px, 1.5fr);
+            gap: 10px;
+            align-items: stretch;
+        }
         /* Otimização Tablet & Mobile Admin */
         @media (max-width: 768px) {
             .admin-container { padding: 10px; margin-top: 8px; }
@@ -423,11 +429,20 @@
                 gap: 10px;
             }
             .produto-foto-col {
-                width: 84px;
+                width: 100% !important;
+                max-width: 150px;
             }
             .item-img {
-                width: 84px;
-                height: 84px;
+                width: 96px;
+                height: 96px;
+            }
+            .item-details {
+                margin-left: 0 !important;
+                width: 100%;
+                min-width: 0;
+            }
+            .aki-wpp-chat-grid {
+                grid-template-columns: 1fr !important;
             }
             .item-actions {
                 width: 100%;
@@ -912,7 +927,7 @@
                         <strong style="font-size:0.92rem;color:#1e293b;"><i class="fa-regular fa-comments"></i> Conversas ao vivo no WhatsApp</strong>
                         <button type="button" id="wpp-btn-atualizar-chat" class="btn-mini btn-edit" style="padding:4px 10px;font-size:0.78rem;"><i class="fa-solid fa-rotate"></i> Atualizar</button>
                     </div>
-                    <div style="display:grid;grid-template-columns:minmax(160px,0.9fr) minmax(220px,1.5fr);gap:10px;align-items:stretch;">
+                    <div class="aki-wpp-chat-grid">
                         <div id="wpp-lista-conversas" style="max-height:230px;overflow-y:auto;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:5px;">
                             <small style="color:#64748b;padding:8px;">Nenhuma conversa ainda. Toque em "Testar IA agora" ou conecte seu WhatsApp.</small>
                         </div>

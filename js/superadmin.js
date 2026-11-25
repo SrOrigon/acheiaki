@@ -60,6 +60,7 @@
                 + (loja.ultimo_pagamento ? '<br>pago em ' + escapar(loja.ultimo_pagamento) : '') + '</td>'
                 + '<td class="acoes">'
                 + '<button type="button" data-acao="entrar" data-slug="' + escapar(loja.slug) + '">Acessar painel</button>'
+                + '<button type="button" class="sec" data-acao="clonar" data-slug="' + escapar(loja.slug) + '">🧬 Clonar</button>'
                 + (temZap && precisaCobrar ? '<button type="button" class="sec" data-acao="cobrar" data-slug="' + escapar(loja.slug) + '">💬 Cobrar WhatsApp</button>' : '')
                 + '<button type="button" class="sec" data-acao="plano" data-slug="' + escapar(loja.slug) + '">Trocar plano</button>'
                 + '<button type="button" class="sec" data-acao="destaque" data-slug="' + escapar(loja.slug) + '">'
@@ -80,9 +81,20 @@
             lojas = data.lojas || [];
             nichos = data.nichos || {};
             const select = document.getElementById('novo-nicho');
-            select.innerHTML = Object.keys(nichos).map((chave) => {
+            const optsNichos = Object.keys(nichos).map((chave) => {
                 return '<option value="' + chave + '">' + escapar(nichos[chave].rotulo || chave) + '</option>';
             }).join('');
+            select.innerHTML = optsNichos;
+            const selClonarNicho = document.getElementById('clonar-nicho');
+            if (selClonarNicho) selClonarNicho.innerHTML = optsNichos;
+            const selOrigem = document.getElementById('clonar-origem');
+            if (selOrigem) {
+                selOrigem.innerHTML = '<option value="">-- Usar só categorias / itens digitados --</option>'
+                    + '<option value="loja-demonstracao-acheiaki">Loja Demonstração AcheIAki (Multissetor pronta)</option>'
+                    + lojas.filter((l) => l.slug && l.slug !== 'loja-demonstracao-acheiaki').map((l) => (
+                        '<option value="' + escapar(l.slug) + '">' + escapar(l.nome_empresa || l.slug) + ' (' + escapar(l.slug) + ')</option>'
+                    )).join('');
+            }
             const saas = data.saas || {};
             document.getElementById('saas-nome').value = saas.nome_plataforma || '';
             document.getElementById('saas-zap').value = saas.suporte_whatsapp || '';
@@ -255,6 +267,57 @@
         });
     });
 
+    const btnClonar = document.getElementById('btn-clonar-vitrine');
+    if (btnClonar) {
+        btnClonar.addEventListener('click', () => {
+            const nome = (document.getElementById('clonar-nome').value || '').trim();
+            if (nome.length < 3) {
+                alert('Informe o nome da loja piloto.');
+                return;
+            }
+            btnClonar.disabled = true;
+            api({
+                acao: 'clonar_vitrine',
+                nome_empresa: nome,
+                whatsapp: (document.getElementById('clonar-whatsapp').value || '').trim(),
+                bairro: (document.getElementById('clonar-bairro').value || '').trim(),
+                cidade: (document.getElementById('clonar-cidade').value || '').trim(),
+                nicho: (document.getElementById('clonar-nicho').value || 'lanchonete'),
+                origem_slug: (document.getElementById('clonar-origem').value || '').trim(),
+                taxa_entrega: Number(document.getElementById('clonar-taxa').value || 5),
+                dias_cortesia: Number(document.getElementById('clonar-dias').value || 30),
+                itens_rapidos: (document.getElementById('clonar-itens').value || '').trim()
+            }).then((data) => {
+                if (!data || !data.success) {
+                    alert((data && data.message) || 'Erro ao clonar/criar loja piloto.');
+                    return;
+                }
+                lojas = data.lojas || lojas;
+                desenhar();
+                const urlCompleta = window.location.origin + data.url_curta;
+                const zapDigits = String(data.whatsapp || '').replace(/\D/g, '');
+                const zapDest = zapDigits.length >= 10 ? (zapDigits.length <= 11 ? '55' + zapDigits : zapDigits) : '';
+                const msgAbordagem = 'Olá! Já deixamos a vitrine da ' + data.nome_empresa + ' pronta no AcheIAki sem comissão, com ' + data.qtd_itens + ' item(ns) no ar para você testar 30 dias grátis: ' + urlCompleta + ' (Painel: ' + window.location.origin + '/' + data.url_admin + ' | Usuário: ' + data.login + ' | Senha: ' + data.senha_usada + ')';
+                const boxRes = document.getElementById('clonar-resultado');
+                if (boxRes) {
+                    boxRes.hidden = false;
+                    boxRes.innerHTML = '<strong>✅ Vitrine pronta em produção!</strong> (' + data.qtd_itens + ' item(ns))<br>'
+                        + '<strong>Link direto:</strong> <a href="' + escapar(urlCompleta) + '" target="_blank" style="color:#065f46;font-weight:700;">' + escapar(urlCompleta) + '</a><br>'
+                        + '<strong>Acesso lojista:</strong> usuário <code>' + escapar(data.login) + '</code> · senha <code>' + escapar(data.senha_usada) + '</code> · cortesia até <code>' + escapar(data.vencimento) + '</code><br>'
+                        + '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">'
+                        + '<a href="' + escapar(urlCompleta) + '" target="_blank" class="btn" style="text-decoration:none;background:#231915;">Abrir vitrine</a>'
+                        + '<a href="https://wa.me/' + escapar(zapDest) + '?text=' + encodeURIComponent(msgAbordagem) + '" target="_blank" rel="noopener" class="btn" style="text-decoration:none;background:#15803d;">💬 Enviar pronto no WhatsApp do dono</a>'
+                        + '</div>';
+                }
+                document.getElementById('clonar-nome').value = '';
+                document.getElementById('clonar-whatsapp').value = '';
+                document.getElementById('clonar-itens').value = '';
+            }).finally(() => {
+                btnClonar.disabled = false;
+            });
+        });
+    }
+
     document.getElementById('master-user').value = auth.user;
     document.getElementById('btn-master').addEventListener('click', () => {
         const novoUser = document.getElementById('master-user').value.trim();
@@ -354,6 +417,15 @@
         if (botao.dataset.acao === 'entrar') {
             sessionStorage.setItem('pedidozap_tenant_slug', slug);
             window.location.href = 'admin.html?tenant=' + encodeURIComponent(slug);
+            return;
+        }
+        if (botao.dataset.acao === 'clonar') {
+            const selOrig = document.getElementById('clonar-origem');
+            const cardClonar = document.getElementById('card-clonar-piloto');
+            if (selOrig) selOrig.value = slug;
+            if (cardClonar) cardClonar.scrollIntoView({ behavior: 'smooth' });
+            const inpNome = document.getElementById('clonar-nome');
+            if (inpNome) inpNome.focus();
             return;
         }
         if (botao.dataset.acao === 'cobrar') {
