@@ -138,6 +138,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (is_file(__DIR__ . '/whatsapp_lib.php')) {
                     require_once __DIR__ . '/whatsapp_lib.php';
                     pz_wpp_enfileirar_status_pedido($slugAtual, $pedidoAtual, $statusPersistir);
+                    if (!$cancelar && $statusPersistir === 'concluido' && function_exists('pz_queue_push')) {
+                        pz_queue_push('whatsapp.post_delivery_viral', [
+                            'pedido' => [
+                                'id' => $pedidoAtual['id'] ?? '',
+                                'cliente' => $pedidoAtual['cliente'] ?? '',
+                                'celular' => $pedidoAtual['celular'] ?? '',
+                            ],
+                        ], $slugAtual, 2700, false);
+                    }
                 }
                 if (!$cancelar && in_array($statusPersistir, ['preparo', 'concluido'], true)) {
                     pz_fiscal_agendar_se_automatico($slugAtual, (string) $req['id'], $statusPersistir === 'concluido' ? 'ao_concluir' : 'ao_preparar');

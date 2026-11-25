@@ -88,11 +88,11 @@
                 <div><label for="novo-nicho">Segmento</label><select id="novo-nicho"></select></div>
                 <div><label for="novo-login">Usuário do lojista</label><input id="novo-login" value="admin"></div>
                 <div><label for="novo-senha">Senha inicial</label><input id="novo-senha" type="password"></div>
-                <div><label for="novo-plano">Plano</label>
+                <div><label for="novo-plano">Plano (1 unidade física = 1 assinatura)</label>
                     <select id="novo-plano">
-                        <option value="essencial">Essencial (R$ 79,90/mês — Porta de entrada)</option>
-                        <option value="pro" selected>Pro ⭐ (R$ 149,90/mês — Recomendado)</option>
-                        <option value="enterprise">Enterprise / Rede (R$ 249,90/mês — Completo)</option>
+                        <option value="start">Start (R$ 59,90/mês — até 100 pedidos)</option>
+                        <option value="pro">Pro (R$ 109,90/mês — até 300 pedidos)</option>
+                        <option value="scale" selected>Scale IA ⭐ (R$ 150,00/mês — Ilimitado + IA 24h)</option>
                     </select>
                 </div>
                 <div><label for="novo-grupo-rede">Grupo de Rede (opcional, p/ múltiplas lojas)</label><input id="novo-grupo-rede" placeholder="Ex.: rede-sabor-sul"></div>
@@ -128,11 +128,11 @@
             </div>
             <h2 style="margin-top:18px;">Planos &amp; Cobrança automática (Mercado Pago · 0% comissão)</h2>
             <div class="grade">
-                <div><label for="saas-preco-essencial">Plano Essencial (R$/mês)</label><input id="saas-preco-essencial" inputmode="decimal" placeholder="79,90"></div>
-                <div><label for="saas-preco-pro">Plano Pro ⭐ (R$/mês)</label><input id="saas-preco-pro" inputmode="decimal" placeholder="149,90"></div>
-                <div><label for="saas-preco-enterprise">Plano Enterprise / Rede (R$/mês)</label><input id="saas-preco-enterprise" inputmode="decimal" placeholder="249,90"></div>
+                <div><label for="saas-preco-essencial">Plano Start (R$/mês)</label><input id="saas-preco-essencial" inputmode="decimal" placeholder="59,90"></div>
+                <div><label for="saas-preco-pro">Plano Pro (R$/mês)</label><input id="saas-preco-pro" inputmode="decimal" placeholder="109,90"></div>
+                <div><label for="saas-preco-enterprise">Plano Scale IA ⭐ (R$/mês)</label><input id="saas-preco-enterprise" inputmode="decimal" placeholder="150,00"></div>
                 <div><label for="saas-desc-anual">Desconto pagamento anual (%)</label><input id="saas-desc-anual" type="number" min="0" max="50" placeholder="20"></div>
-                <div><label for="saas-dias-teste">Dias grátis no teste (máximo 7 dias)</label><input id="saas-dias-teste" type="number" min="1" max="7" value="7" placeholder="7"></div>
+                <div><label for="saas-dias-teste">Dias grátis no trial Scale IA (padrão 30)</label><input id="saas-dias-teste" type="number" min="1" max="30" value="30" placeholder="30"></div>
                 <div><label for="saas-tolerancia-dias">Tolerância de atraso antes do Shadowban (máx. 2 dias)</label><input id="saas-tolerancia-dias" type="number" min="0" max="2" value="2" placeholder="2"></div>
                 <div><label for="saas-multa-reativacao">Encargo de reativação após 2 dias (%)</label><input id="saas-multa-reativacao" type="number" min="0" max="10" step="0.5" value="10" placeholder="10"></div>
                 <div style="grid-column:1/-1;"><label for="saas-mp-token">Access Token de produção do Mercado Pago</label><input id="saas-mp-token" type="password" autocomplete="off" placeholder="APP_USR-..."></div>
@@ -251,7 +251,7 @@
                 <option value="atrasado">Em atraso (tolerância até 2 dias)</option>
                 <option value="bloqueado">Shadowban / Bloqueadas</option>
                 <option value="pendente">Pendentes</option>
-                <option value="teste">Em teste (7 dias)</option>
+                <option value="teste">Em teste (30 dias Scale IA)</option>
             </select>
             <div style="overflow-x:auto;margin-top:12px;">
                 <table>

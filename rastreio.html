@@ -278,7 +278,47 @@
             <a id="rastreio-btn-indicar" href="#" onclick="var u=window.location.origin+'/marketplace.html';window.open('https://wa.me/?text='+encodeURIComponent('Pedi comida sem taxa de aplicativo pelo AcheIAki e saiu mais barato que nos apps! Olha as lojas perto da gente: '+u),'_blank','noopener');return false;" style="flex:1; min-width:120px; text-align:center; padding:11px 12px; border-radius:12px; background:#15803d; color:#ffffff; font-weight:700; font-size:0.86rem; text-decoration:none; box-shadow:0 4px 12px rgba(21,128,61,0.22);"><i class="fa-brands fa-whatsapp"></i> Indicar amigo</a>
             <a href="marketplace.html?tab=pedidos" style="flex:1; min-width:120px; text-align:center; padding:11px 12px; border-radius:12px; background:#ea580c; border:1px solid rgba(255,255,255,0.12); color:#ffffff; font-weight:700; font-size:0.86rem; text-decoration:none; box-shadow:0 4px 12px rgba(234,88,12,0.22);"><i class="fa-solid fa-bag-shopping" style="color:#fde68a;"></i> Meus pedidos</a>
         </div>
+        <details id="rastreio-indicar-card" style="max-width:450px; margin:0 auto; width:100%; background:#ffffff; border-radius:16px; padding:11px 14px; box-shadow:0 8px 22px rgba(0,0,0,0.12); pointer-events:auto;">
+            <summary style="cursor:pointer; font-weight:700; font-size:0.88rem; color:#231915; list-style:none; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <span>🏪 Indique sua loja ou lanchonete favorita</span>
+                <span style="font-size:0.78rem; color:#ea580c;">Abrir</span>
+            </summary>
+            <form id="rastreio-form-indicar" style="display:grid; gap:7px; margin-top:10px;">
+                <input type="text" id="rast-ind-nome" placeholder="Nome da loja / lanchonete *" required style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.86rem;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                    <input type="text" id="rast-ind-bairro" placeholder="Bairro (ex: Campo Grande)" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.84rem;">
+                    <input type="text" id="rast-ind-contato" placeholder="@Instagram ou WhatsApp" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.84rem;">
+                </div>
+                <button type="submit" style="border:none; background:#15803d; color:#fff; font-weight:700; padding:9px 12px; border-radius:8px; font-size:0.86rem; cursor:pointer;">Enviar indicação sem taxa</button>
+                <small id="rast-ind-msg" style="color:#065f46; font-weight:600;"></small>
+            </form>
+        </details>
         </div>
+        <script>
+            (function(){
+                var f = document.getElementById('rastreio-form-indicar');
+                if (!f) return;
+                f.addEventListener('submit', function(ev){
+                    ev.preventDefault();
+                    var msg = document.getElementById('rast-ind-msg');
+                    var nome = (document.getElementById('rast-ind-nome').value || '').trim();
+                    if (!nome) return;
+                    fetch('marketplace_api.php?action=indicar_loja', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            nome_loja: nome,
+                            bairro: (document.getElementById('rast-ind-bairro').value || '').trim(),
+                            contato: (document.getElementById('rast-ind-contato').value || '').trim(),
+                            quem_indicou: 'Comprador (Rastreio)'
+                        })
+                    }).then(function(r){ return r.json(); }).then(function(d){
+                        if (msg) msg.textContent = (d && d.success) ? 'Indicação registrada! Vamos convidar essa loja para vender sem taxas.' : ((d && d.message) || 'Erro ao enviar.');
+                        if (d && d.success) f.reset();
+                    }).catch(function(){ if (msg) msg.textContent = 'Erro de conexão.'; });
+                });
+            })();
+        </script>
         <div id="error-container" class="error-msg">
             O rastreio ainda não está disponível para este pedido ou o ID é inválido.
         </div>

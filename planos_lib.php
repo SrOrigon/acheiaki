@@ -1,18 +1,19 @@
 <?php
 /**
  * Catálogo Oficial de Planos e Controle Real de Recursos (Feature Gating) — AcheIAki
- * Modelo comercial: 1 única plataforma, 0% comissão por pedido, 3 planos valorizados:
- *   - essencial  (R$ 79,90/mês  | Anual 20% OFF: R$ 63,92/mês)  — Porta de entrada
- *   - pro        (R$ 149,90/mês | Anual 20% OFF: R$ 119,92/mês) — Carro-chefe recomendado
- *   - enterprise (R$ 249,90/mês | Anual 20% OFF: R$ 199,92/mês) — Operação completa & Redes
+ * Modelo comercial: 1 Unidade Física = 1 Assinatura, 0% comissão por pedido:
+ *   - start (R$ 59,90/mês)    — Até 100 pedidos/mês e 30 produtos
+ *   - pro   (R$ 109,90/mês)   — Até 300 pedidos/mês, 80 produtos, Cozinha e 30 recuperações/mês
+ *   - scale (R$ 150,00/mês)   — FOCO PRINCIPAL: Pedidos/produtos ilimitados (franquia justa R$ 20 mil/mês),
+ *                               Robô WhatsApp ilimitado, IA 24h, CSV livre e Selo Oficial
  */
 
 function pz_planos_precos_padrao(): array
 {
     return [
-        'essencial' => 79.90,
-        'pro' => 149.90,
-        'enterprise' => 249.90,
+        'start' => 59.90,
+        'pro' => 109.90,
+        'scale' => 150.00,
     ];
 }
 
@@ -20,29 +21,33 @@ function pz_plano_normalizar($slug): string
 {
     $s = strtolower(trim((string) $slug));
     $mapa = [
-        'essencial' => 'essencial',
-        'basico' => 'essencial',
-        'básico' => 'essencial',
-        'entrada' => 'essencial',
+        'start' => 'start',
+        'essencial' => 'start',
+        'basico' => 'start',
+        'básico' => 'start',
+        'entrada' => 'start',
         'pro' => 'pro',
         'profissional' => 'pro',
         'intermediario' => 'pro',
         'mensal' => 'pro',
-        'teste' => 'pro',
-        'enterprise' => 'enterprise',
-        'empresarial' => 'enterprise',
-        'rede' => 'enterprise',
-        'premium' => 'enterprise',
-        'avancado' => 'enterprise',
-        'avançado' => 'enterprise',
-        'completo' => 'enterprise',
+        'scale' => 'scale',
+        'scale_ia' => 'scale',
+        'scale-ia' => 'scale',
+        'teste' => 'scale',
+        'enterprise' => 'scale',
+        'empresarial' => 'scale',
+        'rede' => 'scale',
+        'premium' => 'scale',
+        'avancado' => 'scale',
+        'avançado' => 'scale',
+        'completo' => 'scale',
     ];
-    return $mapa[$s] ?? 'essencial';
+    return $mapa[$s] ?? 'start';
 }
 
 function pz_planos_ordem(): array
 {
-    return ['essencial', 'pro', 'enterprise'];
+    return ['start', 'pro', 'scale'];
 }
 
 function pz_planos_catalogo(?array $saasCfg = null): array
@@ -72,45 +77,51 @@ function pz_planos_catalogo(?array $saasCfg = null): array
         return [$totalAnual, $equivMensal];
     };
 
-    $pEssencial = $precoDe('essencial');
+    $pStart = $precoDe('start');
     $pPro = $precoDe('pro');
-    $pEnterprise = $precoDe('enterprise');
+    $pScale = $precoDe('scale');
 
-    [$aEssencial, $amEssencial] = $calcAnual($pEssencial);
+    [$aStart, $amStart] = $calcAnual($pStart);
     [$aPro, $amPro] = $calcAnual($pPro);
-    [$aEnterprise, $amEnterprise] = $calcAnual($pEnterprise);
+    [$aScale, $amScale] = $calcAnual($pScale);
 
     return [
-        'essencial' => [
-            'slug' => 'essencial',
-            'nome' => 'Essencial',
+        'start' => [
+            'slug' => 'start',
+            'nome' => 'Start',
             'subtitulo' => 'Porta de entrada sem comissão',
-            'publico' => 'Quem está começando no delivery próprio e quer sair das taxas de aplicativos.',
+            'publico' => 'Para começar com catálogo próprio, 0% de comissão e até 100 pedidos/mês.',
             'badge' => 'Porta de entrada',
             'recomendado' => false,
-            'preco_mensal' => $pEssencial,
-            'preco_anual' => $aEssencial,
-            'preco_anual_mensal' => $amEssencial,
+            'preco_mensal' => $pStart,
+            'preco_anual' => $aStart,
+            'preco_anual_mensal' => $amStart,
             'desconto_anual_pct' => $descAnualPct,
             'boost_territorio' => 0,
             'selo_marketplace' => '',
             'limites' => [
-                'max_produtos' => 50,
+                'max_pedidos_mes' => 100,
+                'max_produtos' => 30,
+                'max_recuperacoes_mes' => 0,
                 'max_funcionarios' => 0,
                 'max_unidades' => 1,
+                'franquia_justa_vendas_mes' => 0,
             ],
             'recursos' => [
                 'vitrine_marketplace' => true,
-                'pedidos_ilimitados_zero_comissao' => true,
+                'pedidos_ilimitados_zero_comissao' => false,
                 'painel_kanban_cozinha' => true,
+                'cozinha_motoboy' => false,
                 'impressao_termica' => true,
                 'rastreio_cliente' => true,
                 'avaliacoes_publicas' => true,
                 'cardapio_ilimitado' => false,
                 'caixa_financeiro_dre' => false,
                 'crm_cupons_fidelidade' => false,
+                'csv_export' => false,
                 'entregadores_gps' => false,
                 'equipe_rbac' => false,
+                'wpp_robo_auto' => false,
                 'ia_vitrine' => false,
                 'ia_gestor_acoes' => false,
                 'ia_pessoal_externa' => false,
@@ -123,21 +134,19 @@ function pz_planos_catalogo(?array $saasCfg = null): array
                 'multi_unidades' => false,
             ],
             'itens_destaque' => [
-                '0% de comissão por pedido e vendas ilimitadas',
-                'Cardápio digital próprio (/loja/sua-loja) + presença no Marketplace Regional',
-                'Até 50 produtos cadastrados com compressão WebP automática',
-                'Painel de pedidos, Tela da Cozinha e impressão de comandas (58mm/80mm)',
-                'Rastreio em tempo real para o cliente e avaliações públicas',
-                'Acesso do proprietário (sem financeiro, IA ou automações)',
+                '0% de comissão por pedido · até 100 pedidos/mês',
+                'Até 30 produtos cadastrados com WebP automático (< 150 KB)',
+                'Painel simples de pedidos e link curto (/sua-loja)',
+                'Sem tela de cozinha/motoboy, robô automático ou CSV de clientes',
             ],
         ],
         'pro' => [
             'slug' => 'pro',
             'nome' => 'Pro',
-            'subtitulo' => 'O carro-chefe para faturar mais',
-            'publico' => 'Restaurantes e deliverys ativos que querem vender mais, fidelizar e controlar o caixa.',
-            'badge' => 'Recomendado',
-            'recomendado' => true,
+            'subtitulo' => 'Crescimento com cozinha e recuperação',
+            'publico' => 'Lojas em expansão até 300 pedidos/mês com Tela de Cozinha e recuperação básica.',
+            'badge' => 'Intermediário',
+            'recomendado' => false,
             'preco_mensal' => $pPro,
             'preco_anual' => $aPro,
             'preco_anual_mensal' => $amPro,
@@ -145,23 +154,29 @@ function pz_planos_catalogo(?array $saasCfg = null): array
             'boost_territorio' => 5,
             'selo_marketplace' => '',
             'limites' => [
-                'max_produtos' => 0, // 0 = ilimitado
-                'max_funcionarios' => 5,
+                'max_pedidos_mes' => 300,
+                'max_produtos' => 80,
+                'max_recuperacoes_mes' => 30,
+                'max_funcionarios' => 3,
                 'max_unidades' => 1,
+                'franquia_justa_vendas_mes' => 0,
             ],
             'recursos' => [
                 'vitrine_marketplace' => true,
-                'pedidos_ilimitados_zero_comissao' => true,
+                'pedidos_ilimitados_zero_comissao' => false,
                 'painel_kanban_cozinha' => true,
+                'cozinha_motoboy' => true,
                 'impressao_termica' => true,
                 'rastreio_cliente' => true,
                 'avaliacoes_publicas' => true,
-                'cardapio_ilimitado' => true,
+                'cardapio_ilimitado' => false,
                 'caixa_financeiro_dre' => true,
                 'crm_cupons_fidelidade' => true,
-                'entregadores_gps' => true,
+                'csv_export' => false,
+                'entregadores_gps' => false,
                 'equipe_rbac' => true,
-                'ia_vitrine' => true,
+                'wpp_robo_auto' => false,
+                'ia_vitrine' => false,
                 'ia_gestor_acoes' => false,
                 'ia_pessoal_externa' => false,
                 'estoque_ficha_cmv' => false,
@@ -173,44 +188,48 @@ function pz_planos_catalogo(?array $saasCfg = null): array
                 'multi_unidades' => false,
             ],
             'itens_destaque' => [
-                'Tudo do Essencial + produtos ilimitados no cardápio',
-                'Até 5 funcionários com controle de permissões (RBAC)',
-                'Caixa diário, Contas a Pagar/Receber e DRE financeiro completo',
-                'Cupons de desconto, Programa de Fidelidade e Recuperação de Carrinhos Abandonados',
-                'Gestão de entregadores próprios com mapa GPS ao vivo',
-                'Atendente Virtual com IA na vitrine e resposta oficial às avaliações',
+                'Até 300 pedidos/mês e até 80 produtos · 0% comissão',
+                'Tela dedicada de Cozinha/Expedição + impressão térmica',
+                'Recuperação de carrinho abandonado (até 30 disparos/mês) + Cupons',
+                'Relatório mensal simples + até 3 funcionários (sem IA 24h nem CSV)',
             ],
         ],
-        'enterprise' => [
-            'slug' => 'enterprise',
-            'nome' => 'Enterprise / Rede',
-            'subtitulo' => 'Operação completa e múltiplas lojas',
-            'publico' => 'Operações de alto volume, franquias e redes que exigem automação fiscal, PDV e escala.',
-            'badge' => 'Operação Completa',
-            'recomendado' => false,
-            'preco_mensal' => $pEnterprise,
-            'preco_anual' => $aEnterprise,
-            'preco_anual_mensal' => $amEnterprise,
+        'scale' => [
+            'slug' => 'scale',
+            'nome' => 'Scale IA',
+            'subtitulo' => 'Operação ilimitada + IA 24h + Topo das buscas',
+            'publico' => 'Foco principal: quem quer vender sem teto, recuperar clientes sumidos e dominar o bairro.',
+            'badge' => 'Recomendado · Foco Principal',
+            'recomendado' => true,
+            'preco_mensal' => $pScale,
+            'preco_anual' => $aScale,
+            'preco_anual_mensal' => $amScale,
             'desconto_anual_pct' => $descAnualPct,
-            'boost_territorio' => 12,
-            'selo_marketplace' => 'Destaque Enterprise',
+            'boost_territorio' => 14,
+            'selo_marketplace' => 'Oficial Scale IA',
             'limites' => [
+                'max_pedidos_mes' => 0, // ilimitado (franquia justa R$ 20.000/mês)
                 'max_produtos' => 0,
-                'max_funcionarios' => 0, // 0 = ilimitado
-                'max_unidades' => 0,     // 0 = ilimitado
+                'max_recuperacoes_mes' => 0,
+                'max_funcionarios' => 0,
+                'max_unidades' => 1, // 1 unidade física = 1 assinatura
+                'franquia_justa_vendas_mes' => 20000.00,
             ],
             'recursos' => [
                 'vitrine_marketplace' => true,
                 'pedidos_ilimitados_zero_comissao' => true,
                 'painel_kanban_cozinha' => true,
+                'cozinha_motoboy' => true,
                 'impressao_termica' => true,
                 'rastreio_cliente' => true,
                 'avaliacoes_publicas' => true,
                 'cardapio_ilimitado' => true,
                 'caixa_financeiro_dre' => true,
                 'crm_cupons_fidelidade' => true,
+                'csv_export' => true,
                 'entregadores_gps' => true,
                 'equipe_rbac' => true,
+                'wpp_robo_auto' => true,
                 'ia_vitrine' => true,
                 'ia_gestor_acoes' => true,
                 'ia_pessoal_externa' => true,
@@ -223,12 +242,11 @@ function pz_planos_catalogo(?array $saasCfg = null): array
                 'multi_unidades' => true,
             ],
             'itens_destaque' => [
-                'Tudo do Pro + funcionários ilimitados',
-                'Controle de Estoque, Fornecedores e Ficha Técnica com CMV automático',
-                'Emissão Fiscal NFC-e / SAT + Integração PDV / ERP (Open Delivery)',
-                'Campanhas Push Notifications + Copiloto IA completo e IA Pessoal (API/Voz)',
-                'Auditoria completa, Backup JSON e Destaque Máximo nas buscas',
-                'Painel Consolidado para Múltiplas Lojas / Filiais (Rede)',
+                'Pedidos e produtos ILIMITADOS (franquia justa até R$ 20 mil/mês) · Taxa 0%',
+                'Painel + Cozinha + Rastreio Motoboy + Selo Oficial no topo do bairro',
+                'Robô WhatsApp ilimitado (carrinhos + clientes sumidos + resumo segunda 10h)',
+                'Agente IA 24h + Otimizador de descrições + Exportação CSV livre da base',
+                'Caixa/DRE, Estoque CMV, NFC-e, PDV e sincronização Matriz → Filiais (1 assinatura/unidade)',
             ],
         ],
     ];
@@ -238,7 +256,7 @@ function pz_plano_preco_ciclo(string $planoSlug, string $ciclo = 'mensal', ?arra
 {
     $norm = pz_plano_normalizar($planoSlug);
     $cat = pz_planos_catalogo($saasCfg);
-    $def = $cat[$norm] ?? $cat['essencial'];
+    $def = $cat[$norm] ?? $cat['start'];
     return strtolower(trim($ciclo)) === 'anual' ? (float) $def['preco_anual'] : (float) $def['preco_mensal'];
 }
 
@@ -258,17 +276,18 @@ function pz_plano_da_loja(?string $slugTenant = null, ?array $lojaMeta = null, ?
     $emTeste = !empty($loja['em_teste']) || $planoBruto === 'teste' || (($loja['status'] ?? '') === 'teste');
 
     if ($tenant === 'default' && $planoBruto === '') {
-        $slugEfetivo = 'enterprise';
-    } elseif ($emTeste && !empty($loja['plano_escolhido'])) {
-        $slugEfetivo = pz_plano_normalizar((string) $loja['plano_escolhido']);
+        $slugEfetivo = 'scale';
     } elseif ($emTeste && ($planoBruto === '' || $planoBruto === 'teste')) {
-        $slugEfetivo = 'pro';
+        // Trial de 30 dias libera sempre a experiência completa do Scale IA
+        $slugEfetivo = 'scale';
+    } elseif ($emTeste && !empty($loja['plano_escolhido'])) {
+        $slugEfetivo = 'scale';
     } else {
-        $slugEfetivo = pz_plano_normalizar($planoBruto !== '' ? $planoBruto : 'essencial');
+        $slugEfetivo = pz_plano_normalizar($planoBruto !== '' ? $planoBruto : 'start');
     }
 
     $catalogo = pz_planos_catalogo($saasCfg);
-    $def = $catalogo[$slugEfetivo] ?? $catalogo['essencial'];
+    $def = $catalogo[$slugEfetivo] ?? $catalogo['start'];
     $def['em_teste'] = $emTeste;
     $def['plano_bruto'] = $planoBruto;
     $def['ciclo'] = strtolower((string) ($loja['ciclo_cobranca'] ?? 'mensal')) === 'anual' ? 'anual' : 'mensal';
@@ -326,6 +345,79 @@ function pz_plano_contar_produtos_cardapio($cardapio): int
         }
     }
     return $total;
+}
+
+function pz_plano_resumo_consumo(?string $slugTenant = null): array
+{
+    $tenant = $slugTenant !== null && $slugTenant !== ''
+        ? $slugTenant
+        : (class_exists('Database') ? Database::getTenant() : 'default');
+    $plano = pz_plano_da_loja($tenant);
+    $lim = $plano['limites'] ?? [];
+    $maxPed = (int) ($lim['max_pedidos_mes'] ?? 0);
+    $maxProd = (int) ($lim['max_produtos'] ?? 0);
+    $maxRec = (int) ($lim['max_recuperacoes_mes'] ?? 0);
+    $franquiaVendas = (float) ($lim['franquia_justa_vendas_mes'] ?? 0);
+
+    $ant = class_exists('Database') ? Database::getTenant() : 'default';
+    $pedMes = 0;
+    $vendasMes = 0.0;
+    $prodsAtivos = 0;
+    $recMes = 0;
+    try {
+        if (class_exists('Database')) {
+            Database::setTenant($tenant);
+            $pedidos = Database::readStrict('pedidos.json');
+            if (is_array($pedidos)) {
+                $ym = date('Y-m');
+                foreach ($pedidos as $p) {
+                    if (!is_array($p) || !empty($p['cancelado'])) {
+                        continue;
+                    }
+                    $ts = strtotime((string) ($p['timestamp'] ?? $p['created_at'] ?? $p['criado_em'] ?? ''));
+                    if ($ts && date('Y-m', $ts) === $ym) {
+                        $pedMes++;
+                        $vendasMes += (float) ($p['total'] ?? 0);
+                    }
+                }
+            }
+            $card = Database::readStrict('cardapio.json');
+            $prodsAtivos = pz_plano_contar_produtos_cardapio($card);
+            $autoLog = Database::readStrict('worker_automacoes_log.json');
+            if (is_array($autoLog) && isset($autoLog['recuperacoes_mes'][date('Y-m')])) {
+                $recMes = (int) $autoLog['recuperacoes_mes'][date('Y-m')];
+            }
+        }
+    } finally {
+        if (class_exists('Database')) {
+            Database::setTenant($ant);
+        }
+    }
+
+    $pctPed = $maxPed > 0 ? min(100, (int) round(($pedMes / $maxPed) * 100)) : 0;
+    $atingiuPed = ($maxPed > 0 && $pedMes >= $maxPed);
+    $atingiuProd = ($maxProd > 0 && $prodsAtivos >= $maxProd);
+    $proximoPlano = ($plano['slug'] === 'start') ? 'pro' : 'scale';
+
+    return [
+        'plano_slug' => $plano['slug'],
+        'plano_nome' => $plano['nome'],
+        'em_teste' => !empty($plano['em_teste']),
+        'pedidos_mes' => $pedMes,
+        'max_pedidos_mes' => $maxPed,
+        'pedidos_pct' => $pctPed,
+        'vendas_mes' => round($vendasMes, 2),
+        'franquia_justa_vendas_mes' => $franquiaVendas,
+        'acima_franquia_justa' => ($franquiaVendas > 0 && $vendasMes > $franquiaVendas),
+        'produtos_qtd' => $prodsAtivos,
+        'max_produtos' => $maxProd,
+        'recuperacoes_mes' => $recMes,
+        'max_recuperacoes_mes' => $maxRec,
+        'atingiu_pedidos' => $atingiuPed,
+        'atingiu_produtos' => $atingiuProd,
+        'alerta_conquista' => $atingiuPed || ($maxPed > 0 && $pctPed >= 80),
+        'proximo_plano' => $proximoPlano,
+    ];
 }
 
 function pz_planos_em_breve(): array

@@ -753,7 +753,7 @@
             + quoteHtml
             + '<div class="mkt-card-actions">'
             + '<button type="button" class="mkt-btn-outline" data-ver-loja="' + esc(loja.slug) + '"><i class="fa-solid fa-circle-info"></i> Detalhes e notas</button>'
-            + '<a class="mkt-btn-go" href="' + esc(loja.url_loja) + '" data-open-loja="' + esc(loja.slug) + '">Ver cardápio e pedir →</a>'
+            + '<a class="mkt-btn-go" href="' + esc(loja.url_loja + (String(loja.url_loja).includes('?') ? '&' : '?') + 'origem=marketplace') + '" data-open-loja="' + esc(loja.slug) + '">Ver cardápio e pedir →</a>'
             + '</div></div></article>';
     }
 
@@ -1185,7 +1185,7 @@
             + '<div><strong>' + esc(loja.nome) + '</strong><br><small style="color:#64748b;">' + (loja.fora_raio ? 'Atenção: fora do raio padrão de entrega (' + loja.raio_entrega_km + ' km), confira retirada ou frete na loja.' : 'Atendimento dentro do raio definido pela empresa.') + '</small></div>'
             + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
             + (loja.whatsapp ? '<a class="mkt-btn-outline" target="_blank" rel="noopener" href="https://wa.me/55' + esc(loja.whatsapp.replace(/\D/g, '')) + '"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>' : '')
-            + '<a class="mkt-btn-prim" style="background:' + esc(corPrim) + ';text-decoration:none;" href="' + esc(loja.url_loja) + '"><i class="fa-solid fa-cart-shopping"></i> Fazer Pedido na Loja →</a>'
+            + '<a class="mkt-btn-prim" style="background:' + esc(corPrim) + ';text-decoration:none;" href="' + esc(loja.url_loja + (String(loja.url_loja).includes('?') ? '&' : '?') + 'origem=marketplace') + '"><i class="fa-solid fa-cart-shopping"></i> Fazer Pedido na Loja →</a>'
             + '</div></div>';
 
         box.querySelectorAll('[data-copy-cupom]').forEach((btn) => {

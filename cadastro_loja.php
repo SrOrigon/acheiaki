@@ -82,7 +82,7 @@ $resultado = pedidozap_criar_loja([
     'em_teste' => true,
     'status' => 'teste',
     'plano' => 'teste',
-    'plano_escolhido' => pz_plano_normalizar((string) ($body['plano'] ?? 'pro')),
+    'plano_escolhido' => pz_plano_normalizar((string) ($body['plano'] ?? 'scale')),
     'ciclo_cobranca' => strtolower(trim((string) ($body['ciclo'] ?? 'mensal'))) === 'anual' ? 'anual' : 'mensal',
     'grupo_rede' => trim(strip_tags((string) ($body['grupo_rede'] ?? ''))),
 ]);

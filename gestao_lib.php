@@ -2076,6 +2076,54 @@ function pz_resumo_executivo_loja()
         . "• Novos clientes salvos na base própria: {$clientesNovosSemana} (Total: {$clientesWpp} com WhatsApp)\n"
         . "• Clientes sumidos há 15+ dias prontos para chamar: " . count($sumidos);
 
+    // Termômetro de preço competitivo (incentiva manter valores 10-15% abaixo dos apps comissionados)
+    $cardMenu = Database::readStrict('cardapio.json');
+    $precosItens = [];
+    if (is_array($cardMenu)) {
+        foreach ($cardMenu as $listaCat) {
+            if (!is_array($listaCat)) {
+                continue;
+            }
+            foreach ($listaCat as $itP) {
+                if (is_array($itP) && isset($itP['preco']) && (float) $itP['preco'] > 0 && ($itP['ativo'] ?? true) !== false) {
+                    $precosItens[] = ['nome' => (string) ($itP['nome'] ?? ''), 'preco' => (float) $itP['preco']];
+                }
+            }
+        }
+    }
+    $precoMedioLoja = $precosItens ? round(array_sum(array_column($precosItens, 'preco')) / count($precosItens), 2) : 0.0;
+    $ticketMedioHoje = (float) ($dreHoje['ticket_medio'] ?? 0);
+    $ticketMedioMes = ((int) ($dreMes['pedidos'] ?? 0) > 0) ? round((float) ($dreMes['faturamento_bruto'] ?? 0) / (int) $dreMes['pedidos'], 2) : 0.0;
+    $refMercado = 42.00;
+    if (function_exists('pz_territorio_coletar_lojas')) {
+        try {
+            $nichoAtual = strtolower(trim((string) ($config['NICHO'] ?? '')));
+            $mediasSeg = [];
+            foreach (pz_territorio_coletar_lojas() as $lj) {
+                if (($lj['slug'] ?? '') !== $slugAtual && ($lj['preco_medio'] ?? 0) > 0 && ($nichoAtual === '' || ($lj['nicho'] ?? '') === $nichoAtual)) {
+                    $mediasSeg[] = (float) $lj['preco_medio'];
+                }
+            }
+            if ($mediasSeg) {
+                $refMercado = round(array_sum($mediasSeg) / count($mediasSeg), 2);
+            }
+        } catch (Throwable $eTerm) {
+            // mantém referência padrão
+        }
+    }
+    $difPctTerm = ($precoMedioLoja > 0 && $refMercado > 0) ? (int) round((($precoMedioLoja - $refMercado) / $refMercado) * 100) : 0;
+    $itensAcimaTerm = array_values(array_map(function ($x) {
+        return $x['nome'];
+    }, array_slice(array_filter($precosItens, function ($x) use ($refMercado) {
+        return $x['preco'] > ($refMercado * 1.25);
+    }), 0, 3)));
+    $statusTerm = $precoMedioLoja <= 0 ? 'sem_dados' : ($difPctTerm > 8 ? 'atencao' : 'competitivo');
+    $msgTerm = $statusTerm === 'sem_dados'
+        ? 'Cadastre preços nos produtos para ativar o termômetro regional.'
+        : ($statusTerm === 'atencao'
+            ? "Média {$difPctTerm}% acima da referência do bairro (" . 'R$ ' . number_format($refMercado, 2, ',', '.') . '). Manter 10-15% abaixo dos apps acelera pedidos diretos.'
+            : 'Preços competitivos para converter clientes dos apps comissionados!');
+
     return [
         'hoje' => $dreHoje,
         'semana' => $dreSemana,
@@ -2094,6 +2142,15 @@ function pz_resumo_executivo_loja()
             'sumidos_15d' => count($sumidos),
             'sumidos_preview' => array_slice($sumidos, 0, 5),
             'cupom_sugerido' => $cupomAtivo,
+        ],
+        'termometro_preco' => [
+            'status' => $statusTerm,
+            'preco_medio_loja' => $precoMedioLoja,
+            'preco_ref_regional' => $refMercado,
+            'ticket_medio_mes' => $ticketMedioMes ?: $ticketMedioHoje,
+            'diferenca_pct' => $difPctTerm,
+            'itens_acima' => $itensAcimaTerm,
+            'mensagem' => $msgTerm,
         ],
         'resumo_semanal_wpp' => $resumoSemanalWpp,
         'caixa' => [

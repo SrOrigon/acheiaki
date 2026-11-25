@@ -480,6 +480,52 @@ $alertasFiltrados = array_values(array_filter($resumo['alertas_ia'], function ($
     return true;
 }));
 
+if ($action === 'melhorar_descricao') {
+    if (($sessao['role'] ?? '') !== 'master' && function_exists('pz_plano_exigir')) {
+        pz_plano_exigir('ia_gestor_acoes', 'Otimizador automático de descrição com IA', 'scale', false);
+    }
+    $nomeItem = trim(strip_tags((string) ($req['nome'] ?? '')));
+    $descAtual = trim(strip_tags((string) ($req['descricao'] ?? '')));
+    $catItem = trim(strip_tags((string) ($req['categoria'] ?? '')));
+    $precoItem = is_numeric($req['preco'] ?? null) ? (float) $req['preco'] : 0.0;
+    if ($nomeItem === '') {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Informe o nome do produto para gerar a descrição.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $nichoLojaDesc = strtolower(trim((string) ($config['NICHO'] ?? 'comercio')));
+    $sug = null;
+    if ($modoIA === 'gemini_hibrido') {
+        $promptDesc = "Crie uma descrição curta (1 a 2 frases, até 160 caracteres) altamente vendedora para catálogo online de '{$nomeItem}'"
+            . ($catItem !== '' ? " na categoria '{$catItem}'" : '')
+            . ($precoItem > 0 ? ' (preço ' . pz_brl($precoItem) . ')' : '')
+            . ($descAtual !== '' ? ". Base atual: '{$descAtual}'" : '')
+            . ". Foque em benefício, qualidade e entrega rápida direta da loja sem inventar características inexistentes.";
+        $sug = pz_chamar_gemini_hibrido($promptDesc, ['nicho' => $nichoLojaDesc, 'produto' => $nomeItem], $nomeAgente, $tomAgente);
+    }
+    if (!$sug) {
+        $base = $descAtual !== '' ? rtrim($descAtual, ". ") . '.' : '';
+        $sufixos = [
+            'lanchonete' => 'Preparado na hora com ingredientes selecionados, sabor marcante e entrega quentinha direto da loja.',
+            'pizzaria' => 'Massa leve assada na hora com recheio generoso e excelente custo-benefício direto com a loja.',
+            'marmitaria' => 'Refeição fresca, bem servida e temperada na medida certa para matar a fome pagando preço justo.',
+            'acai' => 'Cremoso, refrescante e montado com todo cuidado para chegar perfeito até você.',
+            'petshop' => 'Selecionado para garantir saúde, bem-estar e economia direto na sua casa.',
+            'moda' => 'Conforto, ótimo caimento e qualidade garantida com entrega rápida no bairro.',
+            'eletronicos' => 'Alta durabilidade, pronto uso e garantia direta com atendimento rápido da nossa loja.',
+            'beleza' => 'Cuidado diário com acabamento impecável e entrega rápida sem taxas extras.',
+        ];
+        $fecho = $sufixos[$nichoLojaDesc] ?? 'Qualidade garantida, envio ágil no bairro e preço direto da loja sem taxa de aplicativo.';
+        $sug = trim(($base !== '' ? $base . ' ' : "{$nomeItem}: ") . $fecho);
+    }
+    echo json_encode([
+        'success' => true,
+        'descricao_sugerida' => $sug,
+        'modo_ia' => $modoIA,
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if ($action === 'diagnostico') {
     $sugestoes = [];
     if ($permFin) {

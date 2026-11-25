@@ -15,6 +15,7 @@ require_once 'pdv_lib.php';
 require_once 'fiscal_lib.php';
 require_once 'push_lib.php';
 require_once 'media_cdn_lib.php';
+require_once 'queue_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -29,6 +30,48 @@ $req = pz_gestao_req_data();
 pedidozap_bootstrap_tenant($req);
 
 $action = trim((string) ($_GET['action'] ?? $req['action'] ?? 'resumo'));
+
+// Aprovação rápida em 1 clique via link assinado (HMAC) enviado no WhatsApp do lojista
+if ($action === 'aprovar_campanha_sumidos' && !empty($_GET['sig'])) {
+    $slugHmac = Database::getTenant();
+    $dataLink = trim((string) ($_GET['d'] ?? date('Y-m-d')));
+    $sigRec = trim((string) $_GET['sig']);
+    $sigExpHoje = hash_hmac('sha256', 'sumidos|' . $slugHmac . '|' . $dataLink, pedidozap_app_secret());
+    if (!hash_equals($sigExpHoje, $sigRec)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Link de aprovação expirado ou inválido.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $cfgAtual = pedidozap_normalizar_config(Database::readStrict('config.json'), $slugHmac);
+    $nomeAtual = trim((string) ($cfgAtual['NOME_LOJA'] ?? $slugHmac)) ?: $slugHmac;
+    $cupom = 'VOLTA10';
+    $listaSum = pz_clientes_sumidos(15, 25, $nomeAtual, $slugHmac, $cupom);
+    $elegiveis = array_values(array_filter($listaSum, function ($s) {
+        $d = (int) ($s['dias_sem_pedir'] ?? 0);
+        return $d >= 15 && $d <= 45;
+    }));
+    $enfileirados = 0;
+    foreach (array_slice($elegiveis, 0, 20) as $cliSum) {
+        if (!empty($cliSum['telefone'])) {
+            pz_queue_push('whatsapp.reactivate_customer', [
+                'telefone' => $cliSum['telefone'],
+                'nome' => $cliSum['nome'] ?? 'Cliente',
+                'cupom' => $cupom,
+            ], $slugHmac, $enfileirados * 2);
+            $enfileirados++;
+        }
+    }
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Campanha IA Aprovada — AcheIAki</title></head>'
+        . '<body style="margin:0;font-family:Inter,system-ui,sans-serif;background:#faf7f2;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;">'
+        . '<div style="max-width:460px;background:#fff;border-radius:18px;padding:26px;border:1px solid #bbf7d0;box-shadow:0 16px 36px rgba(0,0,0,0.08);text-align:center;">'
+        . '<h2 style="margin:0 0 8px;color:#15803d;">✅ Campanha IA aprovada!</h2>'
+        . '<p style="color:#334155;line-height:1.5;">Enfileiramos <strong>' . (int) $enfileirados . '</strong> envio(s) automático(s) no WhatsApp com o cupom <strong>' . htmlspecialchars($cupom, ENT_QUOTES, 'UTF-8') . '</strong> para trazer clientes sumidos de volta à <strong>' . htmlspecialchars($nomeAtual, ENT_QUOTES, 'UTF-8') . '</strong>.</p>'
+        . '<a href="admin.html?tenant=' . rawurlencode($slugHmac) . '" style="display:inline-block;margin-top:10px;background:#ea580c;color:#fff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:10px;">Ir para o painel da loja</a>'
+        . '</div></body></html>';
+    exit;
+}
+
 $user = $_GET['user'] ?? $req['auth']['user'] ?? $req['user'] ?? '';
 $pass = $_GET['pass'] ?? $req['auth']['pass'] ?? $req['pass'] ?? '';
 
@@ -74,28 +117,29 @@ $mapaPlanoAcoes = [
     'funcionario_salvar' => ['equipe_rbac', 'Equipe e Permissões (RBAC)', 'pro'],
     'funcionario_excluir' => ['equipe_rbac', 'Equipe e Permissões (RBAC)', 'pro'],
     'responder_avaliacao' => ['crm_cupons_fidelidade', 'Resposta Oficial às Avaliações', 'pro'],
-    // Enterprise / Rede
-    'estoque_listar' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'enterprise'],
-    'estoque_salvar' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'enterprise'],
-    'estoque_excluir' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'enterprise'],
-    'fornecedor_salvar' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'enterprise'],
-    'fornecedor_excluir' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'enterprise'],
-    'estoque_movimentar' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'enterprise'],
-    'fichas_listar' => ['estoque_ficha_cmv', 'Ficha Técnica & CMV', 'enterprise'],
-    'ficha_salvar' => ['estoque_ficha_cmv', 'Ficha Técnica & CMV', 'enterprise'],
-    'ficha_excluir' => ['estoque_ficha_cmv', 'Ficha Técnica & CMV', 'enterprise'],
-    'auditoria_listar' => ['auditoria_backup', 'Auditoria do Sistema', 'enterprise'],
-    'backup_exportar' => ['auditoria_backup', 'Backup JSON Completo', 'enterprise'],
-    'ia_pessoal_obter' => ['ia_pessoal_externa', 'IA Pessoal (API Key + Voz)', 'enterprise'],
-    'ia_pessoal_salvar' => ['ia_pessoal_externa', 'IA Pessoal (API Key + Voz)', 'enterprise'],
-    'ia_pessoal_testar' => ['ia_pessoal_externa', 'IA Pessoal (API Key + Voz)', 'enterprise'],
-    'pdv_config_salvar' => ['pdv_open_delivery', 'Conector PDV / ERP (Open Delivery)', 'enterprise'],
-    'pdv_testar_webhook' => ['pdv_open_delivery', 'Conector PDV / ERP (Open Delivery)', 'enterprise'],
-    'fiscal_config_salvar' => ['fiscal_nfce', 'Emissão Fiscal NFC-e / SAT', 'enterprise'],
-    'fiscal_emitir_pedido' => ['fiscal_nfce', 'Emissão Fiscal NFC-e / SAT', 'enterprise'],
-    'push_campanha_enviar' => ['push_campanhas', 'Campanhas Push Notifications', 'enterprise'],
-    'rede_resumo' => ['multi_unidades', 'Painel Consolidado Multi-Unidades (Rede)', 'enterprise'],
-    'rede_clonar_cardapio' => ['multi_unidades', 'Clonar Cardápio para Filial (Rede)', 'enterprise'],
+    // Scale IA
+    'estoque_listar' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'scale'],
+    'estoque_salvar' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'scale'],
+    'estoque_excluir' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'scale'],
+    'fornecedor_salvar' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'scale'],
+    'fornecedor_excluir' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'scale'],
+    'estoque_movimentar' => ['estoque_ficha_cmv', 'Estoque & Fornecedores', 'scale'],
+    'fichas_listar' => ['estoque_ficha_cmv', 'Ficha Técnica & CMV', 'scale'],
+    'ficha_salvar' => ['estoque_ficha_cmv', 'Ficha Técnica & CMV', 'scale'],
+    'ficha_excluir' => ['estoque_ficha_cmv', 'Ficha Técnica & CMV', 'scale'],
+    'auditoria_listar' => ['auditoria_backup', 'Auditoria do Sistema', 'scale'],
+    'backup_exportar' => ['auditoria_backup', 'Backup JSON Completo', 'scale'],
+    'ia_pessoal_obter' => ['ia_pessoal_externa', 'IA Pessoal (API Key + Voz)', 'scale'],
+    'ia_pessoal_salvar' => ['ia_pessoal_externa', 'IA Pessoal (API Key + Voz)', 'scale'],
+    'ia_pessoal_testar' => ['ia_pessoal_externa', 'IA Pessoal (API Key + Voz)', 'scale'],
+    'otimizar_cardapio_ia' => ['ia_gestor_acoes', 'Otimizador de Catálogo por IA', 'scale'],
+    'pdv_config_salvar' => ['pdv_open_delivery', 'Conector PDV / ERP (Open Delivery)', 'scale'],
+    'pdv_testar_webhook' => ['pdv_open_delivery', 'Conector PDV / ERP (Open Delivery)', 'scale'],
+    'fiscal_config_salvar' => ['fiscal_nfce', 'Emissão Fiscal NFC-e / SAT', 'scale'],
+    'fiscal_emitir_pedido' => ['fiscal_nfce', 'Emissão Fiscal NFC-e / SAT', 'scale'],
+    'push_campanha_enviar' => ['push_campanhas', 'Campanhas Push Notifications', 'scale'],
+    'rede_resumo' => ['multi_unidades', 'Painel Consolidado Multi-Unidades (Rede)', 'scale'],
+    'rede_clonar_cardapio' => ['multi_unidades', 'Clonar Cardápio para Filial (Rede)', 'scale'],
 ];
 if (isset($mapaPlanoAcoes[$action])) {
     [$recReq, $rotReq, $minReq] = $mapaPlanoAcoes[$action];
@@ -131,6 +175,7 @@ switch ($action) {
         echo json_encode([
             'success' => true,
             'resumo' => pz_resumo_executivo_loja(),
+            'consumo_plano' => pz_plano_resumo_consumo(Database::getTenant()),
             'sessao' => $sessao,
             'plano' => $planoAtualLoja,
         ], JSON_UNESCAPED_UNICODE);
@@ -328,7 +373,32 @@ switch ($action) {
 
     case 'recuperacao_status':
         pz_exigir_perm($sessao, ['clientes']);
-        $ok = pz_marcar_carrinho_recuperado($req['sessao_id'] ?? $req['celular'] ?? '', $req['status'] ?? 'enviado_whatsapp');
+        $statusRec = trim((string) ($req['status'] ?? 'enviado_whatsapp'));
+        $maxRec = (int) ($planoAtualLoja['limites']['max_recuperacoes_mes'] ?? 0);
+        if (!$isMasterPlano && $maxRec > 0 && $statusRec === 'enviado_whatsapp') {
+            $mesAtualRec = date('Y-m');
+            $enviadosMes = 0;
+            foreach (pz_ler_recuperacao() as $rItem) {
+                $stRec = (string) ($rItem['status'] ?? '');
+                $dtRec = substr((string) ($rItem['atualizado_em'] ?? $rItem['criado_em'] ?? ''), 0, 7);
+                if ($dtRec === $mesAtualRec && in_array($stRec, ['enviado_whatsapp', 'convertido'], true)) {
+                    $enviadosMes++;
+                }
+            }
+            if ($enviadosMes >= $maxRec) {
+                http_response_code(402);
+                echo json_encode([
+                    'success' => false,
+                    'codigo_erro' => 'upgrade_plano',
+                    'plano_atual' => $planoAtualLoja['slug'],
+                    'plano_necessario' => 'scale',
+                    'plano_necessario_nome' => 'Scale IA',
+                    'message' => 'Você atingiu o limite de ' . $maxRec . ' disparos de recuperação/mês do plano ' . $planoAtualLoja['nome'] . '. Faça upgrade para o Scale IA e libere robô automático ilimitado.',
+                ], JSON_UNESCAPED_UNICODE);
+                break;
+            }
+        }
+        $ok = pz_marcar_carrinho_recuperado($req['sessao_id'] ?? $req['celular'] ?? '', $statusRec);
         echo json_encode(['success' => (bool) $ok], JSON_UNESCAPED_UNICODE);
         break;
 
@@ -378,9 +448,9 @@ switch ($action) {
                     'success' => false,
                     'codigo_erro' => 'upgrade_plano',
                     'plano_atual' => $planoAtualLoja['slug'],
-                    'plano_necessario' => 'enterprise',
-                    'plano_necessario_nome' => 'Enterprise / Rede',
-                    'message' => 'Seu plano ' . $planoAtualLoja['nome'] . ' permite até ' . $maxFunc . ' funcionário(s). Faça upgrade para o plano Enterprise / Rede para equipe ilimitada.',
+                    'plano_necessario' => 'scale',
+                    'plano_necessario_nome' => 'Scale IA',
+                    'message' => 'Seu plano ' . $planoAtualLoja['nome'] . ' permite até ' . $maxFunc . ' funcionário(s). Faça upgrade para o plano Scale IA para equipe ilimitada.',
                 ], JSON_UNESCAPED_UNICODE);
                 break;
             }
@@ -790,7 +860,7 @@ switch ($action) {
         }
         $diasMin = max(7, min(180, (int) ($req['dias'] ?? $_GET['dias'] ?? 15)));
         $listaSumidos = pz_clientes_sumidos($diasMin, 40, $nomeAtual, $slugAtual, $cupom);
-        $liberado = pz_plano_tem_recurso('crm_cupons_fidelidade', null, $isMasterPlano);
+        $liberado = pz_plano_tem_recurso('wpp_robo_auto', null, $isMasterPlano);
         if (!$liberado) {
             $listaMascarada = array_map(function ($x) {
                 $x['telefone'] = $x['telefone_mascarado'];
@@ -802,6 +872,7 @@ switch ($action) {
                 'success' => true,
                 'liberado' => false,
                 'requer_upgrade_pro' => true,
+                'requer_upgrade_scale' => true,
                 'total' => count($listaSumidos),
                 'cupom_ativo' => $cupom,
                 'clientes' => $listaMascarada,
@@ -817,10 +888,44 @@ switch ($action) {
         ], JSON_UNESCAPED_UNICODE);
         break;
 
+    case 'aprovar_campanha_sumidos':
+        pz_exigir_perm($sessao, ['clientes', 'visao_geral', 'config']);
+        pz_plano_exigir('wpp_robo_auto', 'Disparo de Reativação de Clientes Sumidos (WhatsApp + IA)', 'scale', $isMasterPlano);
+        $slugAtual = Database::getTenant();
+        $cfgAtual = pedidozap_normalizar_config(Database::readStrict('config.json'), $slugAtual);
+        $nomeAtual = trim((string) ($cfgAtual['NOME_LOJA'] ?? $slugAtual)) ?: $slugAtual;
+        $cupom = 'VOLTA10';
+        $listaSum = pz_clientes_sumidos(15, 25, $nomeAtual, $slugAtual, $cupom);
+        $filtrados = array_values(array_filter($listaSum, function ($s) {
+            $d = (int) ($s['dias_sem_pedir'] ?? 0);
+            return $d >= 15 && $d <= 45;
+        }));
+        $enfileirados = 0;
+        foreach (array_slice($filtrados, 0, 20) as $cliSum) {
+            if (!empty($cliSum['telefone'])) {
+                pz_queue_push('whatsapp.reactivate_customer', [
+                    'telefone' => $cliSum['telefone'],
+                    'nome' => $cliSum['nome'] ?? 'Cliente',
+                    'cupom' => $cupom,
+                ], $slugAtual, $enfileirados * 2);
+                $enfileirados++;
+            }
+        }
+        pz_registrar_auditoria('marketing', 'campanha_sumidos_ia', "Enfileirados {$enfileirados} cliente(s) com cupom {$cupom}", $ator);
+        echo json_encode([
+            'success' => true,
+            'enfileirados' => $enfileirados,
+            'cupom' => $cupom,
+            'message' => $enfileirados > 0
+                ? "Campanha aprovada! {$enfileirados} cliente(s) receberão a oferta {$cupom} pelo WhatsApp automático."
+                : 'Nenhum cliente inativo elegível para disparo agora.',
+        ], JSON_UNESCAPED_UNICODE);
+        break;
+
     case 'clientes_csv':
         pz_exigir_perm($sessao, ['clientes', 'relatorios']);
-        if (!pz_plano_tem_recurso('crm_cupons_fidelidade', null, $isMasterPlano)) {
-            pz_plano_exigir('crm_cupons_fidelidade', 'Exportação da Base de Clientes (CSV)', 'pro', $isMasterPlano);
+        if (!pz_plano_tem_recurso('csv_export', null, $isMasterPlano)) {
+            pz_plano_exigir('csv_export', 'Exportação livre da Base de Clientes (CSV)', 'scale', $isMasterPlano);
         }
         $cliLista = pz_ler_clientes();
         $linhasCsv = ['Nome;WhatsApp;Pedidos;Total Gasto;Ultima Compra;Endereco'];

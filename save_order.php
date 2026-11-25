@@ -184,6 +184,20 @@ if (pedidozap_loja_bloqueada(Database::getTenant())) {
     exit;
 }
 
+$consumoPlano = pz_plano_resumo_consumo(Database::getTenant());
+$userOrdGate = $_GET['user'] ?? $pedido['auth']['user'] ?? '';
+$passOrdGate = $_GET['pass'] ?? $pedido['auth']['pass'] ?? '';
+$equipeOrdGate = ($userOrdGate !== '' || $passOrdGate !== '') && (pedidozap_autorizado($userOrdGate, $passOrdGate) !== false);
+if (!$equipeOrdGate && !empty($consumoPlano['atingiu_pedidos'])) {
+    http_response_code(402);
+    echo json_encode([
+        'success' => false,
+        'codigo_erro' => 'limite_pedidos_plano',
+        'message' => 'Esta loja atingiu o limite de ' . (int) $consumoPlano['max_pedidos_mes'] . ' pedidos mensais do plano ' . $consumoPlano['plano_nome'] . '. O lojista precisa liberar mais pedidos no painel.',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if (!is_array($pedido) || empty($pedido['itens']) || !is_array($pedido['itens'])) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Dados do pedido inválidos.'], JSON_UNESCAPED_UNICODE);

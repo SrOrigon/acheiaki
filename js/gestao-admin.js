@@ -172,6 +172,24 @@
         }
         if (resResumo && resResumo.success) {
             state.resumo = resResumo.resumo;
+            const boxTeto = document.getElementById('aki-banner-teto-plano');
+            const cons = resResumo.consumo_plano || null;
+            if (boxTeto && cons && cons.alerta_conquista) {
+                boxTeto.hidden = false;
+                const atingiu = !!cons.atingiu_pedidos;
+                boxTeto.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+                    <div>
+                        <strong style="color:#9a3412;font-size:1.05rem;">${atingiu ? '🏆 Meta atingida! Você completou ' + cons.pedidos_mes + '/' + cons.max_pedidos_mes + ' pedidos do Plano ' + esc(cons.plano_nome) : '🚀 Sua loja está voando: ' + cons.pedidos_mes + ' de ' + cons.max_pedidos_mes + ' pedidos usados no mês (' + cons.pedidos_pct + '%)'}</strong>
+                        <p style="margin:4px 0 0;color:#7c2d12;font-size:0.9rem;">${atingiu ? 'Novos pedidos automáticos foram pausados no teto do plano. Libere agora para não perder vendas hoje!' : 'Faça upgrade para o Scale IA e venda ilimitado com IA 24h por R$ 150/mês (0% de comissão).'}</p>
+                    </div>
+                    <button type="button" class="fg-btn fg-btn-prim fg-ir-plano-pro" style="background:#ea580c;">Liberar no Plano ${cons.proximo_plano === 'pro' ? 'Pro' : 'Scale IA'} →</button>
+                </div>`;
+                const btnTeto = boxTeto.querySelector('.fg-ir-plano-pro');
+                if (btnTeto) btnTeto.addEventListener('click', () => {
+                    const abaConta = document.querySelector('#admin-tabs [data-tab="conta"]');
+                    if (abaConta) abaConta.click();
+                });
+            }
         }
 
         const r = state.resumo || {
@@ -292,6 +310,7 @@
                 const econ = r.economia_taxas || { hoje: 0, semana: 0, mes: 0, taxa_ref_pct: 20 };
                 const baseCli = r.base_clientes || { total: 0, com_whatsapp: 0, novos_semana: 0, sumidos_15d: 0 };
                 const orig = r.origem_pedidos || { link_direto: 0, marketplace: 0, balcao: 0, recuperacao_ia: 0 };
+                const term = r.termometro_preco || { status: 'sem_dados', preco_medio_loja: 0, preco_ref_regional: 42, mensagem: '' };
                 const sumLista = (resSumidos && Array.isArray(resSumidos.clientes)) ? resSumidos.clientes : (baseCli.sumidos_preview || []);
                 const sumLiberado = !resSumidos || resSumidos.liberado !== false;
                 const sumTotal = (resSumidos && resSumidos.total != null) ? Number(resSumidos.total) : Number(baseCli.sumidos_15d || 0);
@@ -299,7 +318,7 @@
                     <div style="margin-top:16px;background:#fff7ed;border:1px solid #fdba74;border-radius:16px;padding:16px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
                             <div>
-                                <h4 style="margin:0;color:#9a3412;font-size:1.05rem;"><i class="fa-solid fa-sack-dollar"></i> Quanto o AcheIAki está salvando no seu bolso</h4>
+                                <h4 style="margin:0;color:#9a3412;font-size:1.05rem;"><i class="fa-solid fa-sack-dollar"></i> Painel Anti-Cancelamento: quanto você economiza no AcheIAki</h4>
                                 <small style="color:#7c2d12;">Economia automática comparada a ~20% de comissão de aplicativos tradicionais.</small>
                             </div>
                             <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -310,28 +329,28 @@
 
                         <div class="fg-grid-kpis" style="margin-bottom:12px;">
                             <div class="fg-kpi destaque-ok" style="background:#ecfdf5;border-color:#86efac;">
-                                <div class="fg-kpi-label">Economia em Taxas (Mês)</div>
+                                <div class="fg-kpi-label">1. Dinheiro Salvo em Taxas (Mês)</div>
                                 <div class="fg-kpi-valor" style="color:#15803d;">${brl(econ.mes)}</div>
                                 <div class="fg-kpi-sub">Hoje: ${brl(econ.hoje)} · 7 dias: ${brl(econ.semana)}</div>
                             </div>
                             <div class="fg-kpi" style="background:#fff;">
-                                <div class="fg-kpi-label">Sua Base Própria (100% sua)</div>
+                                <div class="fg-kpi-label">2. Origem dos Pedidos (Mês)</div>
+                                <div class="fg-kpi-valor" style="font-size:1.05rem;">${orig.link_direto || 0} Direto · ${orig.marketplace || 0} Bairro</div>
+                                <div class="fg-kpi-sub">IA/Robô: ${orig.recuperacao_ia || 0} · Balcão: ${orig.balcao || 0}</div>
+                            </div>
+                            <div class="fg-kpi" style="background:#fff;">
+                                <div class="fg-kpi-label">3. Base Própria Capturada</div>
                                 <div class="fg-kpi-valor">${baseCli.com_whatsapp || 0} clientes</div>
                                 <div class="fg-kpi-sub">
                                     <button type="button" id="fg-btn-exportar-csv" style="border:none;background:#231915;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;margin-top:4px;">
-                                        <i class="fa-solid fa-download"></i> ${sumLiberado ? 'Baixar Lista WhatsApp (CSV)' : '🔒 Exportar CSV (Plano Pro)'}
+                                        <i class="fa-solid fa-download"></i> ${sumLiberado ? 'Baixar WhatsApp (CSV)' : '🔒 Exportar CSV (Plano Scale IA)'}
                                     </button>
                                 </div>
                             </div>
-                            <div class="fg-kpi" style="background:#fff;">
-                                <div class="fg-kpi-label">Origem das Vendas (Mês)</div>
-                                <div class="fg-kpi-valor" style="font-size:1.1rem;">${orig.link_direto || 0} Direto · ${orig.marketplace || 0} Mkt</div>
-                                <div class="fg-kpi-sub">Balcão: ${orig.balcao || 0} · Recuperados IA: ${orig.recuperacao_ia || 0}</div>
-                            </div>
-                            <div class="fg-kpi ${sumTotal > 0 ? 'destaque-alerta' : ''}" style="background:#fff;">
-                                <div class="fg-kpi-label">Clientes Sumidos (15+ dias)</div>
-                                <div class="fg-kpi-valor" style="color:${sumTotal > 0 ? '#c2410c' : '#15803d'};">${sumTotal}</div>
-                                <div class="fg-kpi-sub">${sumTotal > 0 ? 'Prontos p/ chamar no Zap!' : 'Base em dia'}</div>
+                            <div class="fg-kpi ${term.status === 'atencao' ? 'destaque-alerta' : 'destaque-ok'}" style="background:#fff;">
+                                <div class="fg-kpi-label">4. Termômetro de Preço</div>
+                                <div class="fg-kpi-valor" style="font-size:1.05rem;color:${term.status === 'atencao' ? '#c2410c' : '#15803d'};">${term.status === 'atencao' ? ('+' + term.diferenca_pct + '% vs média') : (term.preco_medio_loja > 0 ? 'Competitivo' : 'Sem dados')}</div>
+                                <div class="fg-kpi-sub">${esc(term.mensagem || 'Média do bairro: ' + brl(term.preco_ref_regional))}</div>
                             </div>
                         </div>
 
@@ -340,8 +359,10 @@
                         ${sumTotal > 0 ? `
                             <div style="background:#fff;border:1px solid #fed7aa;border-radius:12px;padding:12px;">
                                 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-                                    <strong style="color:#9a3412;"><i class="fa-solid fa-user-clock"></i> Radar Anti-Churn: clientes que já compraram e não pedem há 15+ dias</strong>
-                                    ${!sumLiberado ? '<button type="button" class="fg-btn fg-btn-prim fg-ir-plano-pro" style="font-size:0.78rem;padding:6px 12px;">🔒 Desbloquear no Plano Pro</button>' : ''}
+                                    <strong style="color:#9a3412;"><i class="fa-solid fa-user-clock"></i> Você tem ${sumTotal} cliente(s) sumido(s) há +15 dias prontos para receber oferta</strong>
+                                    ${sumLiberado
+                                        ? '<button type="button" id="fg-btn-disparar-sumidos-agora" class="fg-btn fg-btn-prim" style="font-size:0.78rem;padding:6px 12px;background:#15803d;"><i class="fa-brands fa-whatsapp"></i> Disparar Cupom VOLTA10 em lote</button>'
+                                        : '<button type="button" class="fg-btn fg-btn-prim fg-ir-plano-pro" style="font-size:0.78rem;padding:6px 12px;">🔒 Desbloquear no Plano Scale IA</button>'}
                                 </div>
                                 <div style="display:grid;gap:8px;">
                                     ${sumLista.slice(0, 5).map((s) => `
@@ -352,7 +373,7 @@
                                             </div>
                                             ${sumLiberado && s.whatsapp_url
                                                 ? `<a href="${esc(s.whatsapp_url)}" target="_blank" rel="noopener" style="background:#15803d;color:#fff;padding:7px 12px;border-radius:8px;text-decoration:none;font-size:0.8rem;font-weight:700;"><i class="fa-brands fa-whatsapp"></i> Chamar agora</a>`
-                                                : `<button type="button" class="fg-ir-plano-pro" style="border:none;background:#ea580c;color:#fff;padding:7px 12px;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;">🔒 Liberar no Pro</button>`}
+                                                : `<button type="button" class="fg-ir-plano-pro" style="border:none;background:#ea580c;color:#fff;padding:7px 12px;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;">🔒 Liberar no Scale IA</button>`}
                                         </div>
                                     `).join('')}
                                 </div>
@@ -388,6 +409,25 @@
             });
         });
 
+        const btnDispararSum = document.getElementById('fg-btn-disparar-sumidos-agora');
+        if (btnDispararSum) {
+            btnDispararSum.addEventListener('click', async () => {
+                btnDispararSum.disabled = true;
+                try {
+                    const resCamp = await apiGestao('aprovar_campanha_sumidos');
+                    if (resCamp && resCamp.codigo_erro === 'upgrade_plano') {
+                        alert(resCamp.message || 'Disponível no Plano Scale IA.');
+                        const abaConta = document.querySelector('#admin-tabs [data-tab="conta"]');
+                        if (abaConta) abaConta.click();
+                        return;
+                    }
+                    alert((resCamp && resCamp.message) || 'Campanha processada!');
+                } finally {
+                    btnDispararSum.disabled = false;
+                }
+            });
+        }
+
         const btnCopiarWpp = document.getElementById('fg-btn-copiar-resumo-wpp');
         if (btnCopiarWpp) {
             btnCopiarWpp.addEventListener('click', async () => {
@@ -408,7 +448,7 @@
                 const resCsv = await apiGestao('clientes_csv');
                 if (!resCsv || !resCsv.success) {
                     if (resCsv && resCsv.codigo_erro === 'upgrade_plano') {
-                        alert(resCsv.message || 'Disponível no Plano Pro.');
+                        alert(resCsv.message || 'Disponível no Plano Scale IA.');
                         const abaConta = document.querySelector('#admin-tabs [data-tab="conta"]');
                         if (abaConta) abaConta.click();
                         return;
@@ -458,7 +498,7 @@
         const btnIndViz = document.getElementById('fg-btn-indicar-vizinho');
         if (btnIndViz) {
             btnIndViz.addEventListener('click', () => {
-                const msg = 'Oi! Estou usando o AcheIAki na minha loja para receber pedidos direto sem pagar 25% de taxa pros apps. Cadastra a sua loja com 7 dias grátis por aqui: ' + window.location.origin + '/cadastro.html';
+                const msg = 'Oi! Estou usando o AcheIAki na minha loja para receber pedidos direto sem pagar 25% de taxa pros apps. Cadastra a sua loja com 30 dias grátis no Scale IA por aqui: ' + window.location.origin + '/cadastro.html';
                 window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
             });
         }

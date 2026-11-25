@@ -93,50 +93,59 @@ if ($ext !== 'gif' && function_exists('imagecreatefromstring') && function_exist
         exit;
     }
     if ($img !== false) {
-        $w = imagesx($img);
-        $h = imagesy($img);
-        $maxDim = 640;
-        $alvo = $img;
-        if ($w > $maxDim || $h > $maxDim) {
-            $escala = min($maxDim / $w, $maxDim / $h);
-            $nw = max(1, (int) round($w * $escala));
-            $nh = max(1, (int) round($h * $escala));
-            $canvas = imagecreatetruecolor($nw, $nh);
-            if ($canvas !== false) {
-                imagealphablending($canvas, false);
-                imagesavealpha($canvas, true);
-                imagecopyresampled($canvas, $img, 0, 0, 0, 0, $nw, $nh, $w, $h);
-                imagedestroy($img);
-                $alvo = $canvas;
-            }
-        } else {
-            imagepalettetotruecolor($alvo);
-            imagealphablending($alvo, true);
-            imagesavealpha($alvo, true);
-        }
-
+        $wOrig = imagesx($img);
+        $hOrig = imagesy($img);
         $melhorBytes = null;
         $novoExt = $ext;
-        $qualidades = [76, 66, 56, 48];
-        foreach ($qualidades as $qComp) {
-            ob_start();
-            $okComp = false;
-            if (function_exists('imagewebp')) {
-                $okComp = @imagewebp($alvo, null, $qComp);
-                $novoExt = 'webp';
-            } elseif (function_exists('imagejpeg')) {
-                $okComp = @imagejpeg($alvo, null, $qComp);
-                $novoExt = 'jpg';
+        $maxBytesAlvo = 150 * 1024; // < 150 KB garantido no 4G
+
+        foreach ([1200, 900, 640] as $maxDim) {
+            $alvo = $img;
+            $criouCanvas = false;
+            if ($wOrig > $maxDim || $hOrig > $maxDim) {
+                $escala = min($maxDim / $wOrig, $maxDim / $hOrig);
+                $nw = max(1, (int) round($wOrig * $escala));
+                $nh = max(1, (int) round($hOrig * $escala));
+                $canvas = imagecreatetruecolor($nw, $nh);
+                if ($canvas !== false) {
+                    imagealphablending($canvas, false);
+                    imagesavealpha($canvas, true);
+                    imagecopyresampled($canvas, $img, 0, 0, 0, 0, $nw, $nh, $wOrig, $hOrig);
+                    $alvo = $canvas;
+                    $criouCanvas = true;
+                }
+            } elseif (function_exists('imagepalettetotruecolor')) {
+                @imagepalettetotruecolor($alvo);
+                @imagealphablending($alvo, true);
+                @imagesavealpha($alvo, true);
             }
-            $compBytes = ob_get_clean();
-            if ($okComp && is_string($compBytes) && strlen($compBytes) > 32) {
-                $melhorBytes = $compBytes;
-                if (strlen($compBytes) <= 100 * 1024) {
-                    break;
+
+            foreach ([80, 70, 60, 50, 40] as $qComp) {
+                ob_start();
+                $okComp = false;
+                if (function_exists('imagewebp')) {
+                    $okComp = @imagewebp($alvo, null, $qComp);
+                    $novoExt = 'webp';
+                } elseif (function_exists('imagejpeg')) {
+                    $okComp = @imagejpeg($alvo, null, $qComp);
+                    $novoExt = 'jpg';
+                }
+                $compBytes = ob_get_clean();
+                if ($okComp && is_string($compBytes) && strlen($compBytes) > 32) {
+                    $melhorBytes = $compBytes;
+                    if (strlen($compBytes) < $maxBytesAlvo) {
+                        if ($criouCanvas) {
+                            imagedestroy($alvo);
+                        }
+                        break 2;
+                    }
                 }
             }
+            if ($criouCanvas) {
+                imagedestroy($alvo);
+            }
         }
-        imagedestroy($alvo);
+        imagedestroy($img);
         if (is_string($melhorBytes) && strlen($melhorBytes) > 32 && (strlen($melhorBytes) < strlen($bytes) || $novoExt === 'webp')) {
             $bytes = $melhorBytes;
             $ext = $novoExt;

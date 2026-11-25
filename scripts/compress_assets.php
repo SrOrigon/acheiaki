@@ -15,16 +15,13 @@ if (!function_exists('imagecreatefromstring') || !function_exists('imagewebp')) 
 
 $dir = dirname(__DIR__) . '/assets/images';
 $entries = is_dir($dir) ? (@scandir($dir) ?: []) : [];
-$maxBytes = 100 * 1024; // 100 KB
+$maxBytes = 140 * 1024; // Abaixo de 150 KB para abertura instantânea no 4G
 
 foreach ($entries as $base) {
     if ($base === '.' || $base === '..') {
         continue;
     }
     if (!preg_match('/\.(png|jpe?g)$/i', $base)) {
-        continue;
-    }
-    if (stripos($base, 'acheiaki-icon') === 0) {
         continue;
     }
     $src = $dir . '/' . $base;
@@ -45,7 +42,7 @@ foreach ($entries as $base) {
     $destWebp = preg_replace('/\.(png|jpe?g)$/i', '.webp', $src);
 
     $bestBytes = null;
-    foreach ([720, 600, 480] as $maxDim) {
+    foreach ([1200, 900, 680, 500] as $maxDim) {
         $alvo = $img;
         $criouCanvas = false;
         if ($wOrig > $maxDim || $hOrig > $maxDim) {

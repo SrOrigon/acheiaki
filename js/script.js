@@ -796,6 +796,18 @@ function iniciarVitrine() {
             : '';
 
         // --- SALVAR PEDIDO NO PAINEL (CRM) ---
+        const paramsOrig = new URLSearchParams(window.location.search);
+        const origParam = (paramsOrig.get('origem') || '').toLowerCase();
+        const cupomOrig = (cupomAplicado.codigo || paramsOrig.get('cupom') || '').toUpperCase();
+        let canalOrigem = 'link_direto';
+        if (canalAtendente) {
+            canalOrigem = 'atendente';
+        } else if (cupomOrig.indexOf('VOLTA') === 0 || sessionStorage.getItem('pz_via_ia') === '1') {
+            canalOrigem = 'recuperacao_ia';
+        } else if (origParam === 'marketplace' || (document.referrer && document.referrer.indexOf('marketplace') !== -1)) {
+            canalOrigem = 'marketplace';
+        }
+
         const pedidoData = {
             id: pedidoNumero,
             codigo: codigoRastreio,
@@ -824,7 +836,7 @@ function iniciarVitrine() {
             visitor_id: visitorAlg,
             consentimento_ia: algConsent,
             status: 'novo',
-            canal: canalAtendente ? 'atendente' : 'site'
+            canal: canalOrigem
         };
 
         if (canalAtendente && atendimentoCfg.rotulo_entrega_manual) {

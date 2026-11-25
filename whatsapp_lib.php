@@ -1003,11 +1003,12 @@ function pz_wpp_processar_entrada_cliente($slug, $telefone, $texto, array $extra
 
     $cfg = pz_wpp_ler_config($slug);
     $forcarResposta = !empty($extra['forcar_ia']);
-    if (!$forcarResposta && (empty($cfg['ia_auto_responder']) || !empty($thread['ia_pausada']))) {
+    $planoWppOk = $forcarResposta || !function_exists('pz_plano_tem_recurso') || pz_plano_tem_recurso('wpp_robo_auto', $slug);
+    if (!$forcarResposta && (empty($cfg['ia_auto_responder']) || !empty($thread['ia_pausada']) || !$planoWppOk)) {
         return [
             'success' => true,
             'auto_respondido' => false,
-            'motivo' => !empty($thread['ia_pausada']) ? 'ia_pausada_humano' : 'auto_responder_desligado',
+            'motivo' => !$planoWppOk ? 'plano_scale_requerido' : (!empty($thread['ia_pausada']) ? 'ia_pausada_humano' : 'auto_responder_desligado'),
             'conversa' => $thread,
         ];
     }
@@ -1118,4 +1119,213 @@ function pz_wpp_enfileirar_status_pedido($slug, array $pedido, $statusNovo)
     }
     pz_wpp_notificar_status_pedido($slug, $pedido, $statusNovo);
     return true;
+}
+
+function pz_wpp_notificar_pos_entrega($slug, array $pedido)
+{
+    $slug = pz_wpp_normalizar_slug($slug);
+    $idPed = trim((string) ($pedido['id'] ?? ''));
+    $tel = pz_wpp_normalizar_telefone($pedido['celular'] ?? '');
+    if ($idPed === '' || strlen($tel) < 12) {
+        return ['success' => false, 'ignorado' => 'dados_incompletos'];
+    }
+    $cfg = pz_wpp_ler_config($slug);
+    if (empty($cfg['notificar_pedidos'])) {
+        return ['success' => false, 'ignorado' => 'notificacao_desativada'];
+    }
+    $gw = pz_wpp_resolver_gateway($slug);
+    if (!$gw['gateway_pronto']) {
+        return ['success' => false, 'ignorado' => 'sem_gateway'];
+    }
+
+    $ant = Database::getTenant();
+    try {
+        Database::setTenant($slug);
+        $autoLog = Database::readStrict('worker_automacoes_log.json');
+        if (!is_array($autoLog)) {
+            $autoLog = [];
+        }
+        $chaveViral = 'pos_entrega_' . $idPed;
+        if (!empty($autoLog['viral'][$chaveViral])) {
+            return ['success' => true, 'ignorado' => 'ja_enviado'];
+        }
+
+        // Respeita preferencia do comprador caso cadastrada na conta unica
+        Database::setTenant('default');
+        $compradores = Database::readStrict('compradores_mkt.json');
+        if (is_array($compradores)) {
+            $telShort = substr($tel, 2);
+            foreach ($compradores as $comp) {
+                if (is_array($comp) && (string) ($comp['telefone'] ?? '') === $telShort && array_key_exists('wpp_notificar_pedidos', $comp) && !$comp['wpp_notificar_pedidos']) {
+                    return ['success' => true, 'ignorado' => 'opt_out_comprador'];
+                }
+            }
+        }
+
+        Database::setTenant($slug);
+        $storeCfg = pedidozap_normalizar_config(Database::readStrict('config.json'), $slug);
+        $nomeLoja = trim((string) ($storeCfg['NOME_LOJA'] ?? $storeCfg['EMPRESA']['nome'] ?? 'Loja')) ?: 'Loja';
+        $base = function_exists('pedidozap_base_url') ? rtrim(pedidozap_base_url(), '/') : '';
+        $linkCurto = ($base !== '' ? $base : '') . '/' . ($slug === 'default' ? '' : rawurlencode($slug));
+        $primeiro = explode(' ', trim((string) ($pedido['cliente'] ?? '')))[0] ?? '';
+
+        $texto = 'Oi' . ($primeiro ? ", *{$primeiro}*" : '') . "! Chegou tudo certinho com seu pedido *#{$idPed}* na *{$nomeLoja}*?\n"
+            . "Se gostou, compartilhe nosso link direto com amigos e família (preço direto da loja sem taxa de aplicativo):\n{$linkCurto}";
+
+        $res = pz_wpp_enviar_texto($slug, $tel, $texto, ['autor' => 'ia', 'nome' => (string) ($pedido['cliente'] ?? '')]);
+        if (!empty($res['success'])) {
+            $autoLog['viral'][$chaveViral] = date('c');
+            Database::write('worker_automacoes_log.json', $autoLog);
+        }
+        return $res;
+    } finally {
+        Database::setTenant($ant);
+    }
+}
+
+function pz_wpp_reativar_cliente_sumido($slug, string $telefone, string $nome = 'Cliente', string $cupom = 'VOLTA10')
+{
+    $slug = pz_wpp_normalizar_slug($slug);
+    $tel = pz_wpp_normalizar_telefone($telefone);
+    if (strlen($tel) < 12) {
+        return ['success' => false, 'ignorado' => 'sem_telefone'];
+    }
+    $gw = pz_wpp_resolver_gateway($slug);
+    if (!$gw['gateway_pronto']) {
+        return ['success' => false, 'ignorado' => 'sem_gateway'];
+    }
+    $ant = Database::getTenant();
+    try {
+        Database::setTenant($slug);
+        $storeCfg = pedidozap_normalizar_config(Database::readStrict('config.json'), $slug);
+        $nomeLoja = trim((string) ($storeCfg['NOME_LOJA'] ?? 'Loja')) ?: 'Loja';
+        $base = function_exists('pedidozap_base_url') ? rtrim(pedidozap_base_url(), '/') : '';
+        $linkCurto = ($base !== '' ? $base : '') . '/' . rawurlencode($slug) . '?cupom=' . rawurlencode($cupom);
+        $primeiro = explode(' ', trim($nome))[0] ?? '';
+        $msg = 'Oi' . ($primeiro ? ", *{$primeiro}*" : '') . "! Faz tempo que você não pede na *{$nomeLoja}*.\n"
+            . "Liberamos o cupom *{$cupom}* exclusivo pra você pedir hoje direto pelo link (sem taxa de aplicativo):\n{$linkCurto}";
+        $res = pz_wpp_enviar_texto($slug, $tel, $msg, ['autor' => 'ia', 'nome' => $nome]);
+        if (!empty($res['success'])) {
+            $ym = date('Y-m');
+            $autoLog = Database::readStrict('worker_automacoes_log.json');
+            if (!is_array($autoLog)) {
+                $autoLog = [];
+            }
+            $autoLog['recuperacoes_mes'][$ym] = ((int) ($autoLog['recuperacoes_mes'][$ym] ?? 0)) + 1;
+            Database::write('worker_automacoes_log.json', $autoLog);
+        }
+        return $res;
+    } finally {
+        Database::setTenant($ant);
+    }
+}
+
+function pz_wpp_executar_automacoes_worker(): array
+{
+    if (!function_exists('pedidozap_ler_registro')) {
+        return ['enviadas' => 0];
+    }
+    $registro = pedidozap_ler_registro();
+    if (!is_array($registro) || !$registro) {
+        return ['enviadas' => 0];
+    }
+    $hojeIso = date('Y-m-d');
+    $semanaIso = date('o-\WW');
+    $ehSegunda10h = (date('N') === '1' && (int) date('G') >= 10);
+    $baseUrl = function_exists('pedidozap_base_url') ? rtrim(pedidozap_base_url(), '/') : '';
+    $enviadas = 0;
+    $ant = Database::getTenant();
+
+    try {
+        foreach ($registro as $slug => $meta) {
+            if (!is_array($meta) || $slug === 'loja-demonstracao-acheiaki') {
+                continue;
+            }
+            $statusEf = function_exists('pedidozap_status_efetivo') ? pedidozap_status_efetivo($meta)['status'] : ($meta['status'] ?? 'ativo');
+            if ($statusEf === 'bloqueado') {
+                continue;
+            }
+            $gw = pz_wpp_resolver_gateway($slug);
+            Database::setTenant($slug);
+            $storeCfg = pedidozap_normalizar_config(Database::readStrict('config.json'), $slug);
+            $telDono = pz_wpp_normalizar_telefone($meta['whatsapp'] ?? ($storeCfg['WHATSAPP_NUMBER'] ?? ($storeCfg['REDES']['whatsapp'] ?? '')));
+            if (strlen($telDono) < 12 || empty($gw['gateway_pronto'])) {
+                continue;
+            }
+
+            $autoLog = Database::readStrict('worker_automacoes_log.json');
+            if (!is_array($autoLog)) {
+                $autoLog = [];
+            }
+            $alterouLog = false;
+            $nomeLoja = trim((string) ($storeCfg['NOME_LOJA'] ?? $meta['nome_empresa'] ?? $slug));
+            $resumo = function_exists('pz_resumo_executivo_loja') ? pz_resumo_executivo_loja() : null;
+
+            // 1. Aviso de Trial no Dia 23 (de 30 dias gratis)
+            if (!empty($meta['em_teste']) && empty($autoLog['trial_dia23_enviado'])) {
+                $criadoTs = strtotime((string) ($meta['criado_em'] ?? ''));
+                $diasUso = $criadoTs ? (int) floor((time() - $criadoTs) / 86400) : 0;
+                if ($diasUso >= 23) {
+                    $econMes = number_format((float) ($resumo['economia_taxas']['mes'] ?? 0), 2, ',', '.');
+                    $pedsMes = (int) ($resumo['mes']['pedidos'] ?? 0);
+                    $linkAssinar = ($baseUrl !== '' ? $baseUrl : '') . '/assinatura.php?tenant=' . rawurlencode($slug);
+                    $msgD23 = "🚀 *Parabéns, {$nomeLoja}! Você chegou ao 23º dia de teste grátis no AcheIAki Scale IA.*\n"
+                        . "• Pedidos registrados: {$pedsMes}\n"
+                        . "• Economia estimada em taxas (~20%): *R$ {$econMes}*\n\n"
+                        . "Para não perder sua vitrine, IA 24h e base de clientes após os 30 dias, ative seu plano agora:\n{$linkAssinar}";
+                    $r23 = pz_wpp_enviar_texto($slug, $telDono, $msgD23, ['autor' => 'ia', 'nome' => $nomeLoja]);
+                    if (!empty($r23['success'])) {
+                        $autoLog['trial_dia23_enviado'] = date('c');
+                        $alterouLog = true;
+                        $enviadas++;
+                    }
+                }
+            }
+
+            // 2. Radar diario de clientes sumidos (15 a 25 dias)
+            $podeIaScale = function_exists('pz_plano_tem_recurso') && pz_plano_tem_recurso('wpp_robo_auto', $slug);
+            if ($podeIaScale && ($autoLog['radar_sumidos_data'] ?? '') !== $hojeIso && function_exists('pz_clientes_sumidos')) {
+                $sumidos = pz_clientes_sumidos(15, 25, $nomeLoja, $slug, 'VOLTA10');
+                $elegiveis = array_values(array_filter($sumidos, function ($s) {
+                    $d = (int) ($s['dias_sem_pedir'] ?? 0);
+                    return $d >= 15 && $d <= 25;
+                }));
+                if (count($elegiveis) > 0) {
+                    $sig = hash_hmac('sha256', 'sumidos|' . $slug . '|' . $hojeIso, pedidozap_app_secret());
+                    $linkAprov = ($baseUrl !== '' ? $baseUrl : '') . '/gestao_api.php?action=aprovar_campanha_sumidos&tenant=' . rawurlencode($slug) . '&d=' . $hojeIso . '&sig=' . $sig;
+                    $msgRad = "👋 *Radar IA {$nomeLoja}:* Encontramos *" . count($elegiveis) . " cliente(s)* que compraram há 15–25 dias e ainda não voltaram.\n"
+                        . "Toque no link abaixo para disparar o cupom *VOLTA10* automaticamente no WhatsApp deles:\n{$linkAprov}";
+                    $rRad = pz_wpp_enviar_texto($slug, $telDono, $msgRad, ['autor' => 'ia', 'nome' => $nomeLoja]);
+                    if (!empty($rRad['success'])) {
+                        $autoLog['radar_sumidos_data'] = $hojeIso;
+                        $alterouLog = true;
+                        $enviadas++;
+                    }
+                } else {
+                    $autoLog['radar_sumidos_data'] = $hojeIso;
+                    $alterouLog = true;
+                }
+            }
+
+            // 3. Gerente Semanal de IA (Segunda-feira a partir das 10h)
+            if ($podeIaScale && $ehSegunda10h && ($autoLog['gerente_semanal_iso'] ?? '') !== $semanaIso && is_array($resumo)) {
+                $recTerm = (string) ($resumo['termometro_preco']['mensagem'] ?? 'Mantenha seus preços 10% a 15% abaixo dos apps comissionados.');
+                $msgSem = ($resumo['resumo_semanal_wpp'] ?? "*Resumo Semanal {$nomeLoja}*") . "\n\n💡 *Recomendação da IA:* {$recTerm}";
+                $rSem = pz_wpp_enviar_texto($slug, $telDono, $msgSem, ['autor' => 'ia', 'nome' => $nomeLoja]);
+                if (!empty($rSem['success'])) {
+                    $autoLog['gerente_semanal_iso'] = $semanaIso;
+                    $alterouLog = true;
+                    $enviadas++;
+                }
+            }
+
+            if ($alterouLog) {
+                Database::write('worker_automacoes_log.json', $autoLog);
+            }
+        }
+    } finally {
+        Database::setTenant($ant);
+    }
+
+    return ['enviadas' => $enviadas];
 }

@@ -84,14 +84,16 @@ try {
         if (!$isMasterSave && $maxProdsPlano > 0) {
             $qtdProdsEnv = pz_plano_contar_produtos_cardapio($data['cardapio']);
             if ($qtdProdsEnv > $maxProdsPlano) {
+                $proxPlanoSlug = $planoSave['slug'] === 'start' ? 'pro' : 'scale';
+                $proxPlanoNome = $planoSave['slug'] === 'start' ? 'Pro (até 80 itens)' : 'Scale IA (ilimitado)';
                 http_response_code(402);
                 echo json_encode([
                     'success' => false,
                     'codigo_erro' => 'upgrade_plano',
                     'plano_atual' => $planoSave['slug'],
-                    'plano_necessario' => 'pro',
-                    'plano_necessario_nome' => 'Pro',
-                    'message' => 'Seu plano ' . $planoSave['nome'] . ' permite até ' . $maxProdsPlano . ' produtos no cardápio (você enviou ' . $qtdProdsEnv . '). Faça upgrade para o plano Pro para cardápio ilimitado.',
+                    'plano_necessario' => $proxPlanoSlug,
+                    'plano_necessario_nome' => $proxPlanoNome,
+                    'message' => 'Seu plano ' . $planoSave['nome'] . ' permite até ' . $maxProdsPlano . ' produtos no cardápio (você enviou ' . $qtdProdsEnv . '). Faça upgrade para o plano ' . $proxPlanoNome . '.',
                 ], JSON_UNESCAPED_UNICODE);
                 exit;
             }

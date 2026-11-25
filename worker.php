@@ -42,6 +42,13 @@ do {
             if (!empty($varredura['atualizadas'])) {
                 echo '[' . date('c') . '] Cobrança/Shadowban: ' . (int) $varredura['atualizadas'] . " loja(s) atualizada(s)\n";
             }
+            if (is_file(__DIR__ . '/whatsapp_lib.php')) {
+                require_once __DIR__ . '/whatsapp_lib.php';
+                $autoWpp = pz_wpp_executar_automacoes_worker();
+                if (!empty($autoWpp['enviadas'])) {
+                    echo '[' . date('c') . '] Automações IA/WhatsApp: ' . (int) $autoWpp['enviadas'] . " disparo(s)\n";
+                }
+            }
         } catch (Throwable $eSaas) {
             echo '[' . date('c') . '] Erro na varredura de cobrança: ' . $eSaas->getMessage() . "\n";
         }

@@ -215,11 +215,11 @@
         const precos = saas.planos_precos || {};
         const fmt = (v, def) => String((v && Number(v) > 0) ? v : def).replace('.', ',');
         const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-        setVal('saas-preco-essencial', fmt(precos.essencial, 79.9));
-        setVal('saas-preco-pro', fmt(precos.pro, 149.9));
-        setVal('saas-preco-enterprise', fmt(precos.enterprise, 249.9));
+        setVal('saas-preco-essencial', fmt(precos.start || precos.essencial, 59.9));
+        setVal('saas-preco-pro', fmt(precos.pro, 109.9));
+        setVal('saas-preco-enterprise', fmt(precos.scale || precos.enterprise, 150.0));
         setVal('saas-desc-anual', saas.desconto_anual_pct != null ? saas.desconto_anual_pct : 20);
-        setVal('saas-dias-teste', Math.min(7, Math.max(1, Number(saas.dias_teste_gratis != null ? saas.dias_teste_gratis : 7))));
+        setVal('saas-dias-teste', Math.min(30, Math.max(1, Number(saas.dias_teste_gratis != null ? saas.dias_teste_gratis : 30))));
         setVal('saas-tolerancia-dias', Math.min(2, Math.max(0, Number(saas.tolerancia_atraso_dias != null ? saas.tolerancia_atraso_dias : 2))));
         setVal('saas-multa-reativacao', Math.min(10, Math.max(0, Number(saas.multa_reativacao_pct != null ? saas.multa_reativacao_pct : 10))));
 
@@ -392,12 +392,12 @@
                 dpo_email: ((document.getElementById('saas-dpo-email') || {}).value || '').trim(),
                 cnpj_plataforma: ((document.getElementById('saas-cnpj') || {}).value || '').trim(),
                 planos_precos: {
-                    essencial: ((document.getElementById('saas-preco-essencial') || {}).value || '79,90').trim(),
-                    pro: ((document.getElementById('saas-preco-pro') || {}).value || '149,90').trim(),
-                    enterprise: ((document.getElementById('saas-preco-enterprise') || {}).value || '249,90').trim()
+                    start: ((document.getElementById('saas-preco-essencial') || {}).value || '59,90').trim(),
+                    pro: ((document.getElementById('saas-preco-pro') || {}).value || '109,90').trim(),
+                    scale: ((document.getElementById('saas-preco-enterprise') || {}).value || '150,00').trim()
                 },
                 desconto_anual_pct: Number(((document.getElementById('saas-desc-anual') || {}).value || 20)),
-                dias_teste_gratis: Math.min(7, Math.max(1, Number(((document.getElementById('saas-dias-teste') || {}).value || 7)))),
+                dias_teste_gratis: Math.min(30, Math.max(1, Number(((document.getElementById('saas-dias-teste') || {}).value || 30)))),
                 tolerancia_atraso_dias: Math.min(2, Math.max(0, Number(((document.getElementById('saas-tolerancia-dias') || {}).value != null ? document.getElementById('saas-tolerancia-dias').value : 2)))),
                 multa_reativacao_pct: Math.min(10, Math.max(0, Number(((document.getElementById('saas-multa-reativacao') || {}).value != null ? document.getElementById('saas-multa-reativacao').value : 10)))),
                 mp_access_token: ((document.getElementById('saas-mp-token') || {}).value || '').trim()

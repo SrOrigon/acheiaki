@@ -273,6 +273,22 @@ function pz_queue_executar_job(array $job)
                 (string) ($payload['status'] ?? 'novo')
             );
 
+        case 'whatsapp.post_delivery_viral':
+            require_once __DIR__ . '/whatsapp_lib.php';
+            return pz_wpp_notificar_pos_entrega(
+                $tenant,
+                is_array($payload['pedido'] ?? null) ? $payload['pedido'] : []
+            );
+
+        case 'whatsapp.reactivate_customer':
+            require_once __DIR__ . '/whatsapp_lib.php';
+            return pz_wpp_reativar_cliente_sumido(
+                $tenant,
+                (string) ($payload['telefone'] ?? ''),
+                (string) ($payload['nome'] ?? 'Cliente'),
+                (string) ($payload['cupom'] ?? 'VOLTA10')
+            );
+
         case 'alg.recompute':
             if (is_file(__DIR__ . '/territorio_lib.php')) {
                 require_once __DIR__ . '/territorio_lib.php';

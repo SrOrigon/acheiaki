@@ -210,16 +210,16 @@ function pedidozap_saas_config()
         'cnpj_plataforma' => '',
         'dominio_base' => '',
         'google_site_verification' => '',
-        'mensalidade_valor' => 79.90,
+        'mensalidade_valor' => 59.90,
         'planos_precos' => pz_planos_precos_padrao(),
         'desconto_anual_pct' => 20,
-        'dias_teste_gratis' => 7,
+        'dias_teste_gratis' => 30,
         'tolerancia_atraso_dias' => 2,
         'multa_reativacao_pct' => 10,
         'mp_access_token' => '',
     ], $data);
     $cfg['planos_precos'] = array_merge(pz_planos_precos_padrao(), is_array($cfg['planos_precos'] ?? null) ? $cfg['planos_precos'] : []);
-    $cfg['dias_teste_gratis'] = max(1, min(7, (int) ($cfg['dias_teste_gratis'] ?? 7)));
+    $cfg['dias_teste_gratis'] = max(1, min(30, (int) ($cfg['dias_teste_gratis'] ?? 30)));
     $cfg['tolerancia_atraso_dias'] = max(0, min(2, (int) ($cfg['tolerancia_atraso_dias'] ?? 2)));
     $cfg['multa_reativacao_pct'] = max(0, min(10, round((float) ($cfg['multa_reativacao_pct'] ?? 10), 2)));
 
@@ -296,7 +296,7 @@ function pedidozap_salvar_saas_config(array $config)
             }
         }
         $atual['planos_precos'] = $precosBase;
-        $atual['mensalidade_valor'] = (float) ($precosBase['essencial'] ?? 79.90);
+        $atual['mensalidade_valor'] = (float) ($precosBase['start'] ?? 59.90);
     } elseif (array_key_exists('mensalidade_valor', $config)) {
         $valor = (float) str_replace(',', '.', (string) $config['mensalidade_valor']);
         $atual['mensalidade_valor'] = $valor > 0 ? round($valor, 2) : 0;
@@ -305,7 +305,7 @@ function pedidozap_salvar_saas_config(array $config)
         $atual['desconto_anual_pct'] = max(0, min(50, (int) $config['desconto_anual_pct']));
     }
     if (array_key_exists('dias_teste_gratis', $config)) {
-        $atual['dias_teste_gratis'] = max(1, min(7, (int) $config['dias_teste_gratis']));
+        $atual['dias_teste_gratis'] = max(1, min(30, (int) $config['dias_teste_gratis']));
     }
     if (array_key_exists('tolerancia_atraso_dias', $config)) {
         $atual['tolerancia_atraso_dias'] = max(0, min(2, (int) $config['tolerancia_atraso_dias']));
@@ -1551,7 +1551,7 @@ function pedidozap_criar_loja(array $dados)
     $vencimento = trim((string) ($dados['vencimento'] ?? ''));
     $statusInicial = (string) ($dados['status'] ?? (!empty($dados['em_teste']) ? 'teste' : 'ativo'));
     $emTeste = !empty($dados['em_teste']) || $statusInicial === 'teste';
-    $diasTrial = max(1, min(7, (int) (pedidozap_saas_config()['dias_teste_gratis'] ?? 7)));
+    $diasTrial = max(1, min(30, (int) (pedidozap_saas_config()['dias_teste_gratis'] ?? 30)));
     if ($emTeste) {
         $limiteTrialTs = strtotime('+' . $diasTrial . ' days');
         $vencInformadoTs = pedidozap_parse_data_iso($vencimento);
@@ -1559,8 +1559,10 @@ function pedidozap_criar_loja(array $dados)
             $vencimento = date('Y-m-d', $limiteTrialTs);
         }
     }
-    $planoEscolhido = pz_plano_normalizar((string) ($dados['plano_escolhido'] ?? ($dados['plano'] ?? 'pro')));
+    $planoEscolhido = pz_plano_normalizar((string) ($dados['plano_escolhido'] ?? ($dados['plano'] ?? 'scale')));
+    $storeIdUnico = 'st_' . substr(sha1($slug . '|' . microtime(true)), 0, 12);
     $okRegistro = pedidozap_salvar_registro_loja($slug, [
+        'store_id' => $storeIdUnico,
         'nome_empresa' => $nome,
         'razao_social' => $razaoSocial,
         'cnpj' => $cnpj,
@@ -1588,9 +1590,64 @@ function pedidozap_criar_loja(array $dados)
         'success' => (bool) $okRegistro,
         'message' => $okRegistro ? '' : 'Não foi possível finalizar o registro da loja.',
         'slug' => $slug,
+        'store_id' => $storeIdUnico,
         'vencimento' => $vencimento,
         'login' => $login,
     ];
+}
+
+/**
+ * Sincroniza cardápio e preços entre matriz e filial (1 unidade física = 1 assinatura própria).
+ */
+function pedidozap_sincronizar_cardapio_filial(string $origemSlug, string $destinoSlug): array
+{
+    $origem = preg_replace('/[^a-z0-9_-]/i', '', strtolower(trim($origemSlug)));
+    $destino = preg_replace('/[^a-z0-9_-]/i', '', strtolower(trim($destinoSlug)));
+    if ($origem === '' || $destino === '' || $origem === $destino) {
+        return ['success' => false, 'message' => 'Informe uma unidade filial diferente da atual.'];
+    }
+    $reg = pedidozap_ler_registro();
+    $mOrig = is_array($reg[$origem] ?? null) ? $reg[$origem] : [];
+    $mDest = is_array($reg[$destino] ?? null) ? $reg[$destino] : [];
+    if (empty($mDest) && !Database::tenantDataExists($destino)) {
+        return ['success' => false, 'message' => 'Unidade filial não encontrada.'];
+    }
+    $gOrig = trim((string) ($mOrig['grupo_rede'] ?? ''));
+    $gDest = trim((string) ($mDest['grupo_rede'] ?? ''));
+    $cnpjOrig = preg_replace('/\D/', '', (string) ($mOrig['cnpj'] ?? ''));
+    $cnpjDest = preg_replace('/\D/', '', (string) ($mDest['cnpj'] ?? ''));
+    $mesmoDono = ($gOrig !== '' && strcasecmp($gOrig, $gDest) === 0)
+        || ($cnpjOrig !== '' && strlen($cnpjOrig) >= 8 && substr($cnpjOrig, 0, 8) === substr($cnpjDest, 0, 8));
+    if (!$mesmoDono) {
+        return ['success' => false, 'message' => 'A filial precisa pertencer ao mesmo Grupo de Rede ou raiz de CNPJ da matriz.'];
+    }
+    if (pedidozap_loja_bloqueada($destino)) {
+        return ['success' => false, 'message' => 'A filial selecionada está com assinatura pendente/bloqueada. Cada unidade física exige assinatura ativa própria.'];
+    }
+
+    $ant = Database::getTenant();
+    try {
+        Database::setTenant($origem);
+        $cardOrig = Database::readStrict('cardapio.json');
+        $cfgOrig = Database::readStrict('config.json');
+        if (!is_array($cardOrig)) {
+            return ['success' => false, 'message' => 'Catálogo da matriz vazio.'];
+        }
+        Database::setTenant($destino);
+        $cfgDest = is_array(Database::readStrict('config.json')) ? Database::readStrict('config.json') : [];
+        if (is_array($cfgOrig) && !empty($cfgOrig['CATEGORIAS'])) {
+            $cfgDest['CATEGORIAS'] = $cfgOrig['CATEGORIAS'];
+        }
+        if (is_array($cfgOrig) && !empty($cfgOrig['TEXTOS']['PAGINAS'])) {
+            $cfgDest['TEXTOS']['PAGINAS'] = $cfgOrig['TEXTOS']['PAGINAS'];
+        }
+        $cfgDest['VERSION'] = time();
+        Database::write('cardapio.json', $cardOrig);
+        Database::write('config.json', $cfgDest);
+        return ['success' => true, 'message' => "Cardápio e preços sincronizados de {$origem} para {$destino}!"];
+    } finally {
+        Database::setTenant($ant);
+    }
 }
 
 function pedidozap_loja_bloqueada($slug)

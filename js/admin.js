@@ -124,7 +124,7 @@ function iniciarCobrancaOnline(assinatura) {
     const btnAnual = document.getElementById('conta-ciclo-anual');
     const boxRede = document.getElementById('conta-rede-box');
 
-    let planoSelecionado = assinatura.plano_slug || 'pro';
+    let planoSelecionado = assinatura.plano_slug || 'scale';
     let cicloSelecionado = assinatura.ciclo === 'anual' ? 'anual' : 'mensal';
     let modoSelecionado = assinatura.modo_cobranca_preferido === 'avulso' ? 'avulso' : 'recorrente';
     let dadosAtual = assinatura;
@@ -831,9 +831,12 @@ async function iniciarAdmin() {
                 </div>
             `;
         } else {
-            // Descrição simples para itens comuns
+            // Descrição simples para itens comuns + botão 1-clique Otimizador IA
             extraFieldsHtml = `
-                <input type="text" value="${safeVal(item.descricao)}" placeholder="Descrição do item (detalhes, cor, marca ou ingredientes)" style="width: 100%; margin-bottom: 5px; border:1px solid #eee; padding:5px; color:#666; font-size:0.9em;" onchange="window.atualizarItem('${category}', ${index}, 'descricao', this.value)">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:5px;">
+                    <input type="text" data-desc-input="${category}:${index}" value="${safeVal(item.descricao)}" placeholder="Descrição do item (detalhes, cor, marca ou ingredientes)" style="flex:1 1 200px; min-width:0; border:1px solid #eee; padding:6px; color:#666; font-size:0.9em;" onchange="window.atualizarItem('${category}', ${index}, 'descricao', this.value)">
+                    <button type="button" class="btn-mini" style="background:#f5f3ff;color:#5b21b6;border:1px solid #ddd6fe;font-weight:700;min-height:36px;padding:6px 10px;" onclick="window.melhorarDescricaoIA && window.melhorarDescricaoIA('${category}', ${index}, this)">✨ Melhorar descrição (IA)</button>
+                </div>
             `;
         }
 
@@ -902,6 +905,87 @@ async function iniciarAdmin() {
         return result.url;
     }
 
+    window.melhorarDescricaoIA = async function (cat, index, btnEl) {
+        const item = (dadosLocais[cat] && dadosLocais[cat][index]) || null;
+        if (!item) return;
+        const nome = (item.nome || '').trim();
+        if (!nome) {
+            showToast('Digite primeiro o nome do produto.', 'error');
+            return;
+        }
+        const origHtml = btnEl ? btnEl.innerHTML : '';
+        if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Gerando...'; }
+        try {
+            const urlAg = (typeof TENANT !== 'undefined' && TENANT.apiUrl)
+                ? TENANT.apiUrl('agente_api.php?action=melhorar_descricao')
+                : 'agente_api.php?action=melhorar_descricao';
+            const r = await fetch(urlAg, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    auth: { user: sessionStorage.getItem('admin_user') || '', pass: sessionStorage.getItem('admin_pass') || '' },
+                    nome: nome,
+                    categoria: cat,
+                    preco: item.preco || 0,
+                    descricao: item.descricao || ''
+                })
+            });
+            const d = await r.json();
+            if (d && d.codigo_erro === 'upgrade_plano') {
+                showToast(d.message || 'Recurso exclusivo do Plano Scale IA (R$ 150/mês).', 'error');
+                const abaConta = document.querySelector('#admin-tabs [data-tab="conta"]');
+                if (abaConta) abaConta.click();
+                return;
+            }
+            if (d && d.success && d.descricao_sugerida) {
+                dadosLocais[cat][index].descricao = d.descricao_sugerida;
+                const inp = document.querySelector('[data-desc-input="' + cat + ':' + index + '"]');
+                if (inp) inp.value = d.descricao_sugerida;
+                salvarAlteracoesNoNavegador();
+                showToast('Descrição melhorada pela IA! Toque em Salvar para publicar.', 'success');
+            } else {
+                showToast((d && d.message) || 'Não foi possível gerar descrição agora.', 'error');
+            }
+        } catch (e) {
+            showToast('Erro de conexão com a IA.', 'error');
+        } finally {
+            if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = origHtml; }
+        }
+    };
+
+    (function initExpressChecklist() {
+        const box = document.getElementById('aki-express-checklist');
+        if (!box) return;
+        const slugAtual = (typeof TENANT !== 'undefined') ? TENANT.slug : 'default';
+        const chaveOk = 'aki_express_ok_' + slugAtual;
+        if (localStorage.getItem(chaveOk) === '1') return;
+        const linkCurto = window.location.origin + '/' + (slugAtual === 'default' ? '' : encodeURIComponent(slugAtual));
+        const prev = document.getElementById('aki-exp-link-preview');
+        if (prev) prev.textContent = linkCurto;
+        box.hidden = false;
+        const bDisp = document.getElementById('aki-express-dispensar');
+        if (bDisp) bDisp.addEventListener('click', () => { localStorage.setItem(chaveOk, '1'); box.hidden = true; });
+        const bZap = document.getElementById('aki-exp-wpp');
+        if (bZap) bZap.addEventListener('click', () => {
+            const t = document.querySelector('#admin-tabs [data-tab="contato"]');
+            if (t) { t.click(); t.scrollIntoView({ behavior: 'smooth' }); }
+        });
+        const bFrete = document.getElementById('aki-exp-frete');
+        if (bFrete) bFrete.addEventListener('click', () => {
+            if (typeof window.__pzMudarNivel === 'function') window.__pzMudarNivel('avancado');
+            const t = document.querySelector('#admin-tabs [data-tab="frete"]');
+            if (t) { t.click(); t.scrollIntoView({ behavior: 'smooth' }); }
+        });
+        const bCop = document.getElementById('aki-exp-copiar');
+        if (bCop) bCop.addEventListener('click', () => {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(linkCurto).then(() => showToast('Link curto copiado: ' + linkCurto, 'success')).catch(() => prompt('Copie o link:', linkCurto));
+            } else {
+                prompt('Copie o link:', linkCurto);
+            }
+        });
+    })();
+
     window.uploadImagem = function (cat, index, input) {
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
@@ -917,7 +1001,7 @@ async function iniciarAdmin() {
             img.onload = async function () {
                 const canvas = document.createElement('canvas');
                 const ctx2 = canvas.getContext('2d');
-                const MAX_WIDTH = 720;
+                const MAX_WIDTH = 1200;
                 let width = img.width;
                 let height = img.height;
                 if (width > MAX_WIDTH) {
