@@ -4,7 +4,7 @@
  * - API pública get_public_store.php em Network-First com fallback em cache por tenant
  * - Imagens de pratos/logos em Cache-First com atualização em segundo plano
  */
-const CACHE_NAME = 'acheiaki-app-v24';
+const CACHE_NAME = 'acheiaki-app-v25';
 const SHELL_ASSETS = [
   'index.html',
   'categoria.html',

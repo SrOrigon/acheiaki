@@ -2033,6 +2033,27 @@ function pedidozap_validar_token($user, $token)
  * Limite genérico por IP + escopo (protege APIs públicas contra abuso).
  * Retorna false quando o limite foi atingido.
  */
+function pedidozap_client_ip()
+{
+    $cand = [
+        $_SERVER['HTTP_X_REAL_IP'] ?? '',
+        $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '',
+        $_SERVER['REMOTE_ADDR'] ?? '',
+    ];
+    foreach ($cand as $raw) {
+        $raw = trim((string) $raw);
+        if ($raw === '') {
+            continue;
+        }
+        $partes = explode(',', $raw);
+        $ip = trim((string) ($partes[0] ?? ''));
+        if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP)) {
+            return $ip;
+        }
+    }
+    return (string) ($_SERVER['REMOTE_ADDR'] ?? 'desconhecido');
+}
+
 function pedidozap_limite_requisicao($escopo, $maximo = 80, $janela = 60, $registrar = true)
 {
     $escopo = preg_replace('/[^a-z0-9._-]/i', '_', (string) $escopo);
@@ -2043,7 +2064,7 @@ function pedidozap_limite_requisicao($escopo, $maximo = 80, $janela = 60, $regis
     if (!is_dir($dir)) {
         @mkdir($dir, 0755, true);
     }
-    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'desconhecido');
+    $ip = pedidozap_client_ip();
     $tenant = class_exists('Database') ? Database::getTenant() : 'default';
     $path = $dir . '/' . sha1($ip . '|' . $escopo . '|' . $tenant) . '.json';
     $agora = time();
@@ -2067,7 +2088,7 @@ function pedidozap_limite_login($registrarFalha = false, $limpar = false)
     if (!is_dir($dir)) {
         @mkdir($dir, 0755, true);
     }
-    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'desconhecido');
+    $ip = pedidozap_client_ip();
     $path = $dir . '/' . sha1($ip . '|' . Database::getTenant()) . '.json';
     $janela = 900;
     $maximo = 8;

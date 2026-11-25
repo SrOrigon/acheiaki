@@ -272,6 +272,11 @@ if ($acao === 'config_login') {
 }
 
 if ($acao === 'entrar_google') {
+    if (function_exists('pedidozap_limite_requisicao') && !pedidozap_limite_requisicao('comprador_cadastro', 8, 300)) {
+        http_response_code(429);
+        echo json_encode(['success' => false, 'message' => 'Muitas tentativas em sequência. Aguarde alguns minutos.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $pub = function_exists('pedidozap_integracoes_publicas') ? pedidozap_integracoes_publicas() : [];
     $clientId = $pub['google_oauth_client_id'] ?? '';
     $credential = trim((string) ($body['credential'] ?? ''));
@@ -445,6 +450,11 @@ if ($acao === 'entrar_google') {
 }
 
 if ($acao === 'cadastrar') {
+    if (function_exists('pedidozap_limite_requisicao') && !pedidozap_limite_requisicao('comprador_cadastro', 8, 300)) {
+        http_response_code(429);
+        echo json_encode(['success' => false, 'message' => 'Muitas tentativas em sequência. Aguarde alguns minutos.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $nomeRaw = trim(strip_tags((string) ($body['nome'] ?? '')));
     $cpf = preg_replace('/\D/', '', (string) ($body['cpf'] ?? ''));
     $tel = pz_comprador_normalizar_tel($body['telefone'] ?? '');
@@ -623,6 +633,11 @@ if ($acao === 'vincular_rapido') {
 }
 
 if ($acao === 'login') {
+    if (function_exists('pedidozap_limite_requisicao') && !pedidozap_limite_requisicao('comprador_login', 10, 300)) {
+        http_response_code(429);
+        echo json_encode(['success' => false, 'message' => 'Muitas tentativas de login. Aguarde 5 minutos e tente de novo.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $ident = trim((string) ($body['telefone'] ?? $body['email'] ?? ''));
     $tel = pz_comprador_normalizar_tel($ident);
     $emailLogin = strtolower($ident);

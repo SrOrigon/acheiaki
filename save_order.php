@@ -270,24 +270,24 @@ if (strlen($celularLimpo) < 10 && strpos($canalPedido, 'balcao') === false && st
     exit;
 }
 $ehRetiradaOuLocal = in_array($recebimentoModo, ['retirada', 'balcao', 'mesa', 'local'], true) || strpos($canalPedido, 'balcao') !== false;
-if (!$ehRetiradaOuLocal) {
-    $cepCheck = preg_replace('/\D/', '', (string) ($endereco['cep'] ?? ''));
-    $ruaCheck = trim((string) ($endereco['rua'] ?? ''));
-    $bairroCheck = trim((string) ($endereco['bairro'] ?? ''));
-    $cidadeCheck = trim((string) ($endereco['cidade'] ?? ''));
-    if ($ruaCheck === '' || $bairroCheck === '' || $cidadeCheck === '') {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Informe rua, bairro e cidade para entrega.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-}
-
 $cfgLojaSave = Database::readStrict('config.json');
 if (Database::getTenant() === 'default' && empty($cfgLojaSave)) {
     $cfgLojaSave = Database::read('config.json');
 }
 require_once 'store_schema.php';
 $cfgLojaSave = pedidozap_normalizar_config(is_array($cfgLojaSave) ? $cfgLojaSave : [], Database::getTenant());
+
+if (!$ehRetiradaOuLocal) {
+    $ruaCheck = trim((string) ($endereco['rua'] ?? ''));
+    if (mb_strlen($ruaCheck) < 4) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Informe o endereço completo para entrega (Rua, número e bairro).'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if (trim((string) ($endereco['cidade'] ?? '')) === '' && !empty($cfgLojaSave['ENDERECO']['cidade'])) {
+        $endereco['cidade'] = (string) $cfgLojaSave['ENDERECO']['cidade'];
+    }
+}
 
 $userAuthOrd = $_GET['user'] ?? $pedido['auth']['user'] ?? '';
 $passAuthOrd = $_GET['pass'] ?? $pedido['auth']['pass'] ?? '';

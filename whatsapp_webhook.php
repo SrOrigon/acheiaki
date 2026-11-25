@@ -54,7 +54,8 @@ function pz_wpp_verificar_segredo_webhook($slugHint = '')
         $segredoLoja = trim((string) ($lojaCfg['webhook_secret'] ?? ''));
     }
     if ($segredoPlat === '' && $segredoLoja === '') {
-        return true;
+        $appEnvWpp = strtolower(trim((string) (function_exists('pz_db_env_val') ? pz_db_env_val('APP_ENV') : getenv('APP_ENV'))));
+        return $appEnvWpp !== 'production';
     }
     $recebido = trim((string) (
         $_GET['secret']

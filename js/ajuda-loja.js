@@ -29,10 +29,17 @@ function garantirElementosAjudaCardapio() {
         const sec = document.createElement('section');
         sec.className = 'ajuda-cliente';
         sec.id = 'secao-ajuda-cliente';
-        sec.setAttribute('aria-label', 'Como pedir');
-        sec.innerHTML = '<h2 id="ajuda-cardapio-titulo"></h2><p class="intro" id="ajuda-cardapio-intro"></p>'
+        sec.setAttribute('aria-label', 'Como comprar');
+        sec.innerHTML = '<div class="aki-a11y-bar">'
+            + '<button type="button" class="aki-a11y-btn" id="aki-btn-ouvir-ajuda" aria-label="Ouvir explicação passo a passo em voz alta">🔊 Ouvir explicação</button>'
+            + '<button type="button" class="aki-a11y-btn" id="aki-btn-letras-grandes" aria-pressed="false">Aa Letras Maiores</button>'
+            + '</div>'
+            + '<h2 id="ajuda-cardapio-titulo"></h2><p class="intro" id="ajuda-cardapio-intro"></p>'
             + '<ol class="ajuda-passos-cliente" id="lista-ajuda-cardapio-passos"></ol>';
         main.insertBefore(sec, main.firstChild);
+        if (typeof window.akiConectarAcessibilidade === 'function') {
+            window.akiConectarAcessibilidade();
+        }
     }
     const carrinho = document.getElementById('carrinho-flutuante');
     if (carrinho && !document.getElementById('ajuda-carrinho-flutuante')) {
@@ -132,4 +139,75 @@ function desenharCozinhaFichasAjuda() {
             + String(f.titulo || '').replace(/</g, '&lt;') + '</strong><span>'
             + String(f.texto || '').replace(/</g, '&lt;') + '</span></div></div>';
     }).join('');
+}
+
+window.akiLerEmVozAlta = function (texto, btnEl) {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        if (btnEl) btnEl.classList.remove('ativo');
+        return;
+    }
+    const u = new SpeechSynthesisUtterance(String(texto || '').trim());
+    u.lang = 'pt-BR';
+    u.rate = 0.94;
+    if (btnEl) {
+        btnEl.classList.add('ativo');
+        u.onend = () => btnEl.classList.remove('ativo');
+        u.onerror = () => btnEl.classList.remove('ativo');
+    }
+    window.speechSynthesis.speak(u);
+};
+
+window.akiToggleModoSimples = function () {
+    const ativo = !document.body.classList.contains('aki-a11y-simples');
+    document.body.classList.toggle('aki-a11y-simples', ativo);
+    try { localStorage.setItem('aki_modo_simples_a11y', ativo ? '1' : '0'); } catch (e) {}
+    document.querySelectorAll('#aki-btn-letras-grandes, #aki-admin-letras-grandes').forEach((b) => {
+        b.classList.toggle('ativo', ativo);
+        b.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+    });
+};
+
+window.akiConectarAcessibilidade = function () {
+    try {
+        if (localStorage.getItem('aki_modo_simples_a11y') === '1') {
+            document.body.classList.add('aki-a11y-simples');
+        }
+    } catch (e) {}
+    const ativo = document.body.classList.contains('aki-a11y-simples');
+    const bLetras = document.getElementById('aki-btn-letras-grandes');
+    if (bLetras && !bLetras.dataset.bound) {
+        bLetras.dataset.bound = '1';
+        bLetras.classList.toggle('ativo', ativo);
+        bLetras.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+        bLetras.addEventListener('click', window.akiToggleModoSimples);
+    }
+    const bOuvir = document.getElementById('aki-btn-ouvir-ajuda');
+    if (bOuvir && !bOuvir.dataset.bound) {
+        bOuvir.dataset.bound = '1';
+        bOuvir.addEventListener('click', () => {
+            const sec = document.getElementById('secao-ajuda-cliente');
+            const texto = sec ? sec.innerText : 'Escolha o produto, toque em Ver Pedido, digite seu nome, WhatsApp e endereço, e envie seu pedido.';
+            window.akiLerEmVozAlta(texto, bOuvir);
+        });
+    }
+};
+
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.akiConectarAcessibilidade();
+        const bAdmLetras = document.getElementById('aki-admin-letras-grandes');
+        if (bAdmLetras) {
+            const ativo = document.body.classList.contains('aki-a11y-simples');
+            bAdmLetras.classList.toggle('ativo', ativo);
+            bAdmLetras.addEventListener('click', window.akiToggleModoSimples);
+        }
+        const bAdmOuvir = document.getElementById('aki-admin-ouvir-passos');
+        if (bAdmOuvir) {
+            bAdmOuvir.addEventListener('click', () => {
+                window.akiLerEmVozAlta('Bem-vindo ao painel fácil da sua loja. Use os 4 botões grandes na tela: 1, Ver pedidos novos. 2, Colocar fotos e preços dos produtos. 3, Conectar seu WhatsApp com robô automático. 4, Ver como sua loja aparece para o cliente.', bAdmOuvir);
+            });
+        }
+    });
 }

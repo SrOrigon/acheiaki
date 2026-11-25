@@ -15,6 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (function_exists('pedidozap_limite_requisicao') && !pedidozap_limite_requisicao('cadastro_loja', 5, 300)) {
+    http_response_code(429);
+    echo json_encode(['success' => false, 'message' => 'Muitos cadastros em sequência. Aguarde alguns minutos e tente novamente.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 $body = json_decode(file_get_contents('php://input') ?: '', true);
 if (!is_array($body)) {
     $body = [];

@@ -36,6 +36,12 @@ if ($acao === 'status') {
     exit;
 }
 
+if ($acao !== 'status' && function_exists('pedidozap_limite_requisicao') && !pedidozap_limite_requisicao('api_perfil_cliente', 20, 60)) {
+    http_response_code(429);
+    echo json_encode(['success' => false, 'message' => 'Muitas consultas em sequência. Aguarde um instante.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if ($acao === 'cnpj') {
     $res = pedidozap_consultar_cnpj($body['cnpj'] ?? '');
     if (!$res['success']) {

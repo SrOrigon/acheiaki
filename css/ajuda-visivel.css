@@ -242,3 +242,51 @@ body[data-pagina="motoboy"] select {
     pointer-events: none;
     opacity: 0.95;
 }
+
+/* Acessibilidade Cognitiva e Visual: Leitura guiada e Letras Maiores */
+.aki-a11y-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 12px;
+}
+
+.aki-a11y-btn {
+    border: 2px solid #cbd5e1;
+    background: #ffffff;
+    color: #0f172a;
+    border-radius: 12px;
+    padding: 9px 14px;
+    min-height: 46px;
+    font-size: 0.96rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.aki-a11y-btn.ativo {
+    background: #0f766e;
+    color: #ffffff;
+    border-color: #0f766e;
+}
+
+body.aki-a11y-simples {
+    font-size: 18px !important;
+    line-height: 1.55 !important;
+}
+
+body.aki-a11y-simples button,
+body.aki-a11y-simples a.botao-principal,
+body.aki-a11y-simples input,
+body.aki-a11y-simples select {
+    min-height: 50px !important;
+    font-size: 1.04rem !important;
+}
+
+body.aki-a11y-simples .aki-bento-btn,
+body.aki-a11y-simples .ajuda-passos-cliente li {
+    border-width: 2px !important;
+    border-color: #ea580c !important;
+}

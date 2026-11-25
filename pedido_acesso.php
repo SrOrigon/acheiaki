@@ -102,9 +102,8 @@ function pz_pode_ver_pedido(array $pedido, $codigo, $chaveEntregador)
     if (pz_entregador_ok($chaveEntregador) || pz_admin_ok()) {
         return true;
     }
-    // Pedidos anteriores ao código secreto continuam acessíveis pelo link já enviado.
     if (empty($pedido['codigo'])) {
-        return true;
+        return false;
     }
     $codigo = (string) $codigo;
     return $codigo !== '' && hash_equals((string) $pedido['codigo'], $codigo);
