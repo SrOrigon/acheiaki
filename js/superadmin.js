@@ -130,7 +130,7 @@
             const st = ind.status || 'pendente';
             const votos = Number(ind.pedidos_indicacao || 1);
             const telLimpo = String(ind.contato || '').replace(/\D/g, '');
-            const msgConv = 'Olá, pessoal da ' + (ind.nome_loja || 'loja') + '! ' + votos + ' morador(es) de ' + (ind.bairro || 'sua região') + ' indicaram vocês no AcheIAki para pedir direto sem taxa de aplicativo! Querem testar 7 dias grátis com tudo montado? ' + window.location.origin + '/cadastro.html';
+            const msgConv = 'Olá, pessoal da ' + (ind.nome_loja || 'loja') + '! ' + votos + ' morador(es) de ' + (ind.bairro || 'sua região') + ' indicaram vocês no AcheIAki para pedir direto sem taxa de aplicativo! Querem testar 30 dias grátis no Scale IA com tudo montado? ' + window.location.origin + '/cadastro.html';
             const waUrl = telLimpo.length >= 10
                 ? 'https://wa.me/' + (telLimpo.length <= 11 ? '55' + telLimpo : telLimpo) + '?text=' + encodeURIComponent(msgConv)
                 : 'https://wa.me/?text=' + encodeURIComponent(msgConv);

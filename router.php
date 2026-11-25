@@ -41,9 +41,9 @@ $bloqueados = [
     '#^/scripts(/|$)#i',
     '#^/mobile-capacitor(/|$)#i',
     '#^/\.#',
-    '#^(?:/loja/[a-zA-Z0-9_-]+)?/(router\.php|auth_config\.php|verificar_sistema\.php|go_live_smoke\.php|worker\.php|db_pdo\.php|Database\.php|store_schema\.php|tenant_init\.php|pedido_acesso\.php|.*_lib\.php|check_braces\.js|configurar-producao\.html|openapi-pdv\.json|Dockerfile|Procfile|railway\.json|nixpacks\.toml|composer\.(json|lock))$#i',
+    '#^(?:/loja/[a-zA-Z0-9_-]+)?/(router\.php|auth_config\.php|verificar_sistema\.php|go_live_smoke\.php|worker\.php|db_pdo\.php|Database\.php|store_schema\.php|tenant_init\.php|pedido_acesso\.php|.*_lib\.php|check_braces\.js|configurar-producao\.html|openapi-pdv\.json|Dockerfile|Procfile|railway\.json|nixpacks\.toml|composer\.(json|lock)|\.env(?:\.example)?)$#i',
     '#^/loja/[a-zA-Z0-9_-]+/saas_admin\.php$#i',
-    '#\.(md|log|sql|bak|env|map|sh|ps1|yml|yaml)$#i',
+    '#\.(md|log|sql|bak|env|example|map|sh|ps1|yml|yaml)$#i',
 ];
 foreach ($bloqueados as $re) {
     if (preg_match($re, $decodedPath)) {

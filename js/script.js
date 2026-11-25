@@ -187,6 +187,7 @@ function iniciarVitrine() {
             qtdItens: qtd,
             retirada: modoRecebimento === 'retirada',
             bairro: enderecoCliente.bairro || '',
+            enderecoTexto: [enderecoCliente.rua, enderecoCliente.bairro, enderecoCliente.cidade].filter(Boolean).join(' '),
             distanciaKm: enderecoCliente.distanciaKm
         }, extra || {}));
         return freteAtual;
@@ -1197,11 +1198,11 @@ function iniciarVitrine() {
 
         const nome = document.getElementById('input-nome').value.trim();
         const celularRaw = document.getElementById('input-celular').value.replace(/\D/g, '');
-        const cepRaw = document.getElementById('input-cep').value.replace(/\D/g, '');
+        const cepRaw = (document.getElementById('input-cep')?.value || '').replace(/\D/g, '');
         const rua = document.getElementById('input-rua').value.trim();
-        const numero = document.getElementById('input-numero').value.trim();
-        const bairro = document.getElementById('input-bairro').value.trim();
-        const cidade = document.getElementById('input-cidade').value.trim();
+        let numero = (document.getElementById('input-numero')?.value || '').trim();
+        let bairro = (document.getElementById('input-bairro')?.value || '').trim();
+        let cidade = (document.getElementById('input-cidade')?.value || '').trim();
 
         let erros = [];
 
@@ -1214,16 +1215,10 @@ function iniciarVitrine() {
         // 2. Validação Celular (10 ou 11 dígitos)
         if (celularRaw.length < 10) {
             erros.push("celular");
-            showToast("Celular inválido. Digite DDD + Número.", "erro");
+            showToast("WhatsApp inválido. Digite DDD + Número.", "erro");
         }
 
-        // 3. Validação CEP (dispensada na retirada)
-        if (!retirada && cepRaw.length < 8) {
-            erros.push("cep");
-            showToast("O CEP deve ter 8 números.", "erro");
-        }
-
-        // 4. Campos Vazios
+        // 3. Checkout em até 3 campos: exige apenas endereço completo quando for entrega (CEP/nº/bairro extras são opcionais)
         const obrigatorios = retirada
             ? [
                 { id: 'input-nome', val: nome },
@@ -1232,15 +1227,12 @@ function iniciarVitrine() {
             : [
                 { id: 'input-nome', val: nome },
                 { id: 'input-celular', val: celularRaw },
-                { id: 'input-cep', val: cepRaw },
-                { id: 'input-rua', val: rua },
-                { id: 'input-numero', val: numero },
-                { id: 'input-bairro', val: bairro },
-                { id: 'input-cidade', val: cidade }
+                { id: 'input-rua', val: rua.length >= 5 ? rua : '' }
             ];
 
         obrigatorios.forEach(campo => {
             const el = document.getElementById(campo.id);
+            if (!el) return;
             if (!campo.val) {
                 if (!erros.includes(campo.id)) erros.push(campo.id);
                 el.classList.add('input-erro');
@@ -1251,44 +1243,62 @@ function iniciarVitrine() {
         });
 
         if (erros.length > 0) {
-            if (erros.some(e => !['nome', 'celular', 'cep'].includes(e))) {
-                showToast("Preencha todos os campos obrigatórios em vermelho.", 'erro');
+            if (erros.includes('input-rua')) {
+                showToast("Digite seu endereço completo (Rua, número e bairro).", 'erro');
             }
             return;
         }
 
+        if (!retirada && rua) {
+            if (!numero) {
+                const mNum = rua.match(/,\s*(\d+[a-zA-Z0-9\/-]*)/);
+                if (mNum) numero = mNum[1];
+            }
+            if (!bairro) {
+                const partesB = rua.split(/\s+[—–-]\s+|,/);
+                if (partesB.length >= 2) bairro = partesB[partesB.length - 1].trim();
+            }
+            if (!cidade) {
+                cidade = (config.ENDERECO && config.ENDERECO.cidade) ? String(config.ENDERECO.cidade) : 'Rio de Janeiro';
+            }
+        }
+
         enderecoCliente = {
-            nome: document.getElementById('input-nome').value.trim(),
+            nome: nome,
             celular: document.getElementById('input-celular').value.trim(),
-            cep: document.getElementById('input-cep').value.trim(),
-            rua: document.getElementById('input-rua').value.trim(),
-            numero: document.getElementById('input-numero').value.trim(),
-            complemento: document.getElementById('input-complemento').value.trim(),
-            bairro: document.getElementById('input-bairro').value.trim(),
-            cidade: document.getElementById('input-cidade').value.trim(),
-            referencia: document.getElementById('input-referencia').value.trim(),
+            cep: (document.getElementById('input-cep')?.value || '').trim(),
+            rua: rua,
+            numero: numero || 'S/N',
+            complemento: (document.getElementById('input-complemento')?.value || '').trim(),
+            bairro: bairro,
+            cidade: cidade,
+            referencia: (document.getElementById('input-referencia')?.value || '').trim(),
             distanciaKm: null
         };
 
         const modoFrete = (config.FRETE && config.FRETE.modo) || 'gratis';
         let usarFallbackDistancia = false;
-        if (!retirada && modoFrete === 'distancia' && window.PedidoZapFrete) {
-            const loja = config.ENDERECO || {};
-            if (loja.lat == null || loja.lng == null) {
-                usarFallbackDistancia = true;
-            } else {
-                const preview = document.getElementById('frete-preview');
-                if (preview) preview.textContent = 'Calculando distância...';
-                try {
-                    const destino = await PedidoZapFrete.geocode([rua, numero, bairro, cidade, cepRaw, 'Brasil'].filter(Boolean).join(', '));
-                    enderecoCliente.lat = destino.lat;
-                    enderecoCliente.lng = destino.lng;
-                    enderecoCliente.distanciaKm = PedidoZapFrete.haversineKm(Number(loja.lat), Number(loja.lng), destino.lat, destino.lng);
-                } catch (err) {
-                    enderecoCliente.distanciaKm = null;
+        if (!retirada && (modoFrete === 'distancia' || modoFrete === 'bairro') && window.PedidoZapFrete) {
+            if (modoFrete === 'distancia') {
+                const loja = config.ENDERECO || {};
+                if (loja.lat == null || loja.lng == null) {
                     usarFallbackDistancia = true;
-                    showToast('Endereço sem ponto exato no mapa — aplicando taxa padrão/bairro para não travar seu pedido.', 'aviso');
+                } else {
+                    const preview = document.getElementById('frete-preview');
+                    if (preview) preview.textContent = 'Calculando entrega...';
+                    try {
+                        const destino = await PedidoZapFrete.geocode([rua, numero, bairro, cidade, cepRaw, 'Brasil'].filter(Boolean).join(', '));
+                        enderecoCliente.lat = destino.lat;
+                        enderecoCliente.lng = destino.lng;
+                        enderecoCliente.distanciaKm = PedidoZapFrete.haversineKm(Number(loja.lat), Number(loja.lng), destino.lat, destino.lng);
+                    } catch (err) {
+                        enderecoCliente.distanciaKm = null;
+                        usarFallbackDistancia = true;
+                        showToast('Rua sem ponto exato no GPS — aplicando taxa padrão/bairro automaticamente.', 'aviso');
+                    }
                 }
+            } else {
+                usarFallbackDistancia = true;
             }
         }
 

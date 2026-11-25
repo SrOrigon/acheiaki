@@ -384,32 +384,37 @@
                     <span id="pz-checkout-rapido-txt">⚡ Seus dados de entrega já estão salvos.</span>
                     <button type="button" id="pz-btn-checkout-rapido" style="border:none;background:#059669;color:#fff;padding:7px 12px;border-radius:8px;font-weight:800;cursor:pointer;font-size:0.82rem;">Usar em 1 clique →</button>
                 </div>
-                <div class="form-grupo"><label for="input-nome">Nome Completo</label><input type="text" id="input-nome"
-                        placeholder="Seu nome" required></div>
-                <div class="form-grupo"><label for="input-celular">Celular (WhatsApp)</label><input type="tel"
-                        id="input-celular" placeholder="(XX) XXXXX-XXXX" required autocomplete="tel" inputmode="tel">
+                <div class="form-grupo"><label for="input-nome">1. Seu Nome *</label><input type="text" id="input-nome"
+                        placeholder="Ex.: Maria Silva" required autocomplete="name"></div>
+                <div class="form-grupo"><label for="input-celular">2. WhatsApp com DDD *</label><input type="tel"
+                        id="input-celular" placeholder="(21) 99999-9999" required autocomplete="tel" inputmode="tel">
                 </div>
-                <div class="form-grupo">
-                    <label for="input-cep">CEP</label>
-                    <div class="input-com-icone"><input type="text" id="input-cep" placeholder="Apenas números"
-                            maxlength="9" required autocomplete="postal-code" inputmode="numeric">
-                        <div id="cep-spinner" class="spinner escondido"></div>
+                <div class="form-grupo"><label for="input-rua">3. Endereço completo (Rua, nº e bairro) *</label><input type="text" id="input-rua"
+                        placeholder="Ex.: Rua Coronel Agostinho, 150 — Campo Grande" required autocomplete="street-address"></div>
+                <details id="aki-end-detalhes" style="margin:6px 0 4px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;">
+                    <summary style="cursor:pointer;font-size:0.86rem;font-weight:700;color:#475569;">CEP, complemento ou ponto de referência (opcional)</summary>
+                    <div style="margin-top:10px;">
+                        <div class="form-grupo">
+                            <label for="input-cep">CEP</label>
+                            <div class="input-com-icone"><input type="text" id="input-cep" placeholder="Apenas números (opcional)"
+                                    maxlength="9" autocomplete="postal-code" inputmode="numeric">
+                                <div id="cep-spinner" class="spinner escondido"></div>
+                            </div>
+                        </div>
+                        <div class="form-grupo-horizontal">
+                            <div class="form-grupo"><label for="input-numero">Número</label><input type="text" id="input-numero"
+                                    placeholder="Nº (se não pôs acima)" inputmode="text"></div>
+                            <div class="form-grupo"><label for="input-complemento">Complemento</label><input type="text"
+                                    id="input-complemento" placeholder="Apto, Bloco, Casa"></div>
+                        </div>
+                        <div class="form-grupo"><label for="input-bairro">Bairro</label><input type="text" id="input-bairro"
+                                placeholder="Ex.: Campo Grande"></div>
+                        <div class="form-grupo"><label for="input-cidade">Cidade</label><input type="text" id="input-cidade"
+                                placeholder="Rio de Janeiro"></div>
+                        <div class="form-grupo"><label for="input-referencia">Ponto de Referência</label><input type="text"
+                                id="input-referencia" placeholder="Opcional"></div>
                     </div>
-                </div>
-                <div class="form-grupo"><label for="input-rua">Rua</label><input type="text" id="input-rua"
-                        placeholder="Sua rua" required autocomplete="address-line1"></div>
-                <div class="form-grupo-horizontal">
-                    <div class="form-grupo"><label for="input-numero">Número</label><input type="text" id="input-numero"
-                            placeholder="Nº" required inputmode="numeric"></div>
-                    <div class="form-grupo"><label for="input-complemento">Complemento</label><input type="text"
-                            id="input-complemento" placeholder="Apto, Bloco, etc."></div>
-                </div>
-                <div class="form-grupo"><label for="input-bairro">Bairro</label><input type="text" id="input-bairro"
-                        placeholder="Seu bairro" required></div>
-                <div class="form-grupo"><label for="input-cidade">Cidade</label><input type="text" id="input-cidade"
-                        placeholder="Sua cidade" required></div>
-                <div class="form-grupo"><label for="input-referencia">Ponto de Referência</label><input type="text"
-                        id="input-referencia" placeholder="Opcional"></div>
+                </details>
             </div>
             <div class="modal-rodape" style="display:flex;gap:8px;flex-wrap:wrap;">
                 <button type="button" id="btn-demo-endereco" hidden

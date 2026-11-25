@@ -8,10 +8,20 @@ require_once __DIR__ . '/integracoes_lib.php';
 require_once __DIR__ . '/perfil_qualificado_lib.php';
 
 if (php_sapi_name() !== 'cli') {
-    http_response_code(403);
+    $appEnvDiag = strtolower(trim((string) (function_exists('pz_db_env_val') ? pz_db_env_val('APP_ENV') : getenv('APP_ENV'))));
+    $diagTokenEnv = trim((string) (function_exists('pz_db_env_val') ? pz_db_env_val('ACHEIAKI_DIAG_TOKEN') : getenv('ACHEIAKI_DIAG_TOKEN')));
+    $diagHeader = trim((string) ($_SERVER['HTTP_X_ACHEIAKI_DIAG_TOKEN'] ?? ''));
+    $uDiag = (string) ($_GET['user'] ?? '');
+    $pDiag = (string) ($_GET['pass'] ?? '');
+    $authMasterOk = function_exists('pedidozap_autorizado') && pedidozap_autorizado($uDiag, $pDiag) === 'master';
+    $tokenOk = $diagTokenEnv !== '' && $diagHeader !== '' && hash_equals($diagTokenEnv, $diagHeader);
+    if (!$authMasterOk && !$tokenOk) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => false, 'message' => 'Acesso restrito a CLI ou administrador master autorizado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['success' => false, 'message' => 'Execute no servidor: php verificar_sistema.php'], JSON_UNESCAPED_UNICODE);
-    exit;
 }
 
 $checks = [];

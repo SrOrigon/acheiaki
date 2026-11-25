@@ -1196,7 +1196,25 @@ function pz_wpp_reativar_cliente_sumido($slug, string $telefone, string $nome = 
     }
     $ant = Database::getTenant();
     try {
+        Database::setTenant('default');
+        $comps = Database::readStrict('compradores_mkt.json');
+        $telShort = substr(preg_replace('/\D/', '', $tel), -11);
+        if (is_array($comps)) {
+            foreach ($comps as $comp) {
+                if (is_array($comp) && (string) ($comp['telefone'] ?? '') === $telShort && array_key_exists('wpp_notificar_ofertas', $comp) && !$comp['wpp_notificar_ofertas']) {
+                    return ['success' => true, 'ignorado' => 'opt_out_ofertas'];
+                }
+            }
+        }
         Database::setTenant($slug);
+        $ym = date('Y-m');
+        $autoLog = Database::readStrict('worker_automacoes_log.json');
+        if (!is_array($autoLog)) {
+            $autoLog = [];
+        }
+        if (!empty($autoLog['sumidos_enviados_mes'][$ym][$telShort])) {
+            return ['success' => true, 'duplicado_ignorado' => true];
+        }
         $storeCfg = pedidozap_normalizar_config(Database::readStrict('config.json'), $slug);
         $nomeLoja = trim((string) ($storeCfg['NOME_LOJA'] ?? 'Loja')) ?: 'Loja';
         $base = function_exists('pedidozap_base_url') ? rtrim(pedidozap_base_url(), '/') : '';
@@ -1206,12 +1224,12 @@ function pz_wpp_reativar_cliente_sumido($slug, string $telefone, string $nome = 
             . "Liberamos o cupom *{$cupom}* exclusivo pra você pedir hoje direto pelo link (sem taxa de aplicativo):\n{$linkCurto}";
         $res = pz_wpp_enviar_texto($slug, $tel, $msg, ['autor' => 'ia', 'nome' => $nome]);
         if (!empty($res['success'])) {
-            $ym = date('Y-m');
             $autoLog = Database::readStrict('worker_automacoes_log.json');
             if (!is_array($autoLog)) {
                 $autoLog = [];
             }
             $autoLog['recuperacoes_mes'][$ym] = ((int) ($autoLog['recuperacoes_mes'][$ym] ?? 0)) + 1;
+            $autoLog['sumidos_enviados_mes'][$ym][$telShort] = date('c');
             Database::write('worker_automacoes_log.json', $autoLog);
         }
         return $res;

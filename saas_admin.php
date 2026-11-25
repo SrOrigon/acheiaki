@@ -34,6 +34,10 @@ if ($acao === 'listar') {
     Database::setTenant('default');
     $indicacoes = Database::read('indicacoes_lojas.json');
     Database::setTenant($antInd);
+    $indicacoesLista = is_array($indicacoes) ? $indicacoes : [];
+    usort($indicacoesLista, static function ($a, $b) {
+        return ((int) ($b['pedidos_indicacao'] ?? 1)) <=> ((int) ($a['pedidos_indicacao'] ?? 1));
+    });
     echo json_encode([
         'success' => true,
         'lojas' => pedidozap_resumo_lojas(),
@@ -42,7 +46,7 @@ if ($acao === 'listar') {
         'planos' => array_values(pz_planos_catalogo()),
         'integracoes' => pedidozap_integracoes_publicas(),
         'db_config' => function_exists('pz_db_config_publica') ? pz_db_config_publica() : null,
-        'indicacoes' => is_array($indicacoes) ? $indicacoes : [],
+        'indicacoes' => $indicacoesLista,
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }

@@ -13,7 +13,7 @@ require_once __DIR__ . '/saas_lib.php';
 function pedidozap_garantir_loja_demo($forcar = false)
 {
     $slug = 'loja-demonstracao-acheiaki';
-    $versaoAlvo = 5;
+    $versaoAlvo = 6;
     $anterior = Database::getTenant();
 
     try {
@@ -28,7 +28,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
             $cardapioExist = [];
         }
 
-        // Preserva URLs de mídia já existentes para itens demo1..demo8 quando válidas
+        // Preserva URLs de mídia customizadas (enviadas no painel), mas atualiza assets demo estáticos para .webp
         $imgExistentePorId = [];
         foreach ($cardapioExist as $lista) {
             if (!is_array($lista)) {
@@ -36,7 +36,10 @@ function pedidozap_garantir_loja_demo($forcar = false)
             }
             foreach ($lista as $it) {
                 if (is_array($it) && !empty($it['id']) && !empty($it['imagem'])) {
-                    $imgExistentePorId[(string) $it['id']] = (string) $it['imagem'];
+                    $urlEx = (string) $it['imagem'];
+                    if (strpos($urlEx, 'assets/lojas/') !== false) {
+                        $imgExistentePorId[(string) $it['id']] = $urlEx;
+                    }
                 }
             }
         }
@@ -60,9 +63,9 @@ function pedidozap_garantir_loja_demo($forcar = false)
         $config['TUTORIAL']['passos'] = pedidozap_default_tutorial_passos();
 
         $config['IDENTIDADE'] = [
-            'LOGO' => 'assets/images/acheiaki-icon.jpg?v=4',
+            'LOGO' => 'assets/images/acheiaki-icon.webp?v=4',
             'FAVICON' => 'assets/images/acheiaki-icon.jpg?v=4',
-            'HERO' => 'assets/images/hero-marketplace.jpg?v=3',
+            'HERO' => 'assets/images/hero-marketplace.webp?v=4',
             'CORES' => [
                 'primaria' => '#f97136',
                 'secundaria' => '#231915',
@@ -143,7 +146,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
         $config['UPSELL'] = [
             'ativo' => true,
             'produto_id' => 'promo-fone-tws',
-            'imagem' => 'assets/images/demo-fone.jpg',
+            'imagem' => 'assets/images/demo-fone.webp',
             'titulo' => 'Leve também o Fone TWS em oferta!',
             'subtitulo' => 'Adicione com desconto direto no carrinho — Taxa Zero.',
         ];
@@ -176,7 +179,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'descricao' => 'Som estéreo nítido, microfone integrado e até 18h de bateria com estojo portátil.',
                     'preco' => 79.90,
                     'precoOriginal' => 119.90,
-                    'imagem' => 'assets/images/demo-fone.jpg',
+                    'imagem' => 'assets/images/demo-fone.webp',
                     'promocao' => true,
                     'destaque' => true,
                     'ativo' => true,
@@ -187,7 +190,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'descricao' => 'Blend 160g, cheddar cremoso, bacon crocante + porção média de batata frita.',
                     'preco' => 34.90,
                     'precoOriginal' => 42.00,
-                    'imagem' => $img('demo3', 'assets/images/xbacon.png'),
+                    'imagem' => $img('demo3', 'assets/images/xbacon.webp'),
                     'promocao' => true,
                     'destaque' => true,
                     'ativo' => true,
@@ -199,7 +202,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'Fone Bluetooth TWS Sem Fio',
                     'descricao' => 'Conexão instantânea Bluetooth 5.3, toque inteligente e garantia direta da loja.',
                     'preco' => 89.90,
-                    'imagem' => 'assets/images/demo-fone.jpg',
+                    'imagem' => 'assets/images/demo-fone.webp',
                     'maisPedido' => true,
                     'ativo' => true,
                 ],
@@ -210,7 +213,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'Camiseta Algodão Premium Terracota',
                     'descricao' => 'Malha 100% algodão penteado, toque macio e caimento moderno (P, M, G e GG).',
                     'preco' => 69.90,
-                    'imagem' => 'assets/images/demo-camiseta.jpg',
+                    'imagem' => 'assets/images/demo-camiseta.webp',
                     'tamanhos' => [
                         ['nome' => 'Tamanho P', 'preco' => 69.90],
                         ['nome' => 'Tamanho M', 'preco' => 69.90],
@@ -227,7 +230,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'Kit Ração Premium 3kg + Brinquedo Corda',
                     'descricao' => 'Nutrição completa sem corantes artificiais + corda resistente para diversão do seu pet.',
                     'preco' => 84.90,
-                    'imagem' => 'assets/images/demo-racao.jpg',
+                    'imagem' => 'assets/images/demo-racao.webp',
                     'ativo' => true,
                 ],
             ],
@@ -237,7 +240,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'Kit Skincare Sérum Vitamina C + Hidratante',
                     'descricao' => 'Tratamento facial completo para hidratação intensa e brilho natural. Ótima opção para presente.',
                     'preco' => 94.90,
-                    'imagem' => 'assets/images/demo-kit-beleza.jpg',
+                    'imagem' => 'assets/images/demo-kit-beleza.webp',
                     'maisPedido' => true,
                     'ativo' => true,
                 ],
@@ -248,7 +251,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'X-Burguer Clássico',
                     'descricao' => 'Pão brioche selado na manteiga, hambúrguer 150g suculento, queijo derretido e molho especial.',
                     'preco' => 22.00,
-                    'imagem' => $img('demo1', 'assets/images/babyburguer.png'),
+                    'imagem' => $img('demo1', 'assets/images/babyburguer.webp'),
                     'ativo' => true,
                 ],
                 [
@@ -256,7 +259,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'X-Salada Especial',
                     'descricao' => 'Pão brioche, carne artesanal 150g, queijo prato, alface americana, tomate e maionese da casa.',
                     'preco' => 24.00,
-                    'imagem' => $img('demo2', 'assets/images/xsalada.png'),
+                    'imagem' => $img('demo2', 'assets/images/xsalada.webp'),
                     'ativo' => true,
                 ],
                 [
@@ -264,7 +267,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'X-Bacon Artesanal',
                     'descricao' => 'Hambúrguer 160g na chapa, cheddar cremoso e tiras de bacon bem crocantes.',
                     'preco' => 28.00,
-                    'imagem' => $img('demo3', 'assets/images/xbacon.png'),
+                    'imagem' => $img('demo3', 'assets/images/xbacon.webp'),
                     'maisPedido' => true,
                     'ativo' => true,
                 ],
@@ -273,7 +276,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'Frango Crocante Especial',
                     'descricao' => 'Filé de frango empanado dourado, queijo, salada fresca e molho cremoso.',
                     'preco' => 26.00,
-                    'imagem' => $img('demo4', 'assets/images/bigburguer.png'),
+                    'imagem' => $img('demo4', 'assets/images/bigburguer.webp'),
                     'ativo' => true,
                 ],
             ],
@@ -283,7 +286,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'Batata Frita Crocante (350g)',
                     'descricao' => 'Sequinhos por fora e macios por dentro, servida quentinha com toque de sal e páprica.',
                     'preco' => 14.00,
-                    'imagem' => $img('demo5', 'assets/images/batatagrande.png'),
+                    'imagem' => $img('demo5', 'assets/images/batatagrande.webp'),
                     'ativo' => true,
                 ],
             ],
@@ -293,7 +296,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'Refrigerante Lata 350ml',
                     'descricao' => 'Entregue bem gelado para acompanhar seu pedido.',
                     'preco' => 7.00,
-                    'imagem' => $img('demo6', 'assets/images/refri-lata.png'),
+                    'imagem' => $img('demo6', 'assets/images/refri-lata.webp'),
                     'ativo' => true,
                 ],
                 [
@@ -301,7 +304,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'Suco Natural da Fruta (400ml)',
                     'descricao' => 'Preparado na hora, refrescante e natural.',
                     'preco' => 9.00,
-                    'imagem' => $img('demo7', 'assets/images/refri-lata.png'),
+                    'imagem' => $img('demo7', 'assets/images/refri-lata.webp'),
                     'ativo' => true,
                 ],
             ],
@@ -311,7 +314,7 @@ function pedidozap_garantir_loja_demo($forcar = false)
                     'nome' => 'Brownie de Chocolate Belga',
                     'descricao' => 'Casquinha crocante com interior cremoso de chocolate meio amargo.',
                     'preco' => 12.00,
-                    'imagem' => $img('demo8', 'assets/images/salgadinho.png'),
+                    'imagem' => $img('demo8', 'assets/images/salgadinho.webp'),
                     'ativo' => true,
                 ],
             ],

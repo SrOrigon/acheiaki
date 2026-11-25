@@ -17,13 +17,23 @@ require_once __DIR__ . '/fiscal_lib.php';
 require_once __DIR__ . '/territorio_lib.php';
 
 if (php_sapi_name() !== 'cli') {
-    http_response_code(403);
+    $appEnvSmoke = strtolower(trim((string) (function_exists('pz_db_env_val') ? pz_db_env_val('APP_ENV') : getenv('APP_ENV'))));
+    $smokeTokenEnv = trim((string) (function_exists('pz_db_env_val') ? pz_db_env_val('ACHEIAKI_DIAG_TOKEN') : getenv('ACHEIAKI_DIAG_TOKEN')));
+    $smokeHeader = trim((string) ($_SERVER['HTTP_X_ACHEIAKI_DIAG_TOKEN'] ?? ''));
+    $uSmoke = (string) ($_GET['user'] ?? '');
+    $pSmoke = (string) ($_GET['pass'] ?? '');
+    $authMasterOk = function_exists('pedidozap_autorizado') && pedidozap_autorizado($uSmoke, $pSmoke) === 'master';
+    $tokenOk = $smokeTokenEnv !== '' && $smokeHeader !== '' && hash_equals($smokeTokenEnv, $smokeHeader);
+    if (!$authMasterOk && !$tokenOk) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Acesso restrito a CLI ou token/master autorizado.',
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode([
-        'success' => false,
-        'message' => 'Execute no servidor: php go_live_smoke.php [url_base_opcional]',
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
 }
 
 $baseUrl = isset($argv[1]) ? rtrim(trim((string) $argv[1]), '/') : '';

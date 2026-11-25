@@ -93,7 +93,20 @@
 
         if (r.modo === 'bairro') {
             const alvo = normalizar(opts.bairro);
-            const achou = r.bairros.find((b) => normalizar(b.nome) === alvo);
+            const textoEnd = normalizar(opts.enderecoTexto || opts.bairro || '');
+            let achou = alvo ? r.bairros.find((b) => normalizar(b.nome) === alvo) : null;
+            if (!achou && textoEnd) {
+                achou = r.bairros.find((b) => {
+                    const bn = normalizar(b.nome);
+                    return bn && textoEnd.indexOf(bn) !== -1;
+                });
+            }
+            if (!achou && opts.fallbackDistancia) {
+                base.valor = Math.max(0, r.taxaFixa > 0 ? r.taxaFixa : (r.taxaBase > 0 ? r.taxaBase : (r.bairros[0] ? num(r.bairros[0].valor) : 0)));
+                base.rotulo = 'Taxa padrão (fallback)';
+                base.detalhe = 'Contingência aplicada para ruas novas';
+                return aplicarGratis(base, r, subtotal);
+            }
             if (!achou) {
                 base.ok = false;
                 base.foraDaArea = true;
